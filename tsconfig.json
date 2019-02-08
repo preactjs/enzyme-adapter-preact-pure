@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "jsxFactory": "h",
+    "module": "commonjs",
+    "outDir": "build",
+    "strict": true,
+    "target": "es2018",
+    "typeRoots": ["types", "node_modules/@types"]
+  }
+}
