@@ -231,5 +231,23 @@ describe('MountRenderer', () => {
 
       sinon.assert.called(callback);
     });
+
+    it('passes arguments to event handler', () => {
+      const renderer = new MountRenderer();
+      const callback = sinon.stub();
+      renderer.render(
+        <button type="button" onKeyDown={callback} />,
+        {},
+        sinon.stub()
+      );
+
+      renderer.simulateEvent(renderer.getNode() as RSTNode, 'keydown', {
+        key: 'a',
+      });
+
+      sinon.assert.calledWithMatch(callback, {
+        key: 'a',
+      });
+    });
   });
 });

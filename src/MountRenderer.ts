@@ -4,6 +4,8 @@ import { h, render } from 'preact';
 import { PreactComponent, PreactNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
 
+type EventDetails = { [prop: string]: any };
+
 /**
  * Return a React Standard Tree (RST) node from a DOM element which might
  * be the root output of a rendered component.
@@ -142,8 +144,16 @@ export default class MountRenderer implements EnzymeRenderer {
     // TODO
   }
 
-  simulateEvent(node: RSTNode, eventName: string, args: Object) {
-    const event = new Event(eventName, args);
+  simulateEvent(node: RSTNode, eventName: string, args: EventDetails = {}) {
+    // To be more faithful to a real browser, this should use the appropriate
+    // constructor for the event type. This implementation is good enough for
+    // many components though.
+    const event = new Event(eventName, {
+      bubbles: args.bubbles,
+      composed: args.composed,
+      cancelable: args.cancelable,
+    });
+    Object.assign(event, args);
     node.instance.dispatchEvent(event);
   }
 
