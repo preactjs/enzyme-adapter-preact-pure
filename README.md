@@ -1,3 +1,5 @@
+**EARLY STAGE PACKAGE: This package is still young. It is functional and has tests but has not been extensively battle-tested.**
+
 # enzyme-adapter-preact-pure
 
 This is an adapter to support using the [Enzyme](https://airbnb.io/enzyme/) UI
