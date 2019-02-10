@@ -1,5 +1,5 @@
 {
-  "name": "enzyme-preact-adapter-lite",
+  "name": "enzyme-adapter-preact-pure",
   "version": "0.1.0",
   "description": "Enzyme adapter for Preact",
   "main": "build/src/index.js",
@@ -31,5 +31,8 @@
   },
   "dependencies": {
     "preact-render-to-string": "^4.1.0"
-  }
+  },
+  "files": [
+    "build/src/**/*"
+  ]
 }
