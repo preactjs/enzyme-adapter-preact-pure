@@ -12,6 +12,7 @@
     "@types/mocha": "^5.2.5",
     "@types/sinon": "^7.0.5",
     "chai": "^4.2.0",
+    "enzyme": "^3.8.0",
     "jsdom": "^13.2.0",
     "mocha": "^5.2.0",
     "preact": "^8.4.2",
