@@ -8,6 +8,16 @@ import ShallowRenderer from '../src/ShallowRenderer';
 import StringRenderer from '../src/StringRenderer';
 
 describe('PreactAdapter', () => {
+  it('adds `type` and `props` attributes to VNodes', () => {
+    // Add extra properties to vnodes for compatibility with Enzyme.
+    const adapter = new PreactAdapter();
+    const el = h('img', { alt: 'A test image' }) as any;
+    assert.equal(el.type, 'img');
+    assert.deepEqual(el.props, {
+      alt: 'A test image',
+    });
+  });
+
   describe('#createElement', () => {
     it('returns a VNode', () => {
       const adapter = new PreactAdapter();
