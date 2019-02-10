@@ -81,6 +81,7 @@ declare module 'enzyme' {
 
   // TODO
   export var mount: any;
+  export var render: any;
   export var shallow: any;
   export var configure: any;
 }

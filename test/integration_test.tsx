@@ -1,4 +1,4 @@
-import { JSXElement, configure, shallow, mount } from 'enzyme';
+import { JSXElement, configure, shallow, mount, render } from 'enzyme';
 import { Component, h } from 'preact';
 
 import { assert } from 'chai';
@@ -7,9 +7,9 @@ import * as sinon from 'sinon';
 import PreactAdapter from '../src/PreactAdapter';
 
 /**
- * Register tests used by full and shallow rendering.
+ * Register tests for static and interactive rendering modes.
  */
-function addSharedTests(render: typeof mount) {
+function addStaticTests(render: typeof mount) {
   it('renders a simple component', () => {
     function Button({ label }: any) {
       return <button>{label}</button>;
@@ -18,13 +18,29 @@ function addSharedTests(render: typeof mount) {
     assert.ok(wrapper.find('button'));
   });
 
-  it('supports simulating events', () => {
-    const onClick = sinon.stub();
-    const wrapper = render(<button onClick={onClick} />);
-    wrapper.simulate('click');
-    sinon.assert.called(onClick);
+  it('can return text content', () => {
+    function Button({ label }: any) {
+      return <button>{label}</button>;
+    }
+
+    const wrapper = render(<Button label="Click me" />);
+    assert.equal(wrapper.text(), 'Click me');
   });
 
+  it('can return HTML content', () => {
+    function Button({ label }: any) {
+      return <button>{label}</button>;
+    }
+
+    const wrapper = mount(<Button label="Click me" />);
+    assert.equal(wrapper.html(), '<button>Click me</button>');
+  });
+}
+
+/**
+ * Register tests for interactive rendering modes (full + shallow rendering).
+ */
+function addInteractiveTests(render: typeof mount) {
   it('supports finding child components', () => {
     function ListItem() {
       return <li>Test</li>;
@@ -76,21 +92,19 @@ function addSharedTests(render: typeof mount) {
     assert.equal(wrapper.find(ListItem).length, 1);
   });
 
-  it('can return text content', () => {
-    function Button({ label }: any) {
-      return <button>{label}</button>;
-    }
-
-    const wrapper = render(<Button label="Click me" />);
-    assert.equal(wrapper.text(), 'Click me');
-  });
-
   it('can set the props of the component', () => {
     const Button = ({ label }: any) => <button>{label}</button>;
     const wrapper = render(<Button label="first" />);
     assert.equal(wrapper.text(), 'first');
     wrapper.setProps({ label: 'second' });
     assert.equal(wrapper.text(), 'second');
+  });
+
+  it('supports simulating events', () => {
+    const onClick = sinon.stub();
+    const wrapper = render(<button onClick={onClick} />);
+    wrapper.simulate('click');
+    sinon.assert.called(onClick);
   });
 
   it('can set the state of the component', done => {
@@ -120,25 +134,15 @@ describe('integration tests', () => {
   });
 
   describe('"mount" rendering', () => {
-    addSharedTests(mount);
-
-    // nb. HTML rendering is only supported for full/"mount" rendering but not
-    // shallow rendering because it internally depends on static/"string"
-    // rendering.
-    it('can return HTML content', () => {
-      function Button({ label }: any) {
-        return <button>{label}</button>;
-      }
-
-      const wrapper = mount(<Button label="Click me" />);
-      assert.equal(wrapper.html(), '<button>Click me</button>');
-    });
+    addStaticTests(mount);
+    addInteractiveTests(mount);
   });
 
   describe('"shallow" rendering', () => {
     const shallowRender = (el: JSXElement) =>
       shallow(el, { disableLifecycleMethods: true });
-    addSharedTests(shallowRender);
+    addStaticTests(shallowRender);
+    addInteractiveTests(shallowRender);
 
     it('does not render child components', () => {
       function Child() {
@@ -171,5 +175,9 @@ describe('integration tests', () => {
       // in shallow rendering.
       assert.equal(wrapper.text(), 'One<Child />Three<NestedChild />');
     });
+  });
+
+  describe('"string" rendering', () => {
+    addStaticTests(render);
   });
 });

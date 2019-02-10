@@ -28,5 +28,8 @@
     "build": "tsc",
     "format": "prettier --write src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
     "test": "mocha -r ts-node/register -r test/init.ts test/*.tsx"
+  },
+  "dependencies": {
+    "preact-render-to-string": "^4.1.0"
   }
 }
