@@ -4,6 +4,7 @@ import { RSTNode } from 'enzyme';
 
 import PreactAdapter from '../src/PreactAdapter';
 import MountRenderer from '../src/MountRenderer';
+import ShallowRenderer from '../src/ShallowRenderer';
 
 describe('PreactAdapter', () => {
   describe('#createElement', () => {
@@ -89,8 +90,14 @@ describe('PreactAdapter', () => {
       assert.instanceOf(renderer, MountRenderer);
     });
 
+    it('returns a `ShallowRenderer` when the mode is "mount"', () => {
+      const adapter = new PreactAdapter();
+      const renderer = adapter.createRenderer({ mode: 'shallow' });
+      assert.instanceOf(renderer, ShallowRenderer);
+    });
+
     it('throws if mode is unsupported', () => {
-      const modes = ['shallow', 'string', 'unknown'];
+      const modes = ['string', 'unknown'];
       const adapter = new PreactAdapter();
       modes.forEach(mode => {
         assert.throws(() => adapter.createRenderer({ mode } as any));

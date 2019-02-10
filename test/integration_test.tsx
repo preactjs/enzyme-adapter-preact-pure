@@ -1,4 +1,4 @@
-import { mount, configure } from 'enzyme';
+import { JSXElement, configure, shallow, mount } from 'enzyme';
 import { Component, h } from 'preact';
 
 import { assert } from 'chai';
@@ -6,22 +6,21 @@ import * as sinon from 'sinon';
 
 import PreactAdapter from '../src/PreactAdapter';
 
-describe('mount rendering', () => {
-  before(() => {
-    configure({ adapter: new PreactAdapter() });
-  });
-
+/**
+ * Register tests used by full and shallow rendering.
+ */
+function addSharedTests(render: typeof mount) {
   it('renders a simple component', () => {
     function Button({ label }: any) {
       return <button>{label}</button>;
     }
-    const wrapper = mount(<Button label="Click me" />);
+    const wrapper = render(<Button label="Click me" />);
     assert.ok(wrapper.find('button'));
   });
 
   it('supports simulating events', () => {
     const onClick = sinon.stub();
-    const wrapper = mount(<button onClick={onClick} />);
+    const wrapper = render(<button onClick={onClick} />);
     wrapper.simulate('click');
     sinon.assert.called(onClick);
   });
@@ -40,9 +39,41 @@ describe('mount rendering', () => {
       );
     }
 
-    const wrapper = mount(<List />);
+    const wrapper = render(<List />);
     const items = wrapper.find('ul > ListItem');
     assert.equal(items.length, 2);
+  });
+
+  it('can return props of child component', () => {
+    function ListItem({ label }: any) {
+      return <li>{label}</li>;
+    }
+    function List() {
+      return (
+        <ul>
+          <ListItem label="test" />
+        </ul>
+      );
+    }
+    const wrapper = render(<List />);
+    const item = wrapper.find('ListItem');
+    assert.deepEqual(item.props(), { label: 'test', children: [] });
+  });
+
+  it('can find child components by type', () => {
+    function ListItem({ label }: any) {
+      return <li>{label}</li>;
+    }
+    function List() {
+      return (
+        <ul>
+          <ListItem label="test" />
+        </ul>
+      );
+    }
+    const wrapper = render(<List />);
+    const item = wrapper.find('ListItem');
+    assert.equal(wrapper.find(ListItem).length, 1);
   });
 
   it('can return text content', () => {
@@ -50,24 +81,14 @@ describe('mount rendering', () => {
       return <button>{label}</button>;
     }
 
-    const wrapper = mount(<Button label="Click me" />);
+    const wrapper = render(<Button label="Click me" />);
     assert.equal(wrapper.text(), 'Click me');
-  });
-
-  it('can return HTML content', () => {
-    function Button({ label }: any) {
-      return <button>{label}</button>;
-    }
-
-    const wrapper = mount(<Button label="Click me" />);
-    assert.equal(wrapper.html(), '<button>Click me</button>');
   });
 
   it('can set the props of the component', () => {
     const Button = ({ label }: any) => <button>{label}</button>;
-    const wrapper = mount(<Button label="first" />);
+    const wrapper = render(<Button label="first" />);
     assert.equal(wrapper.text(), 'first');
-    debugger;
     wrapper.setProps({ label: 'second' });
     assert.equal(wrapper.text(), 'second');
   });
@@ -84,11 +105,71 @@ describe('mount rendering', () => {
       }
     }
 
-    const wrapper = mount(<Counter />);
+    const wrapper = render(<Counter />);
     assert.equal(wrapper.text(), '0');
     wrapper.setState({ count: 2 }, () => {
       assert.equal(wrapper.text(), '2');
       done();
+    });
+  });
+}
+
+describe('integration tests', () => {
+  before(() => {
+    configure({ adapter: new PreactAdapter() });
+  });
+
+  describe('"mount" rendering', () => {
+    addSharedTests(mount);
+
+    // nb. HTML rendering is only supported for full/"mount" rendering but not
+    // shallow rendering because it internally depends on static/"string"
+    // rendering.
+    it('can return HTML content', () => {
+      function Button({ label }: any) {
+        return <button>{label}</button>;
+      }
+
+      const wrapper = mount(<Button label="Click me" />);
+      assert.equal(wrapper.html(), '<button>Click me</button>');
+    });
+  });
+
+  describe('"shallow" rendering', () => {
+    const shallowRender = (el: JSXElement) =>
+      shallow(el, { disableLifecycleMethods: true });
+    addSharedTests(shallowRender);
+
+    it('does not render child components', () => {
+      function Child() {
+        return <span>Two</span>;
+      }
+
+      function NestedChild({ label }: any) {
+        return (
+          <div>
+            <p>{label}</p>
+            <Child />
+          </div>
+        );
+      }
+
+      function Parent() {
+        return (
+          <div>
+            <span>One</span>
+            <Child />
+            <span>Three</span>
+            <NestedChild label="test" />
+          </div>
+        );
+      }
+
+      const wrapper = shallowRender(<Parent />);
+
+      // `text()` outputs placeholders to represent un-rendered child components
+      // in shallow rendering.
+      assert.equal(wrapper.text(), 'One<Child />Three<NestedChild />');
     });
   });
 });

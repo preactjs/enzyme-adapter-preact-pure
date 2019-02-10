@@ -8,6 +8,7 @@ import {
   RSTNode,
 } from 'enzyme';
 
+import ShallowRenderer from './ShallowRenderer';
 import MountRenderer from './MountRenderer';
 
 import { h } from 'preact';
@@ -49,6 +50,8 @@ export default class PreactAdapter extends EnzymeAdapter {
     switch (options.mode) {
       case 'mount':
         return new MountRenderer();
+      case 'shallow':
+        return new ShallowRenderer();
       default:
         throw new Error(`"${options.mode}" rendering is not supported`);
     }

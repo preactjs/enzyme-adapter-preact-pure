@@ -2,6 +2,7 @@ import { EnzymeRenderer, JSXElement, NodeType, RSTNode } from 'enzyme';
 import { render } from 'preact';
 
 import { PreactComponent, PreactNode } from './preact-internals';
+import { getRealType } from './shallow-render-utils';
 
 /**
  * Return a React Standard Tree (RST) node from a DOM element which might
@@ -70,7 +71,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType = 'function';
   }
 
-  let rendered: RSTNode;
+  let rendered: RSTNode | null;
   if ((component as any)._component) {
     // This component rendered another component.
     rendered = rstNodeFromComponent((component as any)._component);
@@ -79,14 +80,27 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     rendered = rstNodeFromDOMElement(component.base as any);
   }
 
+  // If this was a shallow-rendered component, set the RST node's type to the
+  // real component function/class.
+  const shallowRenderedType = getRealType(component);
+  if (shallowRenderedType) {
+    // Shallow rendering replaces the output of the component with a dummy
+    // DOM element. Remove this dummy from the RST so that Enzyme does not see
+    // it.
+    rendered = null;
+  }
+  const type = shallowRenderedType
+    ? shallowRenderedType
+    : component.constructor;
+
   return {
     nodeType,
-    type: component.constructor,
+    type,
     props: component.props,
     key: component.__key || null,
     ref: component.__ref || null,
     instance: component,
-    rendered: [rendered],
+    rendered: rendered ? [rendered] : [],
   };
 }
 
