@@ -8,6 +8,7 @@ import {
   RSTNode,
 } from 'enzyme';
 
+import ShallowRenderer from './ShallowRenderer';
 import MountRenderer from './MountRenderer';
 
 import { h } from 'preact';
@@ -28,7 +29,14 @@ function addTypeAndPropsToVNode() {
   }
   Object.defineProperty(VNode.prototype, 'type', {
     get() {
-      return this.nodeName;
+      if ('originalType' in VNode.prototype) {
+        // This is a shallow-rendered VNode. The `nodeName` has been replaced by
+        // a stub that renders nothing. `originalType` is the _real_ type that
+        // would have been rendered in a full render.
+        return this.originalType;
+      } else {
+        return this.nodeName;
+      }
     },
   });
   Object.defineProperty(VNode.prototype, 'props', {
@@ -49,6 +57,8 @@ export default class PreactAdapter extends EnzymeAdapter {
     switch (options.mode) {
       case 'mount':
         return new MountRenderer();
+      case 'shallow':
+        return new ShallowRenderer();
       default:
         throw new Error(`"${options.mode}" rendering is not supported`);
     }

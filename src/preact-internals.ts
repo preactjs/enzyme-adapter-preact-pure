@@ -1,4 +1,4 @@
-import { Component } from 'preact';
+import { Component, VNode } from 'preact';
 
 /**
  * An instance of Preact's `Component` class or a subclass created by
@@ -21,4 +21,11 @@ export interface PreactNode extends ChildNode {
 
   /** Props used to render a DOM node. */
   __preactattr_: Object;
+}
+
+/**
+ * Additional properties added to Preact VNode elements by the adapter.
+ */
+export interface VNodeExtensions extends VNode {
+  originalType: Function;
 }
