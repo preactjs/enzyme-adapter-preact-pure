@@ -34,16 +34,29 @@ configure({ adapter: new PreactAdapter });
 Once the adapter is configured, you can write Enzyme tests for your Preact
 UI components following the [Enzyme docs](https://airbnb.io/enzyme/).
 
-## Features
 
-The Preact adapter currently supports the following features of Enzyme:
+### Important note about shallow rendering
 
-- Full DOM rendering (aka. "mount" rendering)
+When using Enzyme's shallow rendering mode, this adapter _always_ invokes the
+component's lifecycle methods (`componentDidUpdate` etc.). However, this is
+handled by the adapter itself rather than by Enzyme. Therefore it is necessary
+to **turn off** Enzyme's own lifecycle support:
 
-The Preact adapter does not currently support these modes:
+```js
+import { configure, shallow } from 'enzyme';
 
-- Shallow rendering
-- String rendering
+describe('MyComponent', () => {
+  it('renders something', () => {
+    const wrapper = shallow(<MyComponent />, {
+      // Disable Enzyme's own lifecycle method handling. The adapter does this
+      // instead.
+      disableLifecycleMethods: true,
+    });
+
+    …
+  });
+});
+```
 
 ## Notes
 
