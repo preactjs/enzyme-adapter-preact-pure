@@ -1,5 +1,5 @@
 import { JSXElement, configure, shallow, mount, render } from 'enzyme';
-import { Component, h } from 'preact';
+import { Component, h, options } from 'preact';
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -126,6 +126,97 @@ function addInteractiveTests(render: typeof mount) {
       done();
     });
   });
+
+  function componentWithLifecycles(): any {
+    class Test extends Component<any> {
+      constructor(props: any) {
+        super(props);
+      }
+
+      render() {
+        return <div>Test</div>;
+      }
+    }
+    Test.prototype.shouldComponentUpdate = sinon.stub().returns(true);
+    Test.prototype.componentWillReceiveProps = sinon.stub();
+    Test.prototype.componentWillMount = sinon.stub();
+    Test.prototype.componentDidMount = sinon.stub();
+    Test.prototype.componentDidUpdate = sinon.stub();
+    Test.prototype.componentWillUnmount = sinon.stub();
+    return Test;
+  }
+
+  it('invokes lifecycle hooks on render', () => {
+    const Test = componentWithLifecycles();
+    render(<Test />);
+    const shouldCall = ['componentWillMount', 'componentDidMount'];
+    const shouldNotCall = [
+      'shouldComponentUpdate',
+      'componentWillReceiveProps',
+      'componentDidUpdate',
+      'componentWillUnmount',
+    ];
+    shouldCall.forEach(method =>
+      sinon.assert.calledOnce(Test.prototype[method])
+    );
+    shouldNotCall.forEach(method =>
+      sinon.assert.notCalled(Test.prototype[method])
+    );
+  });
+
+  it('invokes lifecycle hooks on update', () => {
+    const Test = componentWithLifecycles();
+    const shouldCall = [
+      'componentWillReceiveProps',
+      'componentDidUpdate',
+      'shouldComponentUpdate',
+    ];
+    const shouldNotCall = [
+      'componentWillMount',
+      'componentDidMount',
+      'componentWillUnmount',
+    ];
+    const allMethods = [...shouldCall, ...shouldNotCall];
+
+    const wrapper = render(<Test />);
+    allMethods.forEach(method => Test.prototype[method].reset());
+
+    wrapper.setProps({ label: 'foo' });
+
+    shouldCall.forEach(method =>
+      sinon.assert.calledOnce(Test.prototype[method])
+    );
+    shouldNotCall.forEach(method =>
+      sinon.assert.notCalled(Test.prototype[method])
+    );
+  });
+
+  it('invokes lifecycle hooks on unmount', () => {
+    const Test = componentWithLifecycles();
+    const shouldCall = ['componentWillUnmount'];
+    const shouldNotCall = [
+      'componentDidMount',
+      'componentDidUpdate',
+      'componentWillMount',
+      'componentWillReceiveProps',
+      'shouldComponentUpdate',
+    ];
+    const allMethods = [...shouldCall, ...shouldNotCall];
+
+    const wrapper = render(<Test />);
+    allMethods.forEach(method => Test.prototype[method].reset());
+
+    (options as any).beforeUnmount = sinon.stub();
+    wrapper.unmount();
+    sinon.assert.called((options as any).beforeUnmount);
+
+    shouldCall.forEach(method =>
+      sinon.assert.calledOnce(Test.prototype[method])
+    );
+    shouldNotCall.forEach(method =>
+      sinon.assert.notCalled(Test.prototype[method])
+    );
+  });
 }
 
 describe('integration tests', () => {
@@ -139,10 +230,8 @@ describe('integration tests', () => {
   });
 
   describe('"shallow" rendering', () => {
-    const shallowRender = (el: JSXElement) =>
-      shallow(el, { disableLifecycleMethods: true });
-    addStaticTests(shallowRender);
-    addInteractiveTests(shallowRender);
+    addStaticTests(shallow);
+    addInteractiveTests(shallow);
 
     it('does not render child components', () => {
       function Child() {
@@ -169,7 +258,7 @@ describe('integration tests', () => {
         );
       }
 
-      const wrapper = shallowRender(<Parent />);
+      const wrapper = shallow(<Parent />);
 
       // `text()` outputs placeholders to represent un-rendered child components
       // in shallow rendering.

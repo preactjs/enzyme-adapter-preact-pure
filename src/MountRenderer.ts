@@ -1,5 +1,5 @@
 import { EnzymeRenderer, JSXElement, NodeType, RSTNode } from 'enzyme';
-import { render } from 'preact';
+import { h, render } from 'preact';
 
 import { PreactComponent, PreactNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
@@ -121,7 +121,13 @@ export default class MountRenderer implements EnzymeRenderer {
 
   unmount() {
     if (this._rootNode) {
-      this._rootNode.remove();
+      // A custom tag name is used here to work around
+      // https://github.com/developit/preact/issues/1288.
+      this._rootNode = render(h('unmount-me', {}), this._container, this
+        ._rootNode as any) as any;
+      if (this._rootNode) {
+        this._rootNode.remove();
+      }
     }
   }
 

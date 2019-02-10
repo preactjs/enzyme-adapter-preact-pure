@@ -40,25 +40,8 @@ UI components following the [Enzyme docs](https://airbnb.io/enzyme/).
 ### Important note about shallow rendering
 
 When using Enzyme's shallow rendering mode, this adapter _always_ invokes the
-component's lifecycle methods (`componentDidUpdate` etc.). However, this is
-handled by the adapter itself rather than by Enzyme. Therefore it is necessary
-to **turn off** Enzyme's own lifecycle support:
-
-```js
-import { configure, shallow } from 'enzyme';
-
-describe('MyComponent', () => {
-  it('renders something', () => {
-    const wrapper = shallow(<MyComponent />, {
-      // Disable Enzyme's own lifecycle method handling. The adapter does this
-      // instead.
-      disableLifecycleMethods: true,
-    });
-
-    …
-  });
-});
-```
+component's lifecycle methods (`componentDidUpdate` etc.).
+The `disableLifecycleMethods` option is not respected.
 
 ## Notes
 

@@ -29,6 +29,13 @@ export default class ShallowRenderer implements EnzymeRenderer {
         });
         this.forceUpdate();
       };
+
+      // Monkey-patch `componentDidMount` to prevent it being called a second
+      // time after `render` returns. React's shallow renderer does not
+      // invoke lifecycle methods so Enzyme tries to invoke them manually. This
+      // is not necessary for the Preact adapter because shallow rendering
+      // works the same as normal rendering.
+      instance.componentDidMount = () => {};
     });
   }
 

@@ -41,10 +41,24 @@ function addTypeAndPropsToVNode() {
 }
 
 export default class PreactAdapter extends EnzymeAdapter {
+  private options: Object;
+
   constructor() {
     super();
 
     addTypeAndPropsToVNode();
+
+    this.options = {
+      // Prevent Enzyme's shallow renderer from manually invoking lifecycle
+      // methods after a render. This manual invocation is needed for React
+      // but not for the Preact adapter because we re-use the normal rendering
+      // logic.
+      lifecycles: {
+        componentDidUpdate: {
+          onSetState: false,
+        },
+      },
+    };
   }
 
   createRenderer(options: AdapterOptions) {
