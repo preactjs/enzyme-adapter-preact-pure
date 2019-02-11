@@ -2,7 +2,7 @@ import { EnzymeRenderer, JSXElement, RSTNode } from 'enzyme';
 import { h, render } from 'preact';
 
 import { PreactNode } from './preact-internals';
-import { rstNodeFromDOMElementOrComponent } from './rst-node';
+import { getDisplayName, rstNodeFromDOMElementOrComponent } from './rst-node';
 
 type EventDetails = { [prop: string]: any };
 
@@ -45,6 +45,14 @@ export default class MountRenderer implements EnzymeRenderer {
   }
 
   simulateEvent(node: RSTNode, eventName: string, args: EventDetails = {}) {
+    if (node.nodeType !== 'host') {
+      const name = getDisplayName(node);
+      throw new Error(
+        `Cannot simulate event on "${name}" which is not a DOM element. ` +
+          'Find a DOM element in the output and simulate an event on that.'
+      );
+    }
+
     // To be more faithful to a real browser, this should use the appropriate
     // constructor for the event type. This implementation is good enough for
     // many components though.

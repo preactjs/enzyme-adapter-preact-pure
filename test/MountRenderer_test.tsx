@@ -249,5 +249,18 @@ describe('MountRenderer', () => {
         key: 'a',
       });
     });
+
+    it('throws if target is not a DOM node', () => {
+      function Button({ onClick }: any) {
+        return <button type="button" onClick={onClick} />;
+      }
+      const renderer = new MountRenderer();
+      const callback = sinon.stub();
+      renderer.render(<Button onClick={callback} />, {}, sinon.stub());
+
+      assert.throws(() => {
+        renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
+      });
+    });
   });
 });

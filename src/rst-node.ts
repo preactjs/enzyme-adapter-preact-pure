@@ -15,6 +15,15 @@ export function rstNodeFromDOMElementOrComponent(domElement: PreactNode) {
   }
 }
 
+export function getDisplayName(node: RSTNode): string {
+  if (node.nodeType === 'host') {
+    return node.type as string;
+  } else {
+    const type = node.type as any;
+    return type.displayName || type.name;
+  }
+}
+
 function rstNodesFromDOMNodes(nodes: Node[]) {
   return nodes
     .map(node => {
