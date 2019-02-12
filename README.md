@@ -1,5 +1,3 @@
-**EARLY STAGE PACKAGE: This package is still young. It is functional and has tests but has not been extensively battle-tested.**
-
 # enzyme-adapter-preact-pure
 
 [![Build Status](https://travis-ci.org/robertknight/enzyme-adapter-preact-pure.svg?branch=master)](https://travis-ci.org/robertknight/enzyme-adapter-preact-pure)
