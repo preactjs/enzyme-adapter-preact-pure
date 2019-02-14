@@ -43,6 +43,19 @@ When using Enzyme's shallow rendering mode, this adapter _always_ invokes the
 component's lifecycle methods (`componentDidUpdate` etc.).
 The `disableLifecycleMethods` option is not respected.
 
+### Property mapping
+
+In order to support Enzyme's class selectors, `class` props on Preact components
+are mapped to `className`.
+
+```js
+import { mount } from 'enzyme';
+
+const wrapper = mount(<div class="widget"/>);
+wrapper.props() // Returns `{ children: [], className: 'widget' }`
+wrapper.find('.widget').length // Returns `1`
+```
+
 ## Notes
 
 This library is written in TypeScript and includes partial typings for the

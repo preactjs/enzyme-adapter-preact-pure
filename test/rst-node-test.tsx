@@ -90,5 +90,17 @@ describe('rst-node', () => {
         ],
       });
     });
+
+    it('converts Preact prop names to RST prop names', () => {
+      const el = (render(
+        <div class="widget" />,
+        container
+      ) as unknown) as PreactNode;
+      const rstNode = rstNodeFromDOMElementOrComponent(el);
+      assert.deepEqual(rstNode.props, {
+        children: [],
+        className: 'widget',
+      });
+    });
   });
 });

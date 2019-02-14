@@ -39,18 +39,34 @@ function rstNodesFromDOMNodes(nodes: Node[]) {
     .filter(node => node !== null);
 }
 
+type Props = { [prop: string]: any };
+
+function convertDOMProps(props: Props) {
+  const converted: Props = {
+    children: props.children || [],
+  };
+
+  Object.keys(props).forEach(srcProp => {
+    if (srcProp === 'children') {
+      return;
+    }
+    const destProp = srcProp === 'class' ? 'className' : srcProp;
+    converted[destProp] = props[srcProp];
+  });
+
+  return converted;
+}
+
 /**
  * Return a React Standard Tree (RST) node from a host (DOM) element.
  */
 function rstNodeFromDOMElement(domElement: PreactNode): RSTNode {
   const hostProps = domElement.__preactattr_ || {};
+
   return {
     nodeType: 'host',
     type: domElement.__n,
-    props: {
-      children: (hostProps as any).children || [],
-      ...hostProps,
-    },
+    props: convertDOMProps(hostProps),
     key: null,
     ref: null,
     instance: domElement,

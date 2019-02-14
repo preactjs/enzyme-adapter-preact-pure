@@ -1,4 +1,10 @@
-import { JSXElement, configure, shallow, mount, render } from 'enzyme';
+import {
+  JSXElement,
+  configure,
+  shallow,
+  mount,
+  render as renderToString,
+} from 'enzyme';
 import { Component, h, options } from 'preact';
 
 import { assert } from 'chai';
@@ -35,6 +41,16 @@ function addStaticTests(render: typeof mount) {
     const wrapper = mount(<Button label="Click me" />);
     assert.equal(wrapper.html(), '<button>Click me</button>');
   });
+
+  if (render !== renderToString) {
+    it('can find DOM nodes by class name', () => {
+      function Widget() {
+        return <div class="widget">Test</div>;
+      }
+      const wrapper = render(<Widget />);
+      assert.equal(wrapper.find('.widget').length, 1);
+    });
+  }
 }
 
 /**
@@ -267,6 +283,6 @@ describe('integration tests', () => {
   });
 
   describe('"string" rendering', () => {
-    addStaticTests(render);
+    addStaticTests(renderToString);
   });
 });
