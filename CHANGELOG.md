@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
 - Calls to `setState` on fully-rendered components now trigger synchronous
   updates, for consistency with shallow rendering.
+
+### Fixed
+
+- Components that render only strings are now handled correctly.
 
 ## [1.1.0] - 2019-02-14
 

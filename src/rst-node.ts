@@ -95,13 +95,18 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType = 'function';
   }
 
-  let rendered: RSTNode | null;
+  let rendered: RSTNode | string | null;
   if ((component as any)._component) {
     // This component rendered another component.
     rendered = rstNodeFromComponent((component as any)._component);
   } else {
     // This component rendered a host node.
-    rendered = rstNodeFromDOMElement(component.base as any);
+    const hostNode = component.base as Node;
+    if (hostNode.nodeType === Node.ELEMENT_NODE) {
+      rendered = rstNodeFromDOMElement(component.base as any);
+    } else {
+      rendered = hostNode.textContent;
+    }
   }
 
   // If this was a shallow-rendered component, set the RST node's type to the

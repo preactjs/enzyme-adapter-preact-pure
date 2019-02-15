@@ -91,6 +91,18 @@ describe('rst-node', () => {
       });
     });
 
+    it('converts components with text children to RST nodes', () => {
+      function TestComponent() {
+        return 'some text' as any;
+      }
+      const el = (render(
+        <TestComponent />,
+        container
+      ) as unknown) as PreactNode;
+      const rstNode = rstNodeFromDOMElementOrComponent(el);
+      assert.deepEqual(rstNode.rendered, ['some text']);
+    });
+
     it('converts Preact prop names to RST prop names', () => {
       const el = (render(
         <div class="widget" />,
