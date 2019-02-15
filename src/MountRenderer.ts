@@ -16,6 +16,16 @@ export default class MountRenderer implements EnzymeRenderer {
 
   render(el: JSXElement, context: any, callback?: () => any) {
     this._rootNode = render(el, this._container, this._rootNode as any) as any;
+
+    // Monkey-patch the component's `setState` to make it force an update after
+    // rendering.
+    const instance = (this.getNode() as RSTNode).instance;
+    const originalSetState = instance.setState;
+    instance.setState = function(...args: any[]) {
+      originalSetState.call(this, ...args);
+      this.forceUpdate();
+    };
+
     if (callback) {
       callback();
     }

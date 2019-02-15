@@ -188,6 +188,33 @@ describe('MountRenderer', () => {
       renderer.render(<div>Hello</div>, {}, callback);
       sinon.assert.called(callback);
     });
+
+    it('makes `setState` trigger an immediate update', () => {
+      class Counter extends Component<any, any> {
+        constructor(props: any) {
+          super(props);
+          this.state = { count: 0 };
+        }
+
+        increment() {
+          this.setState((state: any) => ({ count: this.state.count + 1 }));
+        }
+
+        render() {
+          return <div>{this.state.count}</div>;
+        }
+      }
+      const renderer = new MountRenderer();
+      renderer.render(<Counter />, {});
+
+      // Modify component state and check that the DOM has been updated
+      // immediately. `setState` changes are normally applied asynchronously in
+      // Preact.
+      (renderer.getNode() as RSTNode).instance.increment();
+
+      const container = (renderer.rootNode() as ChildNode) as HTMLElement;
+      assert.equal(container.innerHTML, '1');
+    });
   });
 
   describe('#unmount', () => {
