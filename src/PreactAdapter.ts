@@ -59,6 +59,10 @@ export default class PreactAdapter extends EnzymeAdapter {
         },
       },
     };
+
+    // Work around a bug in Enzyme where `ShallowWrapper.getElements` calls
+    // the `nodeToElement` method with undefined `this`.
+    this.nodeToElement = this.nodeToElement.bind(this);
   }
 
   createRenderer(options: AdapterOptions) {

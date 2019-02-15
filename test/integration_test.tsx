@@ -243,6 +243,18 @@ describe('integration tests', () => {
   describe('"mount" rendering', () => {
     addStaticTests(mount);
     addInteractiveTests(mount);
+
+    it('supports retrieving elements', () => {
+      // Test workaround for bug where `PreactAdapter.nodeToElement` is called
+      // with undefined `this` by `ReactWrapper#get`.
+      const wrapper = mount(
+        <div>
+          test<span>bar</span>
+        </div>
+      );
+      const div = wrapper.get(0);
+      assert.deepEqual(div.type, 'div');
+    });
   });
 
   describe('"shallow" rendering', () => {

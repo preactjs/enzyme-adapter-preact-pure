@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { VNode, h } from 'preact';
 import { assert } from 'chai';
 import { RSTNode } from 'enzyme';
 
@@ -61,13 +61,57 @@ describe('PreactAdapter', () => {
   });
 
   describe('#nodeToElement', () => {
-    it('returns a JSX element', () => {
-      const renderer = new MountRenderer();
-      const el = <button type="button">Click me</button>;
-      renderer.render(el, {});
-      const adapter = new PreactAdapter();
-      const rstNode = renderer.getNode() as RSTNode;
-      assert.deepEqual(adapter.nodeToElement(rstNode), el);
+    function TextComponent() {
+      return ('test' as unknown) as VNode<any>;
+    }
+
+    function Child() {
+      return <span>child</span>;
+    }
+
+    function Parent() {
+      return (
+        <div>
+          <Child />
+        </div>
+      );
+    }
+
+    [
+      {
+        // Simple DOM element.
+        el: <button type="button">Click me</button>,
+      },
+      {
+        // DOM elements with keys.
+        el: (
+          <ul>
+            <li key={1}>Test</li>
+            <li key={2}>Test</li>
+          </ul>
+        ),
+      },
+      {
+        // DOM element with ref.
+        el: <div ref={() => {}} />,
+      },
+      {
+        // Component that renders text.
+        el: <TextComponent />,
+      },
+      {
+        // Component with children.
+        el: <Parent />,
+      },
+    ].forEach(({ el }) => {
+      it('returns JSX element that matches original input', () => {
+        const renderer = new MountRenderer();
+        const el = <button type="button">Click me</button>;
+        renderer.render(el, {});
+        const adapter = new PreactAdapter();
+        const rstNode = renderer.getNode() as RSTNode;
+        assert.deepEqual(adapter.nodeToElement(rstNode), el);
+      });
     });
   });
 
