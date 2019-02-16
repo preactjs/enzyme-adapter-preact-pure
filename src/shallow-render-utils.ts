@@ -1,6 +1,6 @@
 import { ComponentFactory, Component, h, options } from 'preact';
 
-import { VNodeExtensions } from './preact-internals';
+import { PreactComponent, VNodeExtensions } from './preact-internals';
 
 /**
  * Map of component function to replacement stub function used when shallow
@@ -24,7 +24,13 @@ function getDisplayName(type: ComponentFactory<any>) {
  * shallow rendering.
  */
 export function getRealType(component: Component) {
-  const ctor = component.constructor as any;
+  let ctor: any;
+  const c = component as PreactComponent;
+  if (c._constructor) {
+    ctor = c._constructor;
+  } else {
+    ctor = c.constructor;
+  }
   if (ctor.originalType) {
     return ctor.originalType;
   } else {
@@ -53,16 +59,20 @@ function makeShallowRenderComponent(type: ComponentFactory<any>) {
  * shallow rendering is enabled.
  */
 function shallowRenderVNode(vnode: VNodeExtensions) {
-  if (!shallowRenderActive || typeof vnode.nodeName === 'string') {
+  if (
+    !shallowRenderActive ||
+    typeof vnode.type === 'string' ||
+    vnode.type == null
+  ) {
     return;
   }
 
-  let stub = shallowRenderComponents.get(vnode.nodeName);
+  let stub = shallowRenderComponents.get(vnode.type);
   if (!stub) {
-    stub = makeShallowRenderComponent(vnode.nodeName);
-    shallowRenderComponents.set(vnode.nodeName, stub);
+    stub = makeShallowRenderComponent(vnode.type);
+    shallowRenderComponents.set(vnode.type, stub);
   }
-  vnode.nodeName = stub as any;
+  vnode.type = stub as any;
 }
 
 function installShallowRenderHook() {

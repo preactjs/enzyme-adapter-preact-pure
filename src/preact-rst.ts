@@ -1,4 +1,16 @@
+/**
+ * Functions for rendering components using Preact "classic" (v9 and below)
+ * and converting the result to a React Standard Tree (RST) format defined by
+ * Enzyme.
+ *
+ * Preact <= 9 stores details of the rendered elements on the DOM nodes
+ * themselves and updates diff VDOM elements against the DOM. The rendered
+ * result is converted to RST by traversing the DOM and Preact-internal
+ * metadata attached to DOM nodes.
+ */
+
 import { NodeType, RSTNode } from 'enzyme';
+import { VNode, render as preactRender } from 'preact';
 
 import { PreactComponent, PreactNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
@@ -7,7 +19,7 @@ import { getRealType } from './shallow-render-utils';
  * Return a React Standard Tree (RST) node from a DOM element which might
  * be the root output of a rendered component.
  */
-export function rstNodeFromDOMElementOrComponent(domElement: PreactNode) {
+function rstNodeFromDOMElementOrComponent(domElement: PreactNode) {
   if (domElement._component) {
     return rstNodeFromComponent(domElement._component);
   } else {
@@ -131,4 +143,12 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     instance: component,
     rendered: rendered ? [rendered] : [],
   };
+}
+
+/**
+ * Convert the Preact components rendered into `container` into an RST node.
+ */
+export function getNode(container: HTMLElement): RSTNode {
+  const rootEl: PreactNode = container.firstChild as any;
+  return rstNodeFromDOMElementOrComponent(rootEl);
 }

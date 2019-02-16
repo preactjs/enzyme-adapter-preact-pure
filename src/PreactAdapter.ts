@@ -7,38 +7,12 @@ import {
   JSXElement,
   RSTNode,
 } from 'enzyme';
+import { h } from 'preact';
 
 import MountRenderer from './MountRenderer';
 import ShallowRenderer from './ShallowRenderer';
 import StringRenderer from './StringRenderer';
-
-import { h } from 'preact';
-
-/**
- * Add `type` and  `props` properties to Preact's element class (`VNode`) as
- * aliases of `nodeName` and `attributes`.
- *
- * Preact <= 9 uses `nodeName` and `attributes` as the names for these properties
- * but Enzyme internally relies on being able to access this data via
- * the `type` and `props` attributes, eg. in its `cloneElement` function.
- */
-function addTypeAndPropsToVNode() {
-  const VNode = h('div', {}).constructor;
-  if ('type' in VNode.prototype) {
-    // Extra properties have already been added.
-    return;
-  }
-  Object.defineProperty(VNode.prototype, 'type', {
-    get() {
-      return this.nodeName;
-    },
-  });
-  Object.defineProperty(VNode.prototype, 'props', {
-    get() {
-      return this.attributes;
-    },
-  });
-}
+import { addTypeAndPropsToVNode } from './compat';
 
 export default class PreactAdapter extends EnzymeAdapter {
   private options: Object;
@@ -83,7 +57,7 @@ export default class PreactAdapter extends EnzymeAdapter {
       return node;
     }
     const childElements = node.rendered.map(n => this.nodeToElement(n as any));
-    return h(node.type as any, node.props, childElements);
+    return h(node.type as any, node.props, ...childElements);
   }
 
   nodeToHostNode(node: RSTNode): Node | null {
@@ -100,11 +74,14 @@ export default class PreactAdapter extends EnzymeAdapter {
     if (el == null) {
       return false;
     }
-    // See https://github.com/developit/preact/blob/master/src/vnode.js
-    if (typeof el.nodeName !== 'string' && typeof el.nodeName !== 'function') {
+    if (
+      typeof el.type !== 'string' &&
+      typeof el.type !== 'function' &&
+      el.type !== null
+    ) {
       return false;
     }
-    if (typeof el.children !== 'string' && !Array.isArray(el.children)) {
+    if (Object(el.props) !== el.props) {
       return false;
     }
     return true;

@@ -1,4 +1,5 @@
 import { EnzymeRenderer, JSXElement, RSTNode } from 'enzyme';
+import { VNode } from 'preact';
 
 import MountRenderer from './MountRenderer';
 import { withShallowRendering } from './shallow-render-utils';
@@ -10,7 +11,7 @@ export default class ShallowRenderer implements EnzymeRenderer {
     this._mountRenderer = new MountRenderer();
   }
 
-  render(el: JSXElement, context: any, callback?: () => any) {
+  render(el: VNode, context: any, callback?: () => any) {
     withShallowRendering(() => {
       this._mountRenderer.render(el, context, callback);
 
@@ -61,9 +62,5 @@ export default class ShallowRenderer implements EnzymeRenderer {
 
   batchedUpdates(fn: () => {}) {
     fn();
-  }
-
-  rootNode() {
-    return this._mountRenderer.rootNode();
   }
 }

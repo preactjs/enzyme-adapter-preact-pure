@@ -61,6 +61,16 @@ describe('PreactAdapter', () => {
   });
 
   describe('#nodeToElement', () => {
+    function stripPrivateKeys<T>(obj: T) {
+      const result: any = { ...obj };
+      Object.keys(result).forEach(key => {
+        if (key.startsWith('_')) {
+          delete result[key];
+        }
+      });
+      return result;
+    }
+
     function TextComponent() {
       return ('test' as unknown) as VNode<any>;
     }
@@ -110,7 +120,10 @@ describe('PreactAdapter', () => {
         renderer.render(el, {});
         const adapter = new PreactAdapter();
         const rstNode = renderer.getNode() as RSTNode;
-        assert.deepEqual(adapter.nodeToElement(rstNode), el);
+        assert.deepEqual(
+          stripPrivateKeys(adapter.nodeToElement(rstNode)),
+          stripPrivateKeys(el)
+        );
       });
     });
   });

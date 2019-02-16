@@ -1,10 +1,21 @@
 import { EnzymeRenderer, JSXElement, RSTNode } from 'enzyme';
+import { render as renderToString } from 'preact-render-to-string';
+import { h, render } from 'preact';
 
-import { render } from 'preact-render-to-string';
+import { isPreact10 } from './util';
 
 export default class StringRenderer implements EnzymeRenderer {
   render(el: JSXElement, context: any) {
-    return render(el as any, context);
+    if (isPreact10()) {
+      // preact-render-to-string does not support Preact 10 yet.
+      const tempContainer = document.createElement('div');
+      render(el as any, tempContainer);
+      const html = tempContainer.innerHTML;
+      render(h('unmount-me', {}), tempContainer);
+      return html;
+    } else {
+      return renderToString(el as any, context);
+    }
   }
 
   simulateError(node: RSTNode, rootNode: RSTNode, error: any) {

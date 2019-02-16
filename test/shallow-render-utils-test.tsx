@@ -1,8 +1,8 @@
-import { h, options, render } from 'preact';
+import { cloneElement, createRef, h, options, render } from 'preact';
 import { assert } from 'chai';
 
-import { PreactNode } from '../src/preact-internals';
 import { getRealType, withShallowRendering } from '../src/shallow-render-utils';
+import { componentForDOMNode } from '../src/compat';
 
 describe('shallow-render-utils', () => {
   let container: HTMLElement;
@@ -35,46 +35,50 @@ describe('shallow-render-utils', () => {
 
       // Normal render should return full output.
       const el = <Component />;
-      let node = render(el, container);
-      assert.equal(node.innerHTML, fullOutput);
+      render(el, container);
+      assert.equal(container.firstElementChild!.innerHTML, fullOutput);
 
       // Within the `withShallowRendering` callback, render should replace
       // child components with dummy elements.
       //
       // Note that the root element to render must be created outside of the
       // `withShallowRendering` callback, otherwise nothing gets rendered.
+      //
+      // nb. With Preact 10 it is necessary to render a new VNode with the same
+      // value here.
+      const el2 = cloneElement(el, {});
       withShallowRendering(() => {
-        node = render(el, container, node);
-        assert.equal(node.innerHTML, shallowOutput);
+        render(el2, container);
+        assert.equal(container.firstElementChild!.innerHTML, shallowOutput);
       });
 
       // After the `withShallowRendering` call, render should return full output
       // again.
-      node = render(el, container, node);
-      assert.equal(node.innerHTML, fullOutput);
+      render(el, container);
+      assert.equal(container.firstElementChild!.innerHTML, fullOutput);
     });
   });
 
   describe('getRealType', () => {
     it('returns null if component is not shallow-rendered', () => {
       const el = <Component />;
-      const node = (render(el, container) as unknown) as PreactNode;
-      assert.equal(getRealType(node._component), null);
+      render(el, container);
+      const component = componentForDOMNode(container.firstElementChild!)!;
+      assert.ok(component);
+      assert.equal(getRealType(component), null);
     });
 
     it('returns the real type of a shallow-rendered component', () => {
       const el = <Component />;
-      let node: Element;
 
       withShallowRendering(() => {
-        node = render(el, container) as any;
+        render(el, container);
       });
-      const child = (node!.querySelector(
-        'shallow-render'
-      ) as unknown) as PreactNode;
-
-      assert.equal(child._component instanceof Child, false);
-      assert.equal(getRealType(child._component), Child);
+      const child = container.querySelector('shallow-render')!;
+      const childComponent = componentForDOMNode(child)!;
+      assert.ok(childComponent);
+      assert.equal(childComponent instanceof Child, false);
+      assert.equal(getRealType(childComponent), Child);
     });
   });
 });
