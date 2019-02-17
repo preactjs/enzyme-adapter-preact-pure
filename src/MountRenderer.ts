@@ -14,12 +14,10 @@ type EventDetails = { [prop: string]: any };
 
 export default class MountRenderer implements EnzymeRenderer {
   private _container: HTMLElement;
-  private _rootNode: RSTNode | null;
   private _getNode: typeof getNodeClassic;
 
   constructor() {
     this._container = document.createElement('div');
-    this._rootNode = null;
 
     if (isPreact10()) {
       this._getNode = getNodeV10;
@@ -30,11 +28,11 @@ export default class MountRenderer implements EnzymeRenderer {
 
   render(el: VNode, context: any, callback?: () => any) {
     render(el, this._container);
-    this._rootNode = this._getNode(this._container);
+    const rootNode = this._getNode(this._container);
 
     // Monkey-patch the component's `setState` to make it force an update after
     // rendering.
-    const instance = this._rootNode.instance;
+    const instance = rootNode.instance;
     if (instance.setState) {
       const originalSetState = instance.setState;
       instance.setState = function(...args: any[]) {
@@ -49,18 +47,14 @@ export default class MountRenderer implements EnzymeRenderer {
   }
 
   unmount() {
-    if (this._rootNode) {
-      this._rootNode = null;
-
-      // A custom tag name is used here to work around
-      // https://github.com/developit/preact/issues/1288.
-      const dummy = render(h('unmount-me', {}), this._container);
-      this._container.innerHTML = '';
-    }
+    // A custom tag name is used here to work around
+    // https://github.com/developit/preact/issues/1288.
+    const dummy = render(h('unmount-me', {}), this._container);
+    this._container.innerHTML = '';
   }
 
   getNode() {
-    if (!this._rootNode) {
+    if (this._container.childNodes.length === 0) {
       return null;
     }
     return this._getNode(this._container);

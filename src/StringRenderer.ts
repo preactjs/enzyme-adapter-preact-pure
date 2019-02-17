@@ -37,8 +37,4 @@ export default class StringRenderer implements EnzymeRenderer {
   batchedUpdates(fn: () => {}) {
     fn();
   }
-
-  rootNode() {
-    return null;
-  }
 }
