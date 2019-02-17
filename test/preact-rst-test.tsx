@@ -30,6 +30,10 @@ function FunctionComponent({ label }: any) {
   return <div>{label}</div>;
 }
 
+function NumberComponent({ value }: { value: number }) {
+  return <div>{value}</div>;
+}
+
 function functionNode({ type, rendered, props }: any) {
   props = props || {};
   return {
@@ -143,6 +147,24 @@ const treeCases = [
       type: FunctionComponent,
       rendered: [hostNode({ type: 'div', rendered: ['Hello'] })],
       props: { label: 'Hello' },
+    }),
+  },
+  {
+    description: 'numeric child (nonzero number)',
+    element: <NumberComponent value={42} />,
+    expectedTree: functionNode({
+      type: NumberComponent,
+      rendered: [hostNode({ type: 'div', rendered: ['42'] })],
+      props: { value: 42 },
+    }),
+  },
+  {
+    description: 'numeric child (zero number)',
+    element: <NumberComponent value={0} />,
+    expectedTree: functionNode({
+      type: NumberComponent,
+      rendered: [hostNode({ type: 'div', rendered: ['0'] })],
+      props: { value: 0 },
     }),
   },
   {

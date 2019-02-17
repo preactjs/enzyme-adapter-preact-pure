@@ -50,7 +50,7 @@ function convertDOMProps(props: Props) {
 }
 
 function rstNodeFromVNode(node: PreactVNode): RSTNode | string {
-  if (node.text) {
+  if (node.text !== null) {
     return String(node.text);
   }
   if (node._component) {
@@ -108,7 +108,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     key: component.__key || null,
     ref: component.__ref || null,
     instance: component,
-    rendered: rendered ? [rendered] : [],
+    rendered: rendered !== null ? [rendered] : [],
   };
 }
 
