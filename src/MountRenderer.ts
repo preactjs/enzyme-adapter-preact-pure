@@ -1,5 +1,5 @@
 import { EnzymeRenderer, RSTNode } from 'enzyme';
-import { VNode, cloneElement, createRef, h } from 'preact';
+import { VNode, cloneElement, h } from 'preact';
 
 import { PreactComponent, PreactNode } from './preact-internals';
 import { getDisplayName, getNode as getNodeClassic } from './preact-rst';
