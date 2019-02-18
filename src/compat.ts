@@ -35,10 +35,14 @@ export function addTypeAndPropsToVNode() {
     get() {
       return this.nodeName;
     },
+
+    set(val) {
+      this.nodeName = val;
+    },
   });
   Object.defineProperty(VNode.prototype, 'props', {
     get() {
-      return this.attributes;
+      return this.attributes || {};
     },
   });
 }

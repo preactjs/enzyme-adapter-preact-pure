@@ -81,7 +81,7 @@ export default class PreactAdapter extends EnzymeAdapter {
     ) {
       return false;
     }
-    if (Object(el.props) !== el.props) {
+    if (typeof el.props !== 'object' || el.props == null) {
       return false;
     }
     return true;

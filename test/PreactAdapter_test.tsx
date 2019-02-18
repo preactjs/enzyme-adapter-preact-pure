@@ -41,12 +41,24 @@ describe('PreactAdapter', () => {
     }
 
     [
-      <Component />,
-      <Component prop="val" />,
-      <div>Test</div>,
-      <button type="button">Click me</button>,
-    ].forEach(el => {
-      it('returns true if element is a valid VNode', () => {
+      {
+        description: 'Component without props',
+        el: <Component />,
+      },
+      {
+        description: 'Component with props',
+        el: <Component prop="val" />,
+      },
+      {
+        description: 'DOM element without props',
+        el: <div>Test</div>,
+      },
+      {
+        description: 'DOM element with props',
+        el: <button type="button">Click me</button>,
+      },
+    ].forEach(({ description, el }) => {
+      it(`returns true if element is a valid VNode (${description})`, () => {
         const adapter = new PreactAdapter();
         assert.equal(adapter.isValidElement(el), true);
       });
