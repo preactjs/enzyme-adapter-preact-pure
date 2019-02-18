@@ -1,8 +1,8 @@
-import { cloneElement, h, options, render } from 'preact';
+import { cloneElement, h, options } from 'preact';
 import { assert } from 'chai';
 
 import { getRealType, withShallowRendering } from '../src/shallow-render-utils';
-import { componentForDOMNode } from '../src/compat';
+import { componentForDOMNode, render } from '../src/compat';
 
 describe('shallow-render-utils', () => {
   let container: HTMLElement;

@@ -227,8 +227,8 @@ describe('preact-rst, preact10-rst', () => {
     container.remove();
   });
 
-  function Component({ label, ref }: any) {
-    return <div ref={ref}>{label}</div>;
+  function Component({ label }: any) {
+    return <div>{label}</div>;
   }
 
   describe('getDisplayName', () => {

@@ -109,7 +109,7 @@ export function componentForDOMNode(
 }
 
 export function render(el: VNode, container: HTMLElement) {
-  if (isPreact10) {
+  if (isPreact10()) {
     preactRender(el, container);
   } else {
     const preact9Render = preactRender as any;
