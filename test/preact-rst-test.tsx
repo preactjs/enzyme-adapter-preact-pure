@@ -284,9 +284,9 @@ describe('preact-rst, preact10-rst', () => {
     return <div>{label}</div>;
   }
 
-  describe('render', () => {
+  describe('getNode', () => {
     treeCases.forEach(({ description, element, expectedTree }) => {
-      it(`renders expected RST Node (${description})`, () => {
+      it(`returns expected RST node (${description})`, () => {
         const container = document.createElement('div');
         const rstNode = renderToRST(element, container);
         assert.deepEqual(filterNode(rstNode), expectedTree);
