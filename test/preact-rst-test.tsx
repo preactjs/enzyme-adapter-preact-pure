@@ -33,8 +33,13 @@ function NumberComponent({ value }: { value: number }) {
   return <div>{value}</div>;
 }
 
-function functionNode({ type, rendered, props }: any) {
-  props = props || {};
+function functionNode({
+  type,
+  rendered,
+  props = {},
+  key = null,
+  ref = null,
+}: any) {
   return {
     nodeType: 'function' as NodeType,
     type,
@@ -42,14 +47,19 @@ function functionNode({ type, rendered, props }: any) {
     props: {
       ...props,
     },
-    key: null,
-    ref: null,
+    key,
+    ref,
     instance: type.name,
   };
 }
 
-function classNode({ type, rendered, props }: any) {
-  props = props || {};
+function classNode({
+  type,
+  rendered,
+  props = {},
+  key = null,
+  ref = null,
+}: any) {
   return {
     nodeType: 'class' as NodeType,
     type,
@@ -57,8 +67,8 @@ function classNode({ type, rendered, props }: any) {
     props: {
       ...props,
     },
-    key: null,
-    ref: null,
+    key,
+    ref,
     instance: type.name,
   };
 }
@@ -68,17 +78,23 @@ function getConstructorName(name: string) {
   return el.constructor.name;
 }
 
-function hostNode({ type, rendered, props }: any) {
-  const hostProps = props || {};
+function hostNode({
+  type,
+  rendered = [],
+  props = {},
+  key = null,
+  ref = null,
+}: any) {
+  const hostProps = props;
   return {
     nodeType: 'host' as NodeType,
     type,
-    rendered: rendered || [],
+    rendered: rendered,
     props: {
       ...hostProps,
     },
-    key: null,
-    ref: null,
+    key,
+    ref,
     instance: getConstructorName(type),
   };
 }
@@ -110,6 +126,8 @@ function filterNode(node: RSTNode | null) {
 
   return node;
 }
+
+const testRef = () => {};
 
 const treeCases = [
   {
@@ -206,6 +224,42 @@ const treeCases = [
         }),
       ],
       props: {},
+    }),
+  },
+  {
+    description: 'component that has a key',
+    element: <Child label="test" key="a-key" />,
+    expectedTree: functionNode({
+      type: Child,
+      key: 'a-key',
+      props: { label: 'test' },
+      rendered: [hostNode({ type: 'div', rendered: ['test'] })],
+    }),
+  },
+  {
+    description: 'DOM element that has a key',
+    element: <div key="a-key" />,
+    expectedTree: hostNode({
+      type: 'div',
+      key: 'a-key',
+    }),
+  },
+  {
+    description: 'component that has a ref',
+    element: <ClassComponent label="test" ref={testRef} />,
+    expectedTree: classNode({
+      type: ClassComponent,
+      ref: testRef,
+      rendered: [hostNode({ type: 'span', rendered: ['test'] })],
+      props: { label: 'test' },
+    }),
+  },
+  {
+    description: 'DOM element that has a ref',
+    element: <div ref={testRef} />,
+    expectedTree: hostNode({
+      type: 'div',
+      ref: testRef,
     }),
   },
 ];

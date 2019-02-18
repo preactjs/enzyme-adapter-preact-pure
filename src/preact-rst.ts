@@ -49,7 +49,7 @@ function convertDOMProps(props: Props) {
   };
 
   Object.keys(props).forEach(srcProp => {
-    if (srcProp === 'children') {
+    if (srcProp === 'children' || srcProp === 'key' || srcProp === 'ref') {
       return;
     }
     const destProp = srcProp === 'class' ? 'className' : srcProp;
@@ -63,14 +63,16 @@ function convertDOMProps(props: Props) {
  * Return a React Standard Tree (RST) node from a host (DOM) element.
  */
 function rstNodeFromDOMElement(domElement: PreactNode): RSTNode {
-  const hostProps = domElement.__preactattr_ || {};
+  const hostProps: Props = domElement.__preactattr_ || {};
+  const key = 'key' in hostProps ? hostProps.key : null;
+  const ref = 'ref' in hostProps ? hostProps.ref : null;
 
   return {
     nodeType: 'host',
     type: domElement.__n,
     props: convertDOMProps(hostProps),
-    key: null,
-    ref: null,
+    key,
+    ref,
     instance: domElement,
     rendered: rstNodesFromDOMNodes(Array.from(domElement.childNodes)),
   };
@@ -128,8 +130,8 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType,
     type,
     props: component.props,
-    key: component.__key || null,
-    ref: component.__ref || null,
+    key: component.__k || null,
+    ref: component.__r || null,
     instance: component,
     rendered: rendered ? [rendered] : [],
   };

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support running tests against a custom build of Preact using
   `yarn test --preact-lib <path>`.
 
+### Fixed
+
+- Keys and refs of components and DOM nodes are now exposed to Enzyme.
+
 ## [1.2.0] - 2019-02-15
 
 ### Changed

@@ -5,14 +5,14 @@ import { Component, VNode } from 'preact';
  * rendering.
  */
 export interface PreactComponent extends Component {
-  _constructor: Function;
-
   // Preact 10.
+  _constructor: Function;
   _prevVNode: PreactVNode;
+  _vnode: PreactVNode;
 
   // Preact <= 9.
-  __key: string | null;
-  __ref: Function | null;
+  __k: string | null;
+  __r: Function | null;
 }
 
 /**
@@ -36,7 +36,6 @@ export interface PreactNode extends ChildNode {
 export interface PreactVNode extends VNode {
   // Preact 10.
   _dom: PreactNode | null;
-
   _component: PreactComponent | null;
   _children: PreactVNode[] | null;
 }

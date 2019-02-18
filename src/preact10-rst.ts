@@ -17,6 +17,8 @@ import { getType } from './util';
 
 function componentType(c: PreactComponent) {
   if (c._constructor) {
+    // This is a functional component. The component is an instance of
+    // `Component` but the function is stored in the `_constructor` field.
     return c._constructor;
   }
   return c.constructor;
@@ -96,8 +98,8 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType,
     type,
     props: { children: [], ...component.props },
-    key: component.__key || null,
-    ref: component.__ref || null,
+    key: component._vnode.key || null,
+    ref: component._vnode.ref || null,
     instance: component,
     rendered: rendered !== null ? [rendered] : [],
   };
