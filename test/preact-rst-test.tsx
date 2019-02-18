@@ -33,6 +33,10 @@ function NumberComponent({ value }: { value: number }) {
   return <div>{value}</div>;
 }
 
+function EmptyComponent() {
+  return null;
+}
+
 function functionNode({
   type,
   rendered,
@@ -253,6 +257,14 @@ const treeCases = [
     expectedTree: hostNode({
       type: 'div',
       ref: testRef,
+    }),
+  },
+  {
+    description: 'component that renders `null`',
+    element: <EmptyComponent />,
+    expectedTree: functionNode({
+      type: EmptyComponent,
+      rendered: [],
     }),
   },
 ];

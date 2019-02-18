@@ -42,7 +42,10 @@ function convertDOMProps(props: Props) {
   return converted;
 }
 
-function rstNodeFromVNode(node: PreactVNode): RSTNode | string {
+function rstNodeFromVNode(node: PreactVNode): RSTNode | string | null {
+  if (node == null) {
+    return null;
+  }
   if (node.text !== null) {
     return String(node.text);
   }
