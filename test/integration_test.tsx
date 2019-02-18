@@ -1,10 +1,4 @@
-import {
-  JSXElement,
-  configure,
-  shallow,
-  mount,
-  render as renderToString,
-} from 'enzyme';
+import { configure, shallow, mount, render as renderToString } from 'enzyme';
 import { Component, h, options } from 'preact';
 
 import { assert } from 'chai';
@@ -104,7 +98,6 @@ function addInteractiveTests(render: typeof mount) {
       );
     }
     const wrapper = render(<List />);
-    const item = wrapper.find('ListItem');
     assert.equal(wrapper.find(ListItem).length, 1);
   });
 

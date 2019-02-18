@@ -1,30 +1,41 @@
-import { EnzymeRenderer, JSXElement, RSTNode } from 'enzyme';
-import { h, render } from 'preact';
+import { EnzymeRenderer, RSTNode } from 'enzyme';
+import { VNode, h } from 'preact';
 
-import { PreactNode } from './preact-internals';
-import { getDisplayName, rstNodeFromDOMElementOrComponent } from './rst-node';
+import { getNode as getNodeClassic } from './preact-rst';
+import { getNode as getNodeV10 } from './preact10-rst';
+import { getDisplayName, isPreact10 } from './util';
+import { render } from './compat';
 
 type EventDetails = { [prop: string]: any };
 
 export default class MountRenderer implements EnzymeRenderer {
   private _container: HTMLElement;
-  private _rootNode: PreactNode | undefined;
+  private _getNode: typeof getNodeClassic;
 
   constructor() {
     this._container = document.createElement('div');
+
+    if (isPreact10()) {
+      this._getNode = getNodeV10;
+    } else {
+      this._getNode = getNodeClassic;
+    }
   }
 
-  render(el: JSXElement, context: any, callback?: () => any) {
-    this._rootNode = render(el, this._container, this._rootNode as any) as any;
+  render(el: VNode, context: any, callback?: () => any) {
+    render(el, this._container);
+    const rootNode = this._getNode(this._container);
 
     // Monkey-patch the component's `setState` to make it force an update after
     // rendering.
-    const instance = (this.getNode() as RSTNode).instance;
-    const originalSetState = instance.setState;
-    instance.setState = function(...args: any[]) {
-      originalSetState.call(this, ...args);
-      this.forceUpdate();
-    };
+    const instance = rootNode.instance;
+    if (instance.setState) {
+      const originalSetState = instance.setState;
+      instance.setState = function(...args: any[]) {
+        originalSetState.call(this, ...args);
+        this.forceUpdate();
+      };
+    }
 
     if (callback) {
       callback();
@@ -32,22 +43,17 @@ export default class MountRenderer implements EnzymeRenderer {
   }
 
   unmount() {
-    if (this._rootNode) {
-      // A custom tag name is used here to work around
-      // https://github.com/developit/preact/issues/1288.
-      this._rootNode = render(h('unmount-me', {}), this._container, this
-        ._rootNode as any) as any;
-      if (this._rootNode) {
-        this._rootNode.remove();
-      }
-    }
+    // A custom tag name is used here to work around
+    // https://github.com/developit/preact/issues/1288.
+    render(h('unmount-me', {}), this._container);
+    this._container.innerHTML = '';
   }
 
   getNode() {
-    if (!this._rootNode) {
+    if (this._container.childNodes.length === 0) {
       return null;
     }
-    return rstNodeFromDOMElementOrComponent(this._rootNode);
+    return this._getNode(this._container);
   }
 
   simulateError(node: RSTNode, rootNode: RSTNode, error: any) {
@@ -79,7 +85,7 @@ export default class MountRenderer implements EnzymeRenderer {
     fn();
   }
 
-  rootNode() {
-    return this._rootNode;
+  container() {
+    return this._container;
   }
 }

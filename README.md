@@ -56,6 +56,24 @@ wrapper.props() // Returns `{ children: [], className: 'widget' }`
 wrapper.find('.widget').length // Returns `1`
 ```
 
+## Development
+
+After cloning the repository, you can build it and run tests as follows:
+
+```
+# Install dependencies.
+yarn install
+
+# Build the adapter library.
+yarn build
+
+# Run tests.
+yarn test
+
+# Run tests against a custom build of Preact.
+yarn test --preact-lib <path to Preact bundle>
+```
+
 ## Notes
 
 This library is written in TypeScript and includes partial typings for the

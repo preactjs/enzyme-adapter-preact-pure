@@ -10,7 +10,7 @@ import StringRenderer from '../src/StringRenderer';
 describe('PreactAdapter', () => {
   it('adds `type` and `props` attributes to VNodes', () => {
     // Add extra properties to vnodes for compatibility with Enzyme.
-    const adapter = new PreactAdapter();
+    new PreactAdapter();
     const el = h('img', { alt: 'A test image' }) as any;
     assert.equal(el.type, 'img');
     assert.deepEqual(el.props, {
@@ -41,12 +41,24 @@ describe('PreactAdapter', () => {
     }
 
     [
-      <Component />,
-      <Component prop="val" />,
-      <div>Test</div>,
-      <button type="button">Click me</button>,
-    ].forEach(el => {
-      it('returns true if element is a valid VNode', () => {
+      {
+        description: 'Component without props',
+        el: <Component />,
+      },
+      {
+        description: 'Component with props',
+        el: <Component prop="val" />,
+      },
+      {
+        description: 'DOM element without props',
+        el: <div>Test</div>,
+      },
+      {
+        description: 'DOM element with props',
+        el: <button type="button">Click me</button>,
+      },
+    ].forEach(({ description, el }) => {
+      it(`returns true if element is a valid VNode (${description})`, () => {
         const adapter = new PreactAdapter();
         assert.equal(adapter.isValidElement(el), true);
       });
@@ -61,6 +73,16 @@ describe('PreactAdapter', () => {
   });
 
   describe('#nodeToElement', () => {
+    function stripPrivateKeys<T>(obj: T) {
+      const result: any = { ...obj };
+      Object.keys(result).forEach(key => {
+        if (key.startsWith('_')) {
+          delete result[key];
+        }
+      });
+      return result;
+    }
+
     function TextComponent() {
       return ('test' as unknown) as VNode<any>;
     }
@@ -110,7 +132,10 @@ describe('PreactAdapter', () => {
         renderer.render(el, {});
         const adapter = new PreactAdapter();
         const rstNode = renderer.getNode() as RSTNode;
-        assert.deepEqual(adapter.nodeToElement(rstNode), el);
+        assert.deepEqual(
+          stripPrivateKeys(adapter.nodeToElement(rstNode)),
+          stripPrivateKeys(el)
+        );
       });
     });
   });

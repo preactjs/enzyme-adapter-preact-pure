@@ -5,14 +5,24 @@ import { Component, VNode } from 'preact';
  * rendering.
  */
 export interface PreactComponent extends Component {
-  __key: string | null;
-  __ref: Function | null;
+  // Preact 10.
+  _constructor: Function;
+  _prevVNode: PreactVNode;
+  _vnode: PreactVNode;
+
+  // Preact <= 9.
+  __k: string | null;
+  __r: Function | null;
 }
 
 /**
  * A DOM element or text node created by Preact as a result of rendering.
  */
 export interface PreactNode extends ChildNode {
+  // Preact 10.
+  _prevVNode: PreactVNode;
+
+  // Preact <= 9.
   _component: PreactComponent;
   _componentConstructor: Function;
 
@@ -21,6 +31,13 @@ export interface PreactNode extends ChildNode {
 
   /** Props used to render a DOM node. */
   __preactattr_: Object;
+}
+
+export interface PreactVNode extends VNode {
+  // Preact 10.
+  _dom: PreactNode | null;
+  _component: PreactComponent | null;
+  _children: PreactVNode[] | null;
 }
 
 /**
