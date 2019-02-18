@@ -9,7 +9,7 @@
  */
 
 import { NodeType, RSTNode } from 'enzyme';
-import { Component, VNode, render as preactRender } from 'preact';
+import { Component } from 'preact';
 
 import { PreactComponent, PreactNode, PreactVNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
@@ -122,9 +122,4 @@ export function getNode(container: HTMLElement): RSTNode {
   } else {
     return rstNodeFromVNode(vnode) as RSTNode;
   }
-}
-
-export function render(el: VNode, container: HTMLElement): RSTNode {
-  preactRender(el, container);
-  return getNode(container);
 }

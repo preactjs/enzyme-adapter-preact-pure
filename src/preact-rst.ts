@@ -10,7 +10,6 @@
  */
 
 import { NodeType, RSTNode } from 'enzyme';
-import { VNode, render as preactRender } from 'preact';
 
 import { PreactComponent, PreactNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';

@@ -2,8 +2,6 @@ import {
   AdapterOptions,
   ElementType,
   EnzymeAdapter,
-  EnzymeRenderer,
-  NodeType,
   JSXElement,
   RSTNode,
 } from 'enzyme';
@@ -15,8 +13,6 @@ import StringRenderer from './StringRenderer';
 import { addTypeAndPropsToVNode } from './compat';
 
 export default class PreactAdapter extends EnzymeAdapter {
-  private options: Object;
-
   constructor() {
     super();
 

@@ -1,5 +1,5 @@
 import { Component, h } from 'preact';
-import { NodeType, RSTNode } from 'enzyme';
+import { RSTNode } from 'enzyme';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 

@@ -1,4 +1,4 @@
-import { EnzymeRenderer, JSXElement, RSTNode } from 'enzyme';
+import { EnzymeRenderer, RSTNode } from 'enzyme';
 import { VNode } from 'preact';
 
 import MountRenderer from './MountRenderer';

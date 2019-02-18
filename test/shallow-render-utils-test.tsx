@@ -1,4 +1,4 @@
-import { cloneElement, h, options } from 'preact';
+import { cloneElement, h } from 'preact';
 import { assert } from 'chai';
 
 import { getRealType, withShallowRendering } from '../src/shallow-render-utils';

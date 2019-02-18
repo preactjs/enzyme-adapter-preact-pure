@@ -2,7 +2,6 @@ import { assert } from 'chai';
 import { Component, VNode, h } from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import { PreactNode } from '../src/preact-internals';
 import { getDisplayName, getNode as getNodeV10 } from '../src/preact10-rst';
 import { getNode as getNodeClassic } from '../src/preact-rst';
 import { getType, isPreact10 } from '../src/util';

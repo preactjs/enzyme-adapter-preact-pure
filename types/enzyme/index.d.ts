@@ -72,6 +72,8 @@ declare module 'enzyme' {
    * An adapter that enables Enzyme to work with a specific React-like library.
    */
   export class EnzymeAdapter {
+    options: Object;
+
     createRenderer(options: AdapterOptions): EnzymeRenderer;
     nodeToElement(node: RSTNode): JSXElement;
     isValidElement(el: JSXElement): boolean;

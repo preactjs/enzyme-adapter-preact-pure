@@ -1,12 +1,8 @@
 import { EnzymeRenderer, RSTNode } from 'enzyme';
-import { VNode, cloneElement, h } from 'preact';
+import { VNode, h } from 'preact';
 
-import { PreactComponent, PreactNode } from './preact-internals';
 import { getDisplayName, getNode as getNodeClassic } from './preact-rst';
-import {
-  getNode as getNodeV10,
-  render as preact10Render,
-} from './preact10-rst';
+import { getNode as getNodeV10 } from './preact10-rst';
 import { isPreact10 } from './util';
 import { render } from './compat';
 
@@ -49,7 +45,7 @@ export default class MountRenderer implements EnzymeRenderer {
   unmount() {
     // A custom tag name is used here to work around
     // https://github.com/developit/preact/issues/1288.
-    const dummy = render(h('unmount-me', {}), this._container);
+    render(h('unmount-me', {}), this._container);
     this._container.innerHTML = '';
   }
 
