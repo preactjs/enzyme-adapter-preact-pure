@@ -44,9 +44,7 @@ function functionNode({
     nodeType: 'function' as NodeType,
     type,
     rendered: rendered || [],
-    props: {
-      ...props,
-    },
+    props,
     key,
     ref,
     instance: type.name,
@@ -55,7 +53,7 @@ function functionNode({
 
 function classNode({
   type,
-  rendered,
+  rendered = [],
   props = {},
   key = null,
   ref = null,
@@ -63,10 +61,8 @@ function classNode({
   return {
     nodeType: 'class' as NodeType,
     type,
-    rendered: rendered || [],
-    props: {
-      ...props,
-    },
+    rendered,
+    props,
     key,
     ref,
     instance: type.name,
@@ -85,14 +81,11 @@ function hostNode({
   key = null,
   ref = null,
 }: any) {
-  const hostProps = props;
   return {
     nodeType: 'host' as NodeType,
     type,
-    rendered: rendered,
-    props: {
-      ...hostProps,
-    },
+    rendered,
+    props,
     key,
     ref,
     instance: getConstructorName(type),
@@ -280,44 +273,12 @@ describe('preact-rst, preact10-rst', () => {
     container.remove();
   });
 
-  function Component({ label }: any) {
-    return <div>{label}</div>;
-  }
-
   describe('getNode', () => {
     treeCases.forEach(({ description, element, expectedTree }) => {
       it(`returns expected RST node (${description})`, () => {
         const container = document.createElement('div');
         const rstNode = renderToRST(element, container);
         assert.deepEqual(filterNode(rstNode), expectedTree);
-      });
-    });
-
-    it('converts result into RST nodes', () => {
-      const rstNode = filterNode(
-        renderToRST(<Component label="foo" />, container)
-      );
-
-      assert.deepEqual(rstNode, {
-        nodeType: 'function',
-        type: Component,
-        props: {
-          label: 'foo',
-        },
-        key: null,
-        ref: null,
-        instance: 'Component',
-        rendered: [
-          {
-            nodeType: 'host',
-            type: 'div',
-            props: {},
-            key: null,
-            ref: null,
-            instance: 'HTMLDivElement',
-            rendered: ['foo'],
-          },
-        ],
       });
     });
 
