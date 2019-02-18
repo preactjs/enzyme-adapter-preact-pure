@@ -22,15 +22,6 @@ function componentType(c: PreactComponent) {
   return c.constructor;
 }
 
-export function getDisplayName(node: RSTNode): string {
-  if (node.nodeType === 'host') {
-    return node.type as string;
-  } else {
-    const type = node.type as any;
-    return type.displayName || type.name;
-  }
-}
-
 type Props = { [prop: string]: any };
 
 function convertDOMProps(props: Props) {

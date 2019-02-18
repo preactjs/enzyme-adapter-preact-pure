@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { Component, VNode, h } from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import { getDisplayName, getNode as getNodeV10 } from '../src/preact10-rst';
+import { getNode as getNodeV10 } from '../src/preact10-rst';
 import { getNode as getNodeClassic } from '../src/preact-rst';
 import { getType, isPreact10 } from '../src/util';
 import { render } from '../src/compat';
@@ -229,42 +229,6 @@ describe('preact-rst, preact10-rst', () => {
   function Component({ label }: any) {
     return <div>{label}</div>;
   }
-
-  describe('getDisplayName', () => {
-    const baseNode = {
-      rendered: [],
-      key: null,
-      ref: null,
-      instance: null,
-      props: {},
-    };
-
-    it('returns expected display name for host nodes', () => {
-      const rstNode = {
-        ...baseNode,
-        nodeType: 'host' as NodeType,
-        type: 'div',
-      };
-      assert.equal(getDisplayName(rstNode), 'div');
-    });
-
-    it('returns expected display name for component nodes', () => {
-      function Button() {
-        return null;
-      }
-      const rstNode = {
-        ...baseNode,
-        nodeType: 'function' as NodeType,
-        type: Button,
-      };
-
-      assert.equal(getDisplayName(rstNode), 'Button');
-
-      Button.displayName = 'Fancy Button';
-
-      assert.equal(getDisplayName(rstNode), 'Fancy Button');
-    });
-  });
 
   describe('render', () => {
     treeCases.forEach(({ description, element, expectedTree }) => {

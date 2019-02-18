@@ -1,3 +1,4 @@
+import { RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 
 export function getType(obj: Object) {
@@ -19,4 +20,13 @@ export function nodeType(vnode: VNode) {
     return 'null';
   }
   return typeof vnode.type === 'string' ? vnode.type : vnode.type.name;
+}
+
+export function getDisplayName(node: RSTNode): string {
+  if (node.nodeType === 'host') {
+    return node.type as string;
+  } else {
+    const type = node.type as any;
+    return type.displayName || type.name;
+  }
 }
