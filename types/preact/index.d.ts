@@ -15,4 +15,9 @@ declare module 'preact' {
     ref?: Ref<any>;
     props: P & { children: ComponentChildren };
   }
+
+  /**
+   * Fragment support was introduced in Preact 10.
+   */
+  const Fragment: ComponentConstructor<{}, {}>;
 }
