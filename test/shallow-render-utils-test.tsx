@@ -1,8 +1,9 @@
-import { cloneElement, h } from 'preact';
+import { Fragment, cloneElement, h } from 'preact';
 import { assert } from 'chai';
 
 import { getRealType, withShallowRendering } from '../src/shallow-render-utils';
 import { componentForDOMNode, render } from '../src/compat';
+import { isPreact10 } from '../src/util';
 
 describe('shallow-render-utils', () => {
   let container: HTMLElement;
@@ -57,6 +58,20 @@ describe('shallow-render-utils', () => {
       render(el, container);
       assert.equal(container.firstElementChild!.innerHTML, fullOutput);
     });
+
+    if (isPreact10()) {
+      it('does not shallow-render fragments', () => {
+        const el = (
+          <ul>
+            <Fragment>
+              <li>1</li>
+            </Fragment>
+          </ul>
+        );
+        render(el, container);
+        assert.equal(container.innerHTML, '<ul><li>1</li></ul>');
+      });
+    }
   });
 
   describe('getRealType', () => {

@@ -1,10 +1,11 @@
 import { configure, shallow, mount, render as renderToString } from 'enzyme';
-import { Component, h, options } from 'preact';
+import { Component, Fragment, h, options } from 'preact';
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import PreactAdapter from '../src/PreactAdapter';
+import { isPreact10 } from '../src/util';
 
 /**
  * Register tests for static and interactive rendering modes.
@@ -43,6 +44,26 @@ function addStaticTests(render: typeof mount) {
       }
       const wrapper = render(<Widget />);
       assert.equal(wrapper.find('.widget').length, 1);
+    });
+  }
+
+  if (isPreact10() && render !== renderToString) {
+    it('returns contents of fragments', () => {
+      const el = (
+        <div>
+          <Fragment>
+            <span>one</span>
+            <span>two</span>
+            <Fragment>
+              <span>three</span>
+            </Fragment>
+          </Fragment>
+        </div>
+      );
+      const wrapper = render(el)
+        .find('div')
+        .children();
+      assert.equal(wrapper.length, 3);
     });
   }
 }

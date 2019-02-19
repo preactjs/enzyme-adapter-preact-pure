@@ -9,7 +9,8 @@
  */
 
 import { NodeType, RSTNode } from 'enzyme';
-import { Component } from 'preact';
+import { Component, Fragment } from 'preact';
+import flatMap from 'array.prototype.flatmap';
 
 import { PreactComponent, PreactNode, PreactVNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
@@ -25,6 +26,7 @@ function componentType(c: PreactComponent) {
 }
 
 type Props = { [prop: string]: any };
+type RSTNodeTypes = RSTNode | string | null;
 
 function convertDOMProps(props: Props) {
   const converted: Props = {
@@ -42,7 +44,19 @@ function convertDOMProps(props: Props) {
   return converted;
 }
 
-function rstNodeFromVNode(node: PreactVNode): RSTNode | string | null {
+function rstNodesFromChildren(nodes: PreactVNode[] | null): RSTNodeTypes[] {
+  if (!nodes) {
+    return [];
+  }
+  return flatMap(nodes, (node: PreactVNode | null) => {
+    const rst = rstNodeFromVNode(node);
+    return Array.isArray(rst) ? rst : [rst];
+  });
+}
+
+function rstNodeFromVNode(
+  node: PreactVNode | null
+): RSTNodeTypes | RSTNodeTypes[] {
   if (node == null) {
     return null;
   }
@@ -52,6 +66,16 @@ function rstNodeFromVNode(node: PreactVNode): RSTNode | string | null {
   if (node._component) {
     return rstNodeFromComponent(node._component);
   }
+  if (node.type === Fragment) {
+    return rstNodesFromChildren(node._children);
+  }
+
+  if (!node._dom) {
+    throw new Error(
+      `Expected VDOM node to be a DOM node but got ${node.type!}`
+    );
+  }
+
   return {
     nodeType: 'host',
     type: node.type!,
@@ -59,7 +83,7 @@ function rstNodeFromVNode(node: PreactVNode): RSTNode | string | null {
     key: node.key || null,
     ref: node.ref || null,
     instance: node._dom,
-    rendered: (node._children || []).map(rstNodeFromVNode),
+    rendered: rstNodesFromChildren(node._children),
   };
 }
 
@@ -80,7 +104,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType = 'class';
   }
 
-  let rendered: string | RSTNode | null = rstNodeFromVNode(
+  let rendered: RSTNodeTypes | RSTNodeTypes[] = rstNodeFromVNode(
     component._prevVNode
   );
 
@@ -97,6 +121,15 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     ? shallowRenderedType
     : componentType(component);
 
+  let renderedArray: RSTNodeTypes[];
+  if (Array.isArray(rendered)) {
+    renderedArray = rendered;
+  } else if (rendered !== null) {
+    renderedArray = [rendered];
+  } else {
+    renderedArray = [];
+  }
+
   return {
     nodeType,
     type,
@@ -104,7 +137,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     key: component._vnode.key || null,
     ref: component._vnode.ref || null,
     instance: component,
-    rendered: rendered !== null ? [rendered] : [],
+    rendered: renderedArray,
   };
 }
 
@@ -113,9 +146,21 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
  */
 export function getNode(container: HTMLElement): RSTNode {
   const vnode = ((container as unknown) as PreactNode)._prevVNode;
-  if (vnode._children && vnode._children.length === 1) {
-    return rstNodeFromVNode(vnode._children[0]) as RSTNode;
+  const rstNode = rstNodeFromVNode(vnode);
+
+  // There is currently a requirement that the root element produces a single
+  // RST node. Fragments do not appear in the RST tree, so it is fine if the
+  // root node is a fragment, provided that it renders only a single child. In
+  // fact Preact itself wraps the root element in a single-child fragment.
+  if (Array.isArray(rstNode)) {
+    if (rstNode.length === 1) {
+      return rstNode[0] as RSTNode;
+    } else {
+      throw new Error(
+        'Root element must not be a fragment with multiple children'
+      );
+    }
   } else {
-    return rstNodeFromVNode(vnode) as RSTNode;
+    return rstNode as RSTNode;
   }
 }

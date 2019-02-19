@@ -1,4 +1,4 @@
-import { ComponentFactory, Component, h, options } from 'preact';
+import { ComponentFactory, Component, Fragment, h, options } from 'preact';
 
 import { PreactComponent, VNodeExtensions } from './preact-internals';
 
@@ -62,7 +62,8 @@ function shallowRenderVNode(vnode: VNodeExtensions) {
   if (
     !shallowRenderActive ||
     typeof vnode.type === 'string' ||
-    vnode.type == null
+    vnode.type == null ||
+    (typeof Fragment !== 'undefined' && vnode.type === Fragment)
   ) {
     return;
   }
