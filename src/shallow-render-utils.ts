@@ -9,6 +9,7 @@ import {
 
 import { PreactComponent, VNodeExtensions } from './preact-internals';
 import { childElements } from './compat';
+import { isPreact10 } from './util';
 
 interface ShallowRenderFunction extends Function {
   originalType: Function;
@@ -60,8 +61,19 @@ export function getRealType(component: Component) {
 function makeShallowRenderComponent(
   type: ComponentFactory<any>
 ): ShallowRenderFunction {
-  function ShallowRenderStub() {
-    return h('shallow-render', { component: getDisplayName(type) });
+  function ShallowRenderStub({ children }: { children?: any }) {
+    if (isPreact10()) {
+      // Preact 10 can render fragments, so we can return the children directly.
+      return children;
+    }
+    // Older versions of Preact need a dummy DOM element to contain the children.
+    return h(
+      'shallow-render',
+      {
+        component: getDisplayName(type),
+      },
+      children
+    );
   }
   ShallowRenderStub.originalType = type;
   ShallowRenderStub.displayName = getDisplayName(type);

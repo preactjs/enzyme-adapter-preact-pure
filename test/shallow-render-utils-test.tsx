@@ -1,4 +1,4 @@
-import { Fragment, VNode, cloneElement, h } from 'preact';
+import { Component, Fragment, VNode, cloneElement, h } from 'preact';
 import { assert } from 'chai';
 
 import {
@@ -36,8 +36,13 @@ describe('shallow-render-utils', () => {
   describe('withShallowRendering', () => {
     it('replaces child components with placeholders', () => {
       const fullOutput = 'Hello<span>world</span>';
-      const shallowOutput =
-        'Hello<shallow-render component="Child"></shallow-render>';
+      let shallowOutput: string;
+      if (isPreact10()) {
+        shallowOutput = 'Hello';
+      } else {
+        shallowOutput =
+          'Hello<shallow-render component="Child"></shallow-render>';
+      }
 
       // Normal render should return full output.
       const el = <Component />;
@@ -94,8 +99,15 @@ describe('shallow-render-utils', () => {
       withShallowRendering(() => {
         render(el, container);
       });
-      const child = container.querySelector('shallow-render')!;
-      const childComponent = componentForDOMNode(child)!;
+      let childComponent: Component;
+      if (isPreact10()) {
+        const fragVNode = (container as any)._prevVNode;
+        const rootComponent = fragVNode._children[0]._component;
+        childComponent = rootComponent._prevVNode._children[1]._component;
+      } else {
+        const child = container.querySelector('shallow-render')!;
+        childComponent = componentForDOMNode(child)!;
+      }
       assert.ok(childComponent);
       assert.equal(childComponent instanceof Child, false);
       assert.equal(getRealType(childComponent), Child);

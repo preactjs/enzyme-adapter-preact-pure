@@ -376,6 +376,21 @@ describe('integration tests', () => {
       const output = wrapper.debug().replace(/\s+/g, '');
       assert.equal(output, '<div><Component/></div>');
     });
+
+    it('renders children of non-rendered components', () => {
+      function Component() {
+        return null;
+      }
+      const wrapper = shallow(
+        <div>
+          <Component>
+            <p>foo</p>
+          </Component>
+        </div>
+      );
+      const output = wrapper.debug().replace(/\s+/g, '');
+      assert.equal(output, '<div><Component><p>foo</p></Component></div>');
+    });
   });
 
   describe('"string" rendering', () => {
