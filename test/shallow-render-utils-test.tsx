@@ -1,8 +1,13 @@
-import { Fragment, cloneElement, h } from 'preact';
+import { Fragment, VNode, cloneElement, h } from 'preact';
 import { assert } from 'chai';
 
-import { getRealType, withShallowRendering } from '../src/shallow-render-utils';
-import { componentForDOMNode, render } from '../src/compat';
+import {
+  getRealType,
+  withShallowRendering,
+  isShallowRendered,
+  shallowRenderVNodeTree,
+} from '../src/shallow-render-utils';
+import { componentForDOMNode, render, childElements } from '../src/compat';
 import { isPreact10 } from '../src/util';
 
 describe('shallow-render-utils', () => {
@@ -94,6 +99,31 @@ describe('shallow-render-utils', () => {
       assert.ok(childComponent);
       assert.equal(childComponent instanceof Child, false);
       assert.equal(getRealType(childComponent), Child);
+    });
+  });
+
+  describe('shallowRenderVNodeTree', () => {
+    it('modifies nodes to shallow-render', () => {
+      function Parent() {
+        return null;
+      }
+      function Child() {
+        return null;
+      }
+      const el = (
+        <Parent>
+          <Child />
+        </Parent>
+      );
+      const childEl = childElements(el)[0] as VNode;
+
+      assert.isFalse(isShallowRendered(el));
+      assert.isFalse(isShallowRendered(childEl));
+
+      shallowRenderVNodeTree(el);
+
+      assert.isTrue(isShallowRendered(el));
+      assert.isTrue(isShallowRendered(childEl));
     });
   });
 });

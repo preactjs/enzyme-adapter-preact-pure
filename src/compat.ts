@@ -6,7 +6,7 @@
 import { VNode, h, render as preactRender } from 'preact';
 
 import { PreactComponent, PreactNode, PreactVNode } from './preact-internals';
-import { isPreact10 } from './util';
+import { toArray, isPreact10 } from './util';
 
 /**
  * Add `type` and  `props` properties to Preact elements as aliases of
@@ -115,4 +115,19 @@ export function render(el: VNode, container: HTMLElement) {
     const preact9Render = preactRender as any;
     preact9Render(el, container, container.firstChild);
   }
+}
+
+/**
+ * Return the children of a VNode.
+ */
+export function childElements(el: VNode): (VNode | string | null)[] {
+  if (typeof el.children !== 'undefined') {
+    // Preact 8. Children is always an array.
+    return el.children;
+  }
+  if (typeof el.props.children !== 'undefined') {
+    // Preact 10. Children may be a single object.
+    return toArray(el.props.children);
+  }
+  return [];
 }

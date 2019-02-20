@@ -2,7 +2,11 @@ import { EnzymeRenderer, RSTNode } from 'enzyme';
 import { VNode } from 'preact';
 
 import MountRenderer from './MountRenderer';
-import { withShallowRendering } from './shallow-render-utils';
+import {
+  withShallowRendering,
+  shallowRenderVNodeTree,
+} from './shallow-render-utils';
+import { childElements } from './compat';
 
 export default class ShallowRenderer implements EnzymeRenderer {
   private _mountRenderer: MountRenderer;
@@ -12,6 +16,15 @@ export default class ShallowRenderer implements EnzymeRenderer {
   }
 
   render(el: VNode, context: any, callback?: () => any) {
+    // Make all elements in the input tree, except for the root element, render
+    // to a stub.
+    childElements(el).forEach(el => {
+      if (el != null && typeof el !== 'string') {
+        shallowRenderVNodeTree(el);
+      }
+    });
+
+    // Make any new elements rendered by the root element render to a stub.
     withShallowRendering(() => {
       this._mountRenderer.render(el, context, callback);
 

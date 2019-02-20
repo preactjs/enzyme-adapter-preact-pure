@@ -1,6 +1,18 @@
-import { ComponentFactory, Component, Fragment, h, options } from 'preact';
+import {
+  ComponentFactory,
+  Component,
+  Fragment,
+  VNode,
+  h,
+  options,
+} from 'preact';
 
 import { PreactComponent, VNodeExtensions } from './preact-internals';
+import { childElements } from './compat';
+
+interface ShallowRenderFunction extends Function {
+  originalType: Function;
+}
 
 /**
  * Map of component function to replacement stub function used when shallow
@@ -45,7 +57,9 @@ export function getRealType(component: Component) {
  * This is used to implement shallow rendering by replacing the real component
  * during shallow renders.
  */
-function makeShallowRenderComponent(type: ComponentFactory<any>) {
+function makeShallowRenderComponent(
+  type: ComponentFactory<any>
+): ShallowRenderFunction {
   function ShallowRenderStub() {
     return h('shallow-render', { component: getDisplayName(type) });
   }
@@ -60,7 +74,6 @@ function makeShallowRenderComponent(type: ComponentFactory<any>) {
  */
 function shallowRenderVNode(vnode: VNodeExtensions) {
   if (
-    !shallowRenderActive ||
     typeof vnode.type === 'string' ||
     vnode.type == null ||
     (typeof Fragment !== 'undefined' && vnode.type === Fragment)
@@ -82,12 +95,41 @@ function installShallowRenderHook() {
   }
   const prevHook = options.vnode;
   options.vnode = vnode => {
-    shallowRenderVNode(vnode as VNodeExtensions);
+    if (shallowRenderActive) {
+      shallowRenderVNode(vnode as VNodeExtensions);
+    }
     if (prevHook) {
       prevHook(vnode);
     }
   };
   shallowRenderHookInstalled = true;
+}
+
+function isVNode(obj: any) {
+  return Object(obj) === obj && typeof obj.type !== 'undefined';
+}
+
+/**
+ * Return true if a VNode has been modified to shallow-render.
+ */
+export function isShallowRendered(vnode: VNode) {
+  if (vnode.type == null || typeof vnode.type === 'string') {
+    return false;
+  }
+  const type = (vnode.type as unknown) as ShallowRenderFunction;
+  return typeof type.originalType === 'function';
+}
+
+/**
+ * Convert components in a VNode tree to shallow-render.
+ */
+export function shallowRenderVNodeTree(vnode: VNode) {
+  shallowRenderVNode(vnode as VNodeExtensions);
+  childElements(vnode).forEach(c => {
+    if (isVNode(c)) {
+      shallowRenderVNodeTree(c as VNodeExtensions);
+    }
+  });
 }
 
 /**
