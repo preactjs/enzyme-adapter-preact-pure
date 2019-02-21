@@ -42,6 +42,7 @@ function rstNodesFromDOMNodes(nodes: Node[]) {
 }
 
 type Props = { [prop: string]: any };
+type RSTNodeTypes = RSTNode | string | null;
 
 function convertDOMProps(props: Props) {
   const converted: Props = {
@@ -99,17 +100,26 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType = 'function';
   }
 
-  let rendered: RSTNode | string | null;
+  let rendered: RSTNodeTypes[];
   if ((component as any)._component) {
     // This component rendered another component.
-    rendered = rstNodeFromComponent((component as any)._component);
+    rendered = [rstNodeFromComponent((component as any)._component)];
   } else {
     // This component rendered a host node.
     const hostNode = component.base as Node;
     if (hostNode.nodeType === Node.ELEMENT_NODE) {
-      rendered = rstNodeFromDOMElement(component.base as any);
+      rendered = [rstNodeFromDOMElement(component.base as any)];
     } else {
-      rendered = hostNode.textContent;
+      const text = hostNode.textContent;
+
+      // Preact <= 9 renders `null` as an empty text node. If the node is empty,
+      // it is more likely that the component rendered `null` than an empty
+      // string.
+      if (text !== '') {
+        rendered = [text];
+      } else {
+        rendered = [];
+      }
     }
   }
 
@@ -120,7 +130,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     // Shallow rendering replaces the output of the component with a dummy
     // DOM element. Remove this dummy from the RST so that Enzyme does not see
     // it.
-    rendered = null;
+    rendered = (rendered[0] as RSTNode).rendered;
   }
   const type = shallowRenderedType
     ? shallowRenderedType
@@ -133,7 +143,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     key: component.__k || null,
     ref: component.__r || null,
     instance: component,
-    rendered: rendered ? [rendered] : [],
+    rendered,
   };
 }
 

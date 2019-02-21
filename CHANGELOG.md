@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
 - Add support for simulating errors.
+
+### Changed
+
+- Children passed to non-rendered components during shallow-rendering are now
+  present in the output, for consistency with how shallow rendering works in
+  React.
+
+### Fixed
+
+- Shallow rendering now only renders the root element passed to `shallow`,
+  not any child component elements passed in the call to `shallow`.
+
+  In other words `shallow(<Parent><Child/></Parent>)` will render `<Parent>`
+  but only a stub for `<Child>`.
 
 ## [1.4.0] - 2019-02-19
 

@@ -362,6 +362,35 @@ describe('integration tests', () => {
       // in shallow rendering.
       assert.equal(wrapper.text(), 'One<Child />Three<NestedChild />');
     });
+
+    it('fully renders only the root element', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+      const wrapper = shallow(
+        <div>
+          {/* This should not be rendered as it is not the root component. */}
+          <Component />
+        </div>
+      );
+      const output = wrapper.debug().replace(/\s+/g, '');
+      assert.equal(output, '<div><Component/></div>');
+    });
+
+    it('renders children of non-rendered components', () => {
+      function Component() {
+        return null;
+      }
+      const wrapper = shallow(
+        <div>
+          <Component>
+            <p>foo</p>
+          </Component>
+        </div>
+      );
+      const output = wrapper.debug().replace(/\s+/g, '');
+      assert.equal(output, '<div><Component><p>foo</p></Component></div>');
+    });
   });
 
   describe('"string" rendering', () => {

@@ -111,12 +111,6 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
   // If this was a shallow-rendered component, set the RST node's type to the
   // real component function/class.
   const shallowRenderedType = getRealType(component);
-  if (shallowRenderedType) {
-    // Shallow rendering replaces the output of the component with a dummy
-    // DOM element. Remove this dummy from the RST so that Enzyme does not see
-    // it.
-    rendered = null;
-  }
   const type = shallowRenderedType
     ? shallowRenderedType
     : componentType(component);

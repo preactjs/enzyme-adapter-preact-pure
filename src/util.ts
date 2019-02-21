@@ -56,3 +56,7 @@ export function withReplacedMethod(
     }
   }
 }
+
+export function toArray(obj: any) {
+  return Array.isArray(obj) ? obj : [obj];
+}
