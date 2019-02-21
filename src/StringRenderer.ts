@@ -18,7 +18,7 @@ export default class StringRenderer implements EnzymeRenderer {
     }
   }
 
-  simulateError(node: RSTNode, rootNode: RSTNode, error: any) {
+  simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any) {
     throw new Error('Static rendering does not support simulating errors');
   }
 

@@ -49,7 +49,7 @@ declare module 'enzyme' {
      */
     getNode(): RSTNode|null;
 
-    simulateError(node: RSTNode, rootNode: RSTNode, error: any): void;
+    simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any): void;
 
     /** Simulate an event on a node in the output. */
     simulateEvent(node: RSTNode, event: string, args: Object): void;

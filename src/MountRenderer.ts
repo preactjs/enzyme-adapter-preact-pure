@@ -5,6 +5,8 @@ import { getNode as getNodeClassic } from './preact-rst';
 import { getNode as getNodeV10 } from './preact10-rst';
 import { getDisplayName, isPreact10 } from './util';
 import { render } from './compat';
+import { PreactNode } from './preact-internals';
+import { withReplacedMethod } from './util';
 
 type EventDetails = { [prop: string]: any };
 
@@ -50,14 +52,32 @@ export default class MountRenderer implements EnzymeRenderer {
   }
 
   getNode() {
-    if (this._container.childNodes.length === 0) {
+    const container = (this._container as unknown) as PreactNode;
+    if (
+      // Preact 9 requires DOM nodes to represent any rendered content.
+      container.childNodes.length === 0 &&
+      // If the root component rendered null in Preact 10 then the only
+      // indicator that content has been rendered will be metadata attached to
+      // the container.
+      typeof container._prevVNode === 'undefined'
+    ) {
       return null;
     }
     return this._getNode(this._container);
   }
 
-  simulateError(node: RSTNode, rootNode: RSTNode, error: any) {
-    // TODO
+  simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any) {
+    const errNode = nodeHierarchy[0];
+    const render = () => {
+      // Modify the stack to match where the error is thrown. This makes
+      // debugging easier.
+      error.stack = new Error().stack;
+      throw error;
+    };
+
+    withReplacedMethod(errNode.instance, 'render', render, () => {
+      errNode.instance.forceUpdate();
+    });
   }
 
   simulateEvent(node: RSTNode, eventName: string, args: EventDetails = {}) {
