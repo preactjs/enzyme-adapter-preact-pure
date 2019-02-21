@@ -86,4 +86,11 @@ export default class PreactAdapter extends EnzymeAdapter {
   createElement(type: ElementType, props: Object, ...children: JSXElement[]) {
     return h(type as any, props, ...children);
   }
+
+  elementToNode(el: JSXElement): RSTNode {
+    // TODO - Convert a Preact VNode which has not been rendered to an RST node.
+    // This is implemented by `elementToTree` in the enzyme-adapter-utils
+    // package.
+    throw new Error('elementToNode is not implemented');
+  }
 }

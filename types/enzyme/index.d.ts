@@ -32,7 +32,7 @@ declare module 'enzyme' {
     instance: any;
 
     /** The result of the `render` function from this component. */
-    rendered: Array<RSTNode|string|null>;
+    rendered: Array<RSTNode | string | null>;
   }
 
   /**
@@ -47,9 +47,13 @@ declare module 'enzyme' {
     /**
      * Return a React Standard Tree (RST) representation of the output.
      */
-    getNode(): RSTNode|null;
+    getNode(): RSTNode | null;
 
-    simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any): void;
+    simulateError(
+      nodeHierarchy: RSTNode[],
+      rootNode: RSTNode,
+      error: any
+    ): void;
 
     /** Simulate an event on a node in the output. */
     simulateEvent(node: RSTNode, event: string, args: Object): void;
@@ -71,14 +75,28 @@ declare module 'enzyme' {
   /**
    * An adapter that enables Enzyme to work with a specific React-like library.
    */
-  export class EnzymeAdapter {
+  export abstract class EnzymeAdapter {
     options: Object;
 
-    createRenderer(options: AdapterOptions): EnzymeRenderer;
-    nodeToElement(node: RSTNode): JSXElement;
-    isValidElement(el: JSXElement): boolean;
-    createElement(type: ElementType, props: Object, ...children: JSXElement[]): JSXElement;
-    invokeSetStateCallback(instance: any, callback: () => {}): void;
+    // Required methods.
+    abstract createElement(
+      type: ElementType,
+      props: Object,
+      ...children: JSXElement[]
+    ): JSXElement;
+    abstract createRenderer(options: AdapterOptions): EnzymeRenderer;
+    abstract elementToNode(element: JSXElement): RSTNode;
+    abstract isValidElement(el: JSXElement): boolean;
+    abstract nodeToElement(node: RSTNode): JSXElement;
+    abstract nodeToHostNode(node: RSTNode): Node | null;
+
+    // Optional methods.
+    displayNameOfNode?(node: RSTNode): string;
+    invokeSetStateCallback?(instance: any, callback: () => {}): void;
+    isCustomComponentElement?(instance: RSTNode): boolean;
+    isFragment?(node: RSTNode): boolean;
+    isValidElementType?(obj: any): boolean;
+    wrap?(element: JSXElement): JSXElement;
   }
 
   // TODO
