@@ -66,6 +66,13 @@ describe('MountRenderer', () => {
       const renderer = new MountRenderer();
       assert.equal(renderer.getNode(), null);
     });
+
+    it('does not return null if root component rendered `null`', () => {
+      const Component = () => null;
+      const renderer = new MountRenderer();
+      renderer.render(<Component />, {});
+      assert.notEqual(renderer.getNode(), null);
+    });
   });
 
   describe('#simulateEvent', () => {

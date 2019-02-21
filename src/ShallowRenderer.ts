@@ -40,9 +40,9 @@ export default class ShallowRenderer implements EnzymeRenderer {
     });
   }
 
-  simulateError(node: RSTNode, rootNode: RSTNode, error: any) {
+  simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any) {
     withShallowRendering(() => {
-      this._mountRenderer.simulateError(node, rootNode, error);
+      this._mountRenderer.simulateError(nodeHierarchy, rootNode, error);
     });
   }
 
