@@ -5,7 +5,7 @@ import { h, render } from 'preact';
 import { isPreact10 } from './util';
 
 export default class StringRenderer implements EnzymeRenderer {
-  render(el: JSXElement, context: any) {
+  render(el: JSXElement, context?: any) {
     if (isPreact10()) {
       // preact-render-to-string does not support Preact 10 yet.
       const tempContainer = document.createElement('div');

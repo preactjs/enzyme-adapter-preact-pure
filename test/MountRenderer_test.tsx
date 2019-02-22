@@ -9,7 +9,7 @@ describe('MountRenderer', () => {
   describe('#render', () => {
     it('renders the element', () => {
       const renderer = new MountRenderer();
-      renderer.render(<div>Hello</div>, {}, sinon.stub());
+      renderer.render(<div>Hello</div>);
 
       const HTMLDivElement = (global as any).window.HTMLDivElement;
       assert.instanceOf(renderer.getNode()!.instance, HTMLDivElement);
@@ -38,7 +38,7 @@ describe('MountRenderer', () => {
         }
       }
       const renderer = new MountRenderer();
-      renderer.render(<Counter />, {});
+      renderer.render(<Counter />);
 
       // Modify component state and check that the DOM has been updated
       // immediately. `setState` changes are normally applied asynchronously in
@@ -53,7 +53,7 @@ describe('MountRenderer', () => {
   describe('#unmount', () => {
     it('removes the rendered DOM elements', () => {
       const renderer = new MountRenderer();
-      renderer.render(<div>Hello</div>, {}, sinon.stub());
+      renderer.render(<div>Hello</div>);
       const container = renderer.container();
       assert.equal(container.childNodes.length, 1);
       renderer.unmount();
@@ -70,7 +70,7 @@ describe('MountRenderer', () => {
     it('does not return null if root component rendered `null`', () => {
       const Component = () => null;
       const renderer = new MountRenderer();
-      renderer.render(<Component />, {});
+      renderer.render(<Component />);
       assert.notEqual(renderer.getNode(), null);
     });
   });
@@ -81,8 +81,6 @@ describe('MountRenderer', () => {
       const callback = sinon.stub();
       renderer.render(
         <button type="button" onClick={callback} />,
-        {},
-        sinon.stub()
       );
 
       renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
@@ -95,8 +93,6 @@ describe('MountRenderer', () => {
       const callback = sinon.stub();
       renderer.render(
         <button type="button" onKeyDown={callback} />,
-        {},
-        sinon.stub()
       );
 
       renderer.simulateEvent(renderer.getNode() as RSTNode, 'keydown', {
@@ -114,7 +110,7 @@ describe('MountRenderer', () => {
       }
       const renderer = new MountRenderer();
       const callback = sinon.stub();
-      renderer.render(<Button onClick={callback} />, {}, sinon.stub());
+      renderer.render(<Button onClick={callback} />);
 
       assert.throws(() => {
         renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});

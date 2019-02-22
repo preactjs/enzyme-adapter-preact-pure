@@ -129,7 +129,7 @@ describe('PreactAdapter', () => {
       it('returns JSX element that matches original input', () => {
         const renderer = new MountRenderer();
         const el = <button type="button">Click me</button>;
-        renderer.render(el, {});
+        renderer.render(el);
         const adapter = new PreactAdapter();
         const rstNode = renderer.getNode() as RSTNode;
         assert.deepEqual(
@@ -143,7 +143,7 @@ describe('PreactAdapter', () => {
   describe('#nodeToHostNode', () => {
     it('returns DOM node if RSTNode is a "host" node', () => {
       const renderer = new MountRenderer();
-      renderer.render(<button type="button">Click me</button>, {});
+      renderer.render(<button type="button">Click me</button>);
       const adapter = new PreactAdapter();
       const hostNode = adapter.nodeToHostNode(renderer.getNode() as RSTNode);
       assert.ok(hostNode);
@@ -155,7 +155,7 @@ describe('PreactAdapter', () => {
         return <button>Click me</button>;
       }
       const renderer = new MountRenderer();
-      renderer.render(<Button />, {});
+      renderer.render(<Button />);
       const adapter = new PreactAdapter();
       const hostNode = adapter.nodeToHostNode(renderer.getNode() as RSTNode);
       assert.ok(hostNode);

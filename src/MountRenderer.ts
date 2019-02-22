@@ -24,7 +24,7 @@ export default class MountRenderer implements EnzymeRenderer {
     }
   }
 
-  render(el: VNode, context: any, callback?: () => any) {
+  render(el: VNode, context?: any, callback?: () => any) {
     render(el, this._container);
     const rootNode = this._getNode(this._container);
 

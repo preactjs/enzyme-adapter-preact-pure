@@ -15,7 +15,7 @@ export default class ShallowRenderer implements EnzymeRenderer {
     this._mountRenderer = new MountRenderer();
   }
 
-  render(el: VNode, context: any, callback?: () => any) {
+  render(el: VNode, context?: any, callback?: () => any) {
     // Make all elements in the input tree, except for the root element, render
     // to a stub.
     childElements(el).forEach(el => {

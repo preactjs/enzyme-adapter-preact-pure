@@ -39,7 +39,7 @@ declare module 'enzyme' {
    * A UI renderer created by an `EnzymeAdapter`
    */
   export interface EnzymeRenderer {
-    render(el: JSXElement, context: any, callback: () => any): void;
+    render(el: JSXElement, context?: any, callback?: () => any): void;
 
     /** Remove the rendered output from the DOM. */
     unmount(): void;
