@@ -5,12 +5,13 @@ import {
   JSXElement,
   RSTNode,
 } from 'enzyme';
-import { h } from 'preact';
+import { VNode, h } from 'preact';
 
 import MountRenderer from './MountRenderer';
 import ShallowRenderer from './ShallowRenderer';
 import StringRenderer from './StringRenderer';
 import { addTypeAndPropsToVNode } from './compat';
+import { rstNodeFromElement } from './preact10-rst';
 
 export default class PreactAdapter extends EnzymeAdapter {
   constructor() {
@@ -88,9 +89,6 @@ export default class PreactAdapter extends EnzymeAdapter {
   }
 
   elementToNode(el: JSXElement): RSTNode {
-    // TODO - Convert a Preact VNode which has not been rendered to an RST node.
-    // This is implemented by `elementToTree` in the enzyme-adapter-utils
-    // package.
-    throw new Error('elementToNode is not implemented');
+    return rstNodeFromElement(el as VNode) as RSTNode;
   }
 }

@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { Component, Fragment, VNode, h } from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import { getNode as getNodeV10 } from '../src/preact10-rst';
+import { getNode as getNodeV10, rstNodeFromElement } from '../src/preact10-rst';
 import { getNode as getNodeClassic } from '../src/preact-rst';
 import { getType, isPreact10 } from '../src/util';
 import { render } from '../src/compat';
@@ -418,6 +418,87 @@ describe('preact-rst, preact10-rst', () => {
       assert.equal(rstNode.rendered.length, 1);
       assert.deepEqual((rstNode.rendered[0] as RSTNode).props, {
         className: 'widget',
+      });
+    });
+  });
+
+  describe('rstNodeFromElement', () => {
+    function stripInstances(node: RSTNode | string | null) {
+      if (node == null || typeof node === 'string') {
+        return node;
+      }
+
+      node.instance = null;
+
+      node.rendered.forEach(child => {
+        stripInstances(child);
+      });
+      return node;
+    }
+
+    [
+      {
+        description: 'function component',
+        element: <FunctionComponent />,
+        expectedNode: functionNode({
+          type: FunctionComponent,
+        }),
+      },
+      {
+        description: 'class component',
+        element: <ClassComponent label="test" />,
+        expectedNode: classNode({
+          type: ClassComponent,
+          props: { label: 'test' },
+        }),
+      },
+      {
+        description: 'host node',
+        element: <div />,
+        expectedNode: hostNode({ type: 'div' }),
+      },
+      {
+        description: 'host node with props',
+        element: <img alt="test" class="foo" />,
+        expectedNode: hostNode({
+          type: 'img',
+          props: { alt: 'test', className: 'foo' },
+        }),
+      },
+      {
+        description: 'component with props',
+        element: <FunctionComponent class="foo" />,
+        expectedNode: functionNode({
+          type: FunctionComponent,
+          props: { class: 'foo' },
+        }),
+      },
+      {
+        description: 'element with key',
+        element: <li key="foo" />,
+        expectedNode: hostNode({ type: 'li', key: 'foo' }),
+      },
+      {
+        description: 'element with ref',
+        element: <li ref={testRef} />,
+        expectedNode: hostNode({ type: 'li', ref: testRef }),
+      },
+      {
+        description: 'element with children',
+        element: (
+          <ul>
+            <li>item</li>
+          </ul>
+        ),
+        expectedNode: hostNode({
+          type: 'ul',
+          rendered: [hostNode({ type: 'li', rendered: ['item'] })],
+        }),
+      },
+    ].forEach(({ description, element, expectedNode }) => {
+      it(`converts node to element (${description})`, () => {
+        const rstNode = rstNodeFromElement(element);
+        assert.deepEqual(rstNode, stripInstances(expectedNode));
       });
     });
   });

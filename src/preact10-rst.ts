@@ -9,9 +9,10 @@
  */
 
 import { NodeType, RSTNode } from 'enzyme';
-import { Component, Fragment } from 'preact';
+import { Component, Fragment, VNode } from 'preact';
 import flatMap from 'array.prototype.flatmap';
 
+import { childElements } from './compat';
 import { PreactComponent, PreactNode, PreactVNode } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
 import { getType } from './util';
@@ -28,19 +29,18 @@ function componentType(c: PreactComponent) {
 type Props = { [prop: string]: any };
 type RSTNodeTypes = RSTNode | string | null;
 
-function convertDOMProps(props: Props) {
-  const converted: Props = {
-    children: props.children || [],
-  };
+function stripSpecialProps(props: Props) {
+  const { children, key, ref, ...otherProps } = props;
+  return otherProps;
+}
 
-  Object.keys(props).forEach(srcProp => {
-    if (srcProp === 'children' || srcProp === 'ref' || srcProp === 'key') {
-      return;
-    }
+function convertDOMProps(props: Props) {
+  const srcProps = stripSpecialProps(props);
+  const converted: Props = {};
+  Object.keys(srcProps).forEach(srcProp => {
     const destProp = srcProp === 'class' ? 'className' : srcProp;
     converted[destProp] = props[srcProp];
   });
-
   return converted;
 }
 
@@ -84,6 +84,51 @@ function rstNodeFromVNode(
     ref: node.ref || null,
     instance: node._dom,
     rendered: rstNodesFromChildren(node._children),
+  };
+}
+
+function nodeTypeFromType(type: any): NodeType {
+  if (typeof type === 'string') {
+    return 'host';
+  } else if (typeof type.prototype.render === 'function') {
+    return 'class';
+  } else if (typeof type === 'function') {
+    return 'function';
+  } else {
+    throw new Error(`Unknown node type: ${type}`);
+  }
+}
+
+/**
+ * Convert a JSX element tree returned by Preact's `h` function into an RST
+ * node.
+ *
+ * This function accepts vnodes produced by both Preact 10 and earlier versions.
+ * Since the elements have not been rendered, none of the private properties
+ * which store references to the associated DOM element, component instance etc.
+ * will have been set.
+ */
+export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
+  if (node == null || typeof node === 'string') {
+    return node;
+  }
+  const children = childElements(node).map(rstNodeFromElement);
+  const nodeType = nodeTypeFromType(node.type);
+  const props =
+    nodeType === 'host'
+      ? convertDOMProps(node.props)
+      : stripSpecialProps(node.props);
+
+  const ref = node.ref || node.props.ref || null;
+
+  return {
+    nodeType,
+    type: node.type as NodeType,
+    props,
+    key: node.key || null,
+    ref,
+    instance: null,
+    rendered: children,
   };
 }
 
