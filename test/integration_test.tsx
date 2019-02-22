@@ -50,6 +50,39 @@ function addStaticTests(render: typeof mount) {
       const wrapper = render(<Widget />);
       assert.equal(wrapper.find('.widget').length, 1);
     });
+
+    it('can test if result contains subtree', () => {
+      function ListItem({ label }: any) {
+        return <b>{label}</b>;
+      }
+      function List() {
+        return (
+          <ul>
+            <li>
+              <ListItem label="test" />
+            </li>
+          </ul>
+        );
+      }
+      const wrapper = render(<List />);
+
+      assert.isTrue(wrapper.contains(<ListItem label="test" />));
+      assert.isTrue(
+        wrapper.contains(
+          <li>
+            <ListItem label="test" />
+          </li>
+        )
+      );
+      assert.isFalse(wrapper.contains(<ListItem label="foo" />));
+      assert.isFalse(
+        wrapper.contains(
+          <p>
+            <ListItem label="test" />
+          </p>
+        )
+      );
+    });
   }
 
   if (render !== renderToString) {

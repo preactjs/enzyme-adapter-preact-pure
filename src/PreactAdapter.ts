@@ -5,12 +5,13 @@ import {
   JSXElement,
   RSTNode,
 } from 'enzyme';
-import { h } from 'preact';
+import { VNode, h } from 'preact';
 
 import MountRenderer from './MountRenderer';
 import ShallowRenderer from './ShallowRenderer';
 import StringRenderer from './StringRenderer';
 import { addTypeAndPropsToVNode } from './compat';
+import { rstNodeFromElement } from './preact10-rst';
 
 export default class PreactAdapter extends EnzymeAdapter {
   constructor() {
@@ -85,5 +86,9 @@ export default class PreactAdapter extends EnzymeAdapter {
 
   createElement(type: ElementType, props: Object, ...children: JSXElement[]) {
     return h(type as any, props, ...children);
+  }
+
+  elementToNode(el: JSXElement): RSTNode {
+    return rstNodeFromElement(el as VNode) as RSTNode;
   }
 }
