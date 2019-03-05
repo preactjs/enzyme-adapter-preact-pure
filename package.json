@@ -20,6 +20,7 @@
     "mocha": "^5.2.0",
     "pirates": "^4.0.1",
     "preact": "^8.4.2",
+    "preact10": "npm:preact@10.0.0-alpha.0",
     "prettier": "1.16.4",
     "sinon": "^7.2.3",
     "ts-node": "^8.0.2",
@@ -27,7 +28,7 @@
   },
   "peerDependencies": {
     "enzyme": "^3.8.0",
-    "preact": "^8.4.2"
+    "preact": "^8.4.2 || ^10.0.0-alpha"
   },
   "scripts": {
     "build": "tsc",
@@ -37,8 +38,7 @@
   },
   "dependencies": {
     "array.prototype.flatmap": "^1.2.1",
-    "preact-render-to-string": "^4.1.0",
-    "preact10": "npm:preact@10.0.0-alpha0"
+    "preact-render-to-string": "^4.1.0"
   },
   "files": [
     "build/src/**/*"
