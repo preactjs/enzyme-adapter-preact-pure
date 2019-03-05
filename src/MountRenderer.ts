@@ -5,7 +5,7 @@ import { getNode as getNodeClassic } from './preact-rst';
 import { getNode as getNodeV10 } from './preact10-rst';
 import { getDisplayName, isPreact10 } from './util';
 import { render } from './compat';
-import { PreactNode } from './preact-internals';
+import { PreactNode, getRenderedVNode } from './preact-internals';
 import { withReplacedMethod } from './util';
 
 type EventDetails = { [prop: string]: any };
@@ -59,7 +59,7 @@ export default class MountRenderer implements EnzymeRenderer {
       // If the root component rendered null in Preact 10 then the only
       // indicator that content has been rendered will be metadata attached to
       // the container.
-      typeof container._prevVNode === 'undefined'
+      typeof getRenderedVNode(container) === 'undefined'
     ) {
       return null;
     }

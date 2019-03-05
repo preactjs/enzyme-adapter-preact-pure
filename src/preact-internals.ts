@@ -1,14 +1,26 @@
 import { Component, VNode } from 'preact';
 
 /**
+ * This module provides extended typings for Preact's `Component` and `VNode`
+ * classes which include internal properties.
+ *
+ * The original property names (in the Preact source) are replaced with shorter
+ * ones (they are "mangled") during the build. The mapping from original name to
+ * short name is fixed, see `mangle.json` in the Preact source tree.
+ */
+
+/**
  * An instance of Preact's `Component` class or a subclass created by
  * rendering.
  */
 export interface PreactComponent extends Component {
   // Preact 10.
-  _constructor: Function;
-  _prevVNode: PreactVNode;
-  _vnode: PreactVNode;
+
+  // Original name: `_prevVNode`.
+  __t: PreactVNode;
+
+  // Original name: `_vnode`.
+  __v: PreactVNode;
 
   // Preact <= 9.
   __k: string | null;
@@ -20,7 +32,9 @@ export interface PreactComponent extends Component {
  */
 export interface PreactNode extends ChildNode {
   // Preact 10.
-  _prevVNode: PreactVNode;
+
+  // Original name: `_prevVNode`.
+  __t: PreactVNode;
 
   // Preact <= 9.
   _component: PreactComponent;
@@ -35,9 +49,15 @@ export interface PreactNode extends ChildNode {
 
 export interface PreactVNode extends VNode {
   // Preact 10.
-  _dom: PreactNode | null;
-  _component: PreactComponent | null;
-  _children: PreactVNode[] | null;
+
+  // Original name: `_dom`.
+  __e: PreactNode | null;
+
+  // Original name: `_component`.
+  __c: PreactComponent | null;
+
+  // Original name: `_children`.
+  __k: PreactVNode[] | null;
 }
 
 /**
@@ -45,4 +65,34 @@ export interface PreactVNode extends VNode {
  */
 export interface VNodeExtensions extends VNode {
   originalType: Function;
+}
+
+/**
+ * Return the VNode representing the rendered output of a component.
+ */
+export function getRenderedVNode(
+  componentOrNode: PreactComponent | PreactNode
+) {
+  return componentOrNode.__t;
+}
+
+/**
+ * Return the rendered DOM node associated with a VNode.
+ */
+export function getDOMNode(node: PreactVNode): PreactNode | null {
+  return node.__e;
+}
+
+/**
+ * Return the `Component` instance associated with a VNode.
+ */
+export function getComponent(node: PreactVNode): PreactComponent | null {
+  return node.__c;
+}
+
+/**
+ * Return the child VNodes associated with a VNode.
+ */
+export function getChildren(node: PreactVNode) {
+  return node.__k;
 }

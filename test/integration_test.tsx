@@ -274,7 +274,14 @@ function addInteractiveTests(render: typeof mount) {
     const wrapper = render(<Test />);
     allMethods.forEach(method => Test.prototype[method].reset());
 
-    (options as any).beforeUnmount = sinon.stub();
+    const unmountCallback = sinon.stub();
+
+    // Preact <= 8.
+    (options as any).beforeUnmount = unmountCallback;
+
+    // Preact 10.
+    (options as any).unmount = unmountCallback;
+
     wrapper.unmount();
     sinon.assert.called((options as any).beforeUnmount);
 

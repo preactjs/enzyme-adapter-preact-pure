@@ -13,18 +13,17 @@ import { Component, Fragment, VNode } from 'preact';
 import flatMap from 'array.prototype.flatmap';
 
 import { childElements } from './compat';
-import { PreactComponent, PreactNode, PreactVNode } from './preact-internals';
+import {
+  PreactComponent,
+  PreactNode,
+  PreactVNode,
+  getComponent,
+  getChildren,
+  getDOMNode,
+  getRenderedVNode,
+} from './preact-internals';
 import { getRealType } from './shallow-render-utils';
 import { getType } from './util';
-
-function componentType(c: PreactComponent) {
-  if (c._constructor) {
-    // This is a functional component. The component is an instance of
-    // `Component` but the function is stored in the `_constructor` field.
-    return c._constructor;
-  }
-  return c.constructor;
-}
 
 type Props = { [prop: string]: any };
 type RSTNodeTypes = RSTNode | string | null;
@@ -63,14 +62,16 @@ function rstNodeFromVNode(
   if (node.text !== null) {
     return String(node.text);
   }
-  if (node._component) {
-    return rstNodeFromComponent(node._component);
+
+  const component = getComponent(node);
+  if (component) {
+    return rstNodeFromComponent(component);
   }
   if (node.type === Fragment) {
-    return rstNodesFromChildren(node._children);
+    return rstNodesFromChildren(getChildren(node));
   }
 
-  if (!node._dom) {
+  if (!getDOMNode(node)) {
     throw new Error(
       `Expected VDOM node to be a DOM node but got ${node.type!}`
     );
@@ -82,8 +83,8 @@ function rstNodeFromVNode(
     props: convertDOMProps(node.props),
     key: node.key || null,
     ref: node.ref || null,
-    instance: node._dom,
-    rendered: rstNodesFromChildren(node._children),
+    instance: getDOMNode(node),
+    rendered: rstNodesFromChildren(getChildren(node)),
   };
 }
 
@@ -142,15 +143,10 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     );
   }
 
-  let nodeType: NodeType;
-  if (component._constructor) {
-    nodeType = 'function';
-  } else {
-    nodeType = 'class';
-  }
+  const nodeType = nodeTypeFromType(component.constructor);
 
   let rendered: RSTNodeTypes | RSTNodeTypes[] = rstNodeFromVNode(
-    component._prevVNode
+    getRenderedVNode(component)
   );
 
   // If this was a shallow-rendered component, set the RST node's type to the
@@ -158,7 +154,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
   const shallowRenderedType = getRealType(component);
   const type = shallowRenderedType
     ? shallowRenderedType
-    : componentType(component);
+    : component.constructor;
 
   let renderedArray: RSTNodeTypes[];
   if (Array.isArray(rendered)) {
@@ -173,8 +169,8 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType,
     type,
     props: { children: [], ...component.props },
-    key: component._vnode.key || null,
-    ref: component._vnode.ref || null,
+    key: component.__v.key || null,
+    ref: component.__v.ref || null,
     instance: component,
     rendered: renderedArray,
   };
@@ -184,7 +180,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
  * Convert the Preact components rendered into `container` into an RST node.
  */
 export function getNode(container: HTMLElement): RSTNode {
-  const vnode = ((container as unknown) as PreactNode)._prevVNode;
+  const vnode = getRenderedVNode((container as unknown) as PreactNode);
   const rstNode = rstNodeFromVNode(vnode);
 
   // There is currently a requirement that the root element produces a single

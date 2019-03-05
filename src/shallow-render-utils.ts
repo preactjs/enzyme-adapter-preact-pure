@@ -39,11 +39,8 @@ function getDisplayName(type: ComponentFactory<any>) {
 export function getRealType(component: Component) {
   let ctor: any;
   const c = component as PreactComponent;
-  if (c._constructor) {
-    ctor = c._constructor;
-  } else {
-    ctor = c.constructor;
-  }
+  ctor = c.constructor;
+
   if (ctor.originalType) {
     return ctor.originalType;
   } else {
