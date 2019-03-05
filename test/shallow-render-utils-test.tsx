@@ -9,6 +9,12 @@ import {
 } from '../src/shallow-render-utils';
 import { componentForDOMNode, render, childElements } from '../src/compat';
 import { isPreact10 } from '../src/util';
+import {
+  PreactNode,
+  getChildren,
+  getComponent,
+  getRenderedVNode,
+} from '../src/preact-internals';
 
 describe('shallow-render-utils', () => {
   let container: HTMLElement;
@@ -101,9 +107,12 @@ describe('shallow-render-utils', () => {
       });
       let childComponent: Component;
       if (isPreact10()) {
-        const fragVNode = (container as any)._prevVNode;
-        const rootComponent = fragVNode._children[0]._component;
-        childComponent = rootComponent._prevVNode._children[1]._component;
+        const fragVNode = getRenderedVNode(
+          (container as unknown) as PreactNode
+        );
+        const rootComponent = getComponent(getChildren(fragVNode)![0])!;
+        const rootOutput = getRenderedVNode(rootComponent);
+        childComponent = getComponent(getChildren(rootOutput)![1])!;
       } else {
         const child = container.querySelector('shallow-render')!;
         childComponent = componentForDOMNode(child)!;

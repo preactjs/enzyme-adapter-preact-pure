@@ -79,9 +79,7 @@ describe('MountRenderer', () => {
     it('fires an event at the DOM node', () => {
       const renderer = new MountRenderer();
       const callback = sinon.stub();
-      renderer.render(
-        <button type="button" onClick={callback} />,
-      );
+      renderer.render(<button type="button" onClick={callback} />);
 
       renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
 
@@ -91,9 +89,7 @@ describe('MountRenderer', () => {
     it('passes arguments to event handler', () => {
       const renderer = new MountRenderer();
       const callback = sinon.stub();
-      renderer.render(
-        <button type="button" onKeyDown={callback} />,
-      );
+      renderer.render(<button type="button" onKeyDown={callback} />);
 
       renderer.simulateEvent(renderer.getNode() as RSTNode, 'keydown', {
         key: 'a',

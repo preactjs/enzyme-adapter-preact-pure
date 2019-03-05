@@ -5,7 +5,15 @@
 
 import { VNode, h, render as preactRender } from 'preact';
 
-import { PreactComponent, PreactNode, PreactVNode } from './preact-internals';
+import {
+  PreactComponent,
+  PreactNode,
+  PreactVNode,
+  getDOMNode,
+  getComponent,
+  getChildren,
+  getRenderedVNode,
+} from './preact-internals';
 import { toArray, isPreact10 } from './util';
 
 /**
@@ -55,13 +63,14 @@ function findVNodeForDOM(
   el: PreactNode
 ): PreactVNode | null {
   // Test the current vnode itself.
-  if (vnode._dom === el) {
+  if (getDOMNode(vnode) === el) {
     return vnode;
   }
 
   // Test children of this vnode.
-  if (vnode._children) {
-    for (const child of vnode._children) {
+  const children = getChildren(vnode);
+  if (children) {
+    for (const child of children) {
       if (typeof child === 'string') {
         continue;
       }
@@ -73,8 +82,9 @@ function findVNodeForDOM(
   }
 
   // Test the rendered output of this vnode.
-  if (vnode._component) {
-    return findVNodeForDOM(vnode._component._prevVNode, el);
+  const component = getComponent(vnode);
+  if (component) {
+    return findVNodeForDOM(getRenderedVNode(component), el);
   }
 
   return null;
@@ -98,10 +108,13 @@ export function componentForDOMNode(
   const targetEl = el;
   while (el) {
     el = (el.parentNode as unknown) as PreactNode;
-    if (el && '_prevVNode' in el) {
-      const vnode = findVNodeForDOM(el._prevVNode, targetEl as PreactNode);
+    if (el && getRenderedVNode(el as PreactNode)) {
+      const vnode = findVNodeForDOM(
+        getRenderedVNode(el as PreactNode),
+        targetEl as PreactNode
+      );
       if (vnode) {
-        return vnode._component;
+        return getComponent(vnode);
       }
     }
   }
