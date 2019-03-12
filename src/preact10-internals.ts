@@ -15,10 +15,10 @@ import { Component, VNode } from 'preact';
  */
 interface PreactComponent extends Component {
   // Original name: `_prevVNode`.
-  __t: PreactVNode;
+  __t: VNode;
 
   // Original name: `_vnode`.
-  __v: PreactVNode;
+  __v: VNode;
 }
 
 /**
@@ -31,20 +31,26 @@ interface PreactNode extends ChildNode {
 
 interface PreactVNode extends VNode {
   // Original name: `_dom`.
-  __e: PreactNode | null;
+  __e: Node | null;
 
   // Original name: `_component`.
-  __c: PreactComponent | null;
+  __c: Component | null;
 
   // Original name: `_children`.
-  __k: PreactVNode[] | null;
+  __k: VNode[] | null;
 }
 
 /**
  * Return the VNode representing the rendered output of a component.
  */
 export function getRenderedVNode(componentOrNode: Component | Node) {
-  return (componentOrNode as PreactComponent).__t;
+  // Although these two branches currently access a property with the same name,
+  // keep them because they are accessing different objects.
+  if (componentOrNode instanceof Node) {
+    return (componentOrNode as PreactNode).__t;
+  } else {
+    return (componentOrNode as PreactComponent).__t;
+  }
 }
 
 /**
@@ -61,14 +67,14 @@ export function getVNode(component: Component) {
 /**
  * Return the rendered DOM node associated with a VNode.
  */
-export function getDOMNode(node: VNode): PreactNode | null {
+export function getDOMNode(node: VNode): Node | null {
   return (node as PreactVNode).__e;
 }
 
 /**
  * Return the `Component` instance associated with a VNode.
  */
-export function getComponent(node: VNode): PreactComponent | null {
+export function getComponent(node: VNode): Component | null {
   return (node as PreactVNode).__c;
 }
 

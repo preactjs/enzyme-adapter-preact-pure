@@ -15,7 +15,7 @@ interface Preact8Component extends Component {
 }
 
 interface Preact8Node extends ChildNode {
-  _component: Preact8Component;
+  _component: Component;
 
   /** Props used to render a DOM node. */
   __preactattr_: Object;
