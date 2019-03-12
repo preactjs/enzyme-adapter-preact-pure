@@ -9,7 +9,8 @@ import {
   getDOMNode,
   getComponent,
   getChildren,
-  getRenderedVNode,
+  getLastRenderOutput,
+  getLastVNodeRenderedIntoContainer,
 } from './preact10-internals';
 
 import { componentForNode } from './preact8-internals';
@@ -81,7 +82,7 @@ function findVNodeForDOM(vnode: VNode, el: Node): VNode | null {
   // Test the rendered output of this vnode.
   const component = getComponent(vnode);
   if (component) {
-    return findVNodeForDOM(getRenderedVNode(component), el);
+    return findVNodeForDOM(getLastRenderOutput(component), el);
   }
 
   return null;
@@ -103,8 +104,9 @@ export function componentForDOMNode(el: Node): Component | null {
   const targetEl = el;
   let parentEl = el.parentNode;
   while (parentEl) {
-    if (getRenderedVNode(parentEl)) {
-      const vnode = findVNodeForDOM(getRenderedVNode(parentEl), targetEl);
+    const rendered = getLastVNodeRenderedIntoContainer(parentEl);
+    if (rendered) {
+      const vnode = findVNodeForDOM(rendered, targetEl);
       if (vnode) {
         return getComponent(vnode);
       }
