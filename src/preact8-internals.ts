@@ -9,7 +9,6 @@ import { Component } from 'preact';
  */
 
 interface Preact8Component extends Component {
-  // Preact <= 8.
   __k: string | null;
   __r: Function | null;
 }
