@@ -5,7 +5,7 @@ import { getNode as getNodeClassic } from './preact-rst';
 import { getNode as getNodeV10 } from './preact10-rst';
 import { getDisplayName, isPreact10 } from './util';
 import { render } from './compat';
-import { PreactNode, getRenderedVNode } from './preact-internals';
+import { getRenderedVNode } from './preact-internals';
 import { withReplacedMethod } from './util';
 
 type EventDetails = { [prop: string]: any };
@@ -52,9 +52,9 @@ export default class MountRenderer implements EnzymeRenderer {
   }
 
   getNode() {
-    const container = (this._container as unknown) as PreactNode;
+    const container = this._container;
     if (
-      // Preact 9 requires DOM nodes to represent any rendered content.
+      // Preact 8 requires DOM nodes to represent any rendered content.
       container.childNodes.length === 0 &&
       // If the root component rendered null in Preact 10 then the only
       // indicator that content has been rendered will be metadata attached to

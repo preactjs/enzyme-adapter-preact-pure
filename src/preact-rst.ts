@@ -3,24 +3,31 @@
  * and converting the result to a React Standard Tree (RST) format defined by
  * Enzyme.
  *
- * Preact <= 9 stores details of the rendered elements on the DOM nodes
+ * Preact <= 8 stores details of the rendered elements on the DOM nodes
  * themselves and updates diff VDOM elements against the DOM. The rendered
  * result is converted to RST by traversing the DOM and Preact-internal
  * metadata attached to DOM nodes.
  */
 
+import { Component } from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import { PreactComponent, PreactNode } from './preact-internals';
+import {
+  componentForNode,
+  propsForNode,
+  componentKey,
+  componentRef,
+} from './preact8-internals';
 import { getRealType } from './shallow-render-utils';
 
 /**
  * Return a React Standard Tree (RST) node from a DOM element which might
  * be the root output of a rendered component.
  */
-function rstNodeFromDOMElementOrComponent(domElement: PreactNode) {
-  if (domElement._component) {
-    return rstNodeFromComponent(domElement._component);
+function rstNodeFromDOMElementOrComponent(domElement: Node) {
+  const component = componentForNode(domElement);
+  if (component) {
+    return rstNodeFromComponent(component);
   } else {
     return rstNodeFromDOMElement(domElement);
   }
@@ -31,7 +38,7 @@ function rstNodesFromDOMNodes(nodes: Node[]) {
     .map(node => {
       switch (node.nodeType) {
         case Node.ELEMENT_NODE:
-          return rstNodeFromDOMElementOrComponent(node as PreactNode);
+          return rstNodeFromDOMElementOrComponent(node);
         case Node.TEXT_NODE:
           return node.nodeValue;
         default:
@@ -63,14 +70,14 @@ function convertDOMProps(props: Props) {
 /**
  * Return a React Standard Tree (RST) node from a host (DOM) element.
  */
-function rstNodeFromDOMElement(domElement: PreactNode): RSTNode {
-  const hostProps: Props = domElement.__preactattr_ || {};
+function rstNodeFromDOMElement(domElement: Node): RSTNode {
+  const hostProps: Props = propsForNode(domElement);
   const key = 'key' in hostProps ? hostProps.key : null;
   const ref = 'ref' in hostProps ? hostProps.ref : null;
 
   return {
     nodeType: 'host',
-    type: domElement.__n,
+    type: domElement.nodeName.toLowerCase(),
     props: convertDOMProps(hostProps),
     key,
     ref,
@@ -82,7 +89,7 @@ function rstNodeFromDOMElement(domElement: PreactNode): RSTNode {
 /**
  * Return a React Standard Tree (RST) node from a Preact `Component` instance.
  */
-function rstNodeFromComponent(component: PreactComponent): RSTNode {
+function rstNodeFromComponent(component: Component): RSTNode {
   let nodeType: NodeType;
   try {
     if (component instanceof component.constructor) {
@@ -112,7 +119,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     } else {
       const text = hostNode.textContent;
 
-      // Preact <= 9 renders `null` as an empty text node. If the node is empty,
+      // Preact <= 8 renders `null` as an empty text node. If the node is empty,
       // it is more likely that the component rendered `null` than an empty
       // string.
       if (text !== '') {
@@ -140,8 +147,8 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     nodeType,
     type,
     props: component.props,
-    key: component.__k || null,
-    ref: component.__r || null,
+    key: componentKey(component) || null,
+    ref: componentRef(component) || null,
     instance: component,
     rendered,
   };
@@ -151,6 +158,5 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
  * Convert the Preact components rendered into `container` into an RST node.
  */
 export function getNode(container: HTMLElement): RSTNode {
-  const rootEl: PreactNode = container.firstChild as any;
-  return rstNodeFromDOMElementOrComponent(rootEl);
+  return rstNodeFromDOMElementOrComponent(container.firstChild!);
 }

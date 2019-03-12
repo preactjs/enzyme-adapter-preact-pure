@@ -3,24 +3,24 @@
  * Preact.
  */
 
-import { VNode, h, render as preactRender } from 'preact';
+import { Component, VNode, h, render as preactRender } from 'preact';
 
 import {
-  PreactComponent,
-  PreactNode,
-  PreactVNode,
   getDOMNode,
   getComponent,
   getChildren,
   getRenderedVNode,
 } from './preact-internals';
+
+import { componentForNode } from './preact8-internals';
+
 import { toArray, isPreact10 } from './util';
 
 /**
  * Add `type` and  `props` properties to Preact elements as aliases of
  * `nodeName` and `attributes`.
  *
- * This only applies to older versions of Preact. Preact 9 and 10 use the
+ * This only applies to older versions of Preact. Preact 10 uses the
  * names `type` and `props` already.
  *
  * This normalizes VNodes across different versions of Preact and also Enzyme
@@ -58,10 +58,7 @@ export function addTypeAndPropsToVNode() {
 /**
  * Search a tree of Preact v10 VNodes for the one that produced a given DOM element.
  */
-function findVNodeForDOM(
-  vnode: PreactVNode,
-  el: PreactNode
-): PreactVNode | null {
+function findVNodeForDOM(vnode: VNode, el: Node): VNode | null {
   // Test the current vnode itself.
   if (getDOMNode(vnode) === el) {
     return vnode;
@@ -93,30 +90,26 @@ function findVNodeForDOM(
 /**
  * Find the `Component` instance associated with a rendered DOM element.
  */
-export function componentForDOMNode(
-  el: Node | PreactNode
-): PreactComponent | null {
-  // In Preact <= 9 this is easy, as rendered nodes have `_component` expando
+export function componentForDOMNode(el: Node): Component | null {
+  // In Preact <= 8 this is easy, as rendered nodes have `_component` expando
   // property.
   if ('_component' in el) {
-    return el._component;
+    return componentForNode(el);
   }
 
   // In Preact 10 we have to search up the tree until we find the root element
   // which has a `_prevVNode` expando property, and then traverse the tree of
   // VNodes until we find one with a matching `_dom` property.
   const targetEl = el;
-  while (el) {
-    el = (el.parentNode as unknown) as PreactNode;
-    if (el && getRenderedVNode(el as PreactNode)) {
-      const vnode = findVNodeForDOM(
-        getRenderedVNode(el as PreactNode),
-        targetEl as PreactNode
-      );
+  let parentEl = el.parentNode;
+  while (parentEl) {
+    if (getRenderedVNode(parentEl)) {
+      const vnode = findVNodeForDOM(getRenderedVNode(parentEl), targetEl);
       if (vnode) {
         return getComponent(vnode);
       }
     }
+    parentEl = parentEl.parentNode;
   }
   return null;
 }
@@ -125,8 +118,8 @@ export function render(el: VNode, container: HTMLElement) {
   if (isPreact10()) {
     preactRender(el, container);
   } else {
-    const preact9Render = preactRender as any;
-    preact9Render(el, container, container.firstChild);
+    const preact8Render = preactRender as any;
+    preact8Render(el, container, container.firstChild);
   }
 }
 

@@ -5,4 +5,4 @@ script:
   # Preact 8.x.
   - yarn test
   # Preact 10.
-  - yarn test --preact-lib node_modules/preact10/dist/preact.js
+  - yarn test:preact10

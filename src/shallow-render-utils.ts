@@ -7,11 +7,17 @@ import {
   options,
 } from 'preact';
 
-import { PreactComponent, VNodeExtensions } from './preact-internals';
 import { childElements } from './compat';
 import { isPreact10 } from './util';
 
 interface ShallowRenderFunction extends Function {
+  originalType: Function;
+}
+
+/**
+ * Additional properties added to Preact VNode elements by the adapter.
+ */
+export interface VNodeExtensions extends VNode {
   originalType: Function;
 }
 
@@ -38,7 +44,7 @@ function getDisplayName(type: ComponentFactory<any>) {
  */
 export function getRealType(component: Component) {
   let ctor: any;
-  const c = component as PreactComponent;
+  const c = component as Component;
   ctor = c.constructor;
 
   if (ctor.originalType) {
