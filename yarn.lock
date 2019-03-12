@@ -1101,10 +1101,10 @@ preact-render-to-string@^4.1.0:
   dependencies:
     pretty-format "^3.8.0"
 
-"preact10@npm:preact@10.0.0-alpha.0":
-  version "10.0.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/preact/-/preact-10.0.0-alpha.0.tgz#24f35f5bd47c81387f4ee99517fc5c2320dbafa0"
-  integrity sha512-GO2JTMOuoys4m3652dEv8knD+F36LMCA37aIgCeHjsF6hGkNQJcV68qmRDdEFy79lsJcoaa+me8SGc4AOWnllg==
+"preact10@npm:preact@10.0.0-alpha.1":
+  version "10.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.0.0-alpha.1.tgz#0c8ee161fcd23839568cd52487d2dc07ca1b3166"
+  integrity sha512-9mDFKeU8SkepfCcjsoq/lODLKBtjgZj/aGBJaVXTNOEZV5XgOfE2TZQkFWDejE7w/q1qKUh1tJZaAeICxAKJ1g==
   dependencies:
     prop-types "^15.6.2"
 
@@ -1178,9 +1178,9 @@ randexp@0.4.6:
     ret "~0.1.10"
 
 react-is@^16.8.1:
-  version "16.8.3"
-  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.8.3.tgz#4ad8b029c2a718fc0cfc746c8d4e1b7221e5387d"
-  integrity sha512-Y4rC1ZJmsxxkkPuMLwvKvlL1Zfpbcu+Bf4ZigkHup3v9EfdYhAlWAaVyA19olXq2o2mGn0w+dFKvk3pVVlYcIA==
+  version "16.8.4"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.8.4.tgz#90f336a68c3a29a096a3d648ab80e87ec61482a2"
+  integrity sha512-PVadd+WaUDOAciICm/J1waJaSvgq+4rHE/K70j0PFqKhkTBsPv/82UGQJNXAngz1fOQLLxI6z1sEDmJDQhCTAA==
 
 readable-stream@^3.0.6:
   version "3.1.1"
