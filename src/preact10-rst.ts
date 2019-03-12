@@ -14,13 +14,11 @@ import flatMap from 'array.prototype.flatmap';
 
 import { childElements } from './compat';
 import {
-  PreactComponent,
-  PreactNode,
-  PreactVNode,
   getComponent,
   getChildren,
   getDOMNode,
   getRenderedVNode,
+  getVNode,
 } from './preact-internals';
 import { getRealType } from './shallow-render-utils';
 import { getType } from './util';
@@ -43,19 +41,17 @@ function convertDOMProps(props: Props) {
   return converted;
 }
 
-function rstNodesFromChildren(nodes: PreactVNode[] | null): RSTNodeTypes[] {
+function rstNodesFromChildren(nodes: VNode[] | null): RSTNodeTypes[] {
   if (!nodes) {
     return [];
   }
-  return flatMap(nodes, (node: PreactVNode | null) => {
+  return flatMap(nodes, (node: VNode | null) => {
     const rst = rstNodeFromVNode(node);
     return Array.isArray(rst) ? rst : [rst];
   });
 }
 
-function rstNodeFromVNode(
-  node: PreactVNode | null
-): RSTNodeTypes | RSTNodeTypes[] {
+function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
   if (node == null) {
     return null;
   }
@@ -136,7 +132,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
 /**
  * Return a React Standard Tree (RST) node from a Preact `Component` instance.
  */
-function rstNodeFromComponent(component: PreactComponent): RSTNode {
+function rstNodeFromComponent(component: Component): RSTNode {
   if (!(component instanceof Component)) {
     throw new Error(
       `Expected argument to be a Component but got ${getType(component)}`
@@ -165,12 +161,14 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
     renderedArray = [];
   }
 
+  const vnode = getVNode(component);
+
   return {
     nodeType,
     type,
     props: { children: [], ...component.props },
-    key: component.__v.key || null,
-    ref: component.__v.ref || null,
+    key: vnode.key || null,
+    ref: vnode.ref || null,
     instance: component,
     rendered: renderedArray,
   };
@@ -180,7 +178,7 @@ function rstNodeFromComponent(component: PreactComponent): RSTNode {
  * Convert the Preact components rendered into `container` into an RST node.
  */
 export function getNode(container: HTMLElement): RSTNode {
-  const vnode = getRenderedVNode((container as unknown) as PreactNode);
+  const vnode = getRenderedVNode(container);
   const rstNode = rstNodeFromVNode(vnode);
 
   // There is currently a requirement that the root element produces a single

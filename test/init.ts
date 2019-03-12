@@ -36,6 +36,6 @@ if (opts['preact-lib']) {
 import { isPreact10 } from '../src/util';
 console.log(`Using Preact ${isPreact10() ? '10+' : '<= 9'}`);
 
-// For Preact <= 9, modify VNode class for compatibility with Preact 10.
+// For Preact <= 8, modify VNode class for compatibility with Preact 10.
 import { addTypeAndPropsToVNode } from '../src/compat';
 addTypeAndPropsToVNode();

@@ -10,7 +10,6 @@ import {
 import { componentForDOMNode, render, childElements } from '../src/compat';
 import { isPreact10 } from '../src/util';
 import {
-  PreactNode,
   getChildren,
   getComponent,
   getRenderedVNode,
@@ -107,9 +106,7 @@ describe('shallow-render-utils', () => {
       });
       let childComponent: Component;
       if (isPreact10()) {
-        const fragVNode = getRenderedVNode(
-          (container as unknown) as PreactNode
-        );
+        const fragVNode = getRenderedVNode(container);
         const rootComponent = getComponent(getChildren(fragVNode)![0])!;
         const rootOutput = getRenderedVNode(rootComponent);
         childComponent = getComponent(getChildren(rootOutput)![1])!;
