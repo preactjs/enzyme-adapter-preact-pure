@@ -1,7 +1,7 @@
 import { RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 
-import { getComponent } from './preact-internals';
+import { getComponent } from './preact10-internals';
 
 export function getType(obj: Object) {
   if (obj == null) {

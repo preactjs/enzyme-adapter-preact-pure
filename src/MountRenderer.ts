@@ -1,11 +1,11 @@
 import { EnzymeRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 
-import { getNode as getNodeClassic } from './preact-rst';
+import { getNode as getNodeClassic } from './preact8-rst';
 import { getNode as getNodeV10 } from './preact10-rst';
 import { getDisplayName, isPreact10 } from './util';
 import { render } from './compat';
-import { getRenderedVNode } from './preact-internals';
+import { getRenderedVNode } from './preact10-internals';
 import { withReplacedMethod } from './util';
 
 type EventDetails = { [prop: string]: any };

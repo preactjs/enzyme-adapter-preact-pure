@@ -3,7 +3,7 @@ import { Component, Fragment, VNode, h } from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
 import { getNode as getNodeV10, rstNodeFromElement } from '../src/preact10-rst';
-import { getNode as getNodeClassic } from '../src/preact-rst';
+import { getNode as getNodeClassic } from '../src/preact8-rst';
 import { getType, isPreact10 } from '../src/util';
 import { render } from '../src/compat';
 
@@ -280,7 +280,7 @@ function renderToRST(el: VNode, container?: HTMLElement): RSTNode | null {
   return filterNode(rootNode);
 }
 
-describe('preact-rst, preact10-rst', () => {
+describe('preact8-rst, preact10-rst', () => {
   let container: HTMLElement;
 
   beforeEach(() => {
