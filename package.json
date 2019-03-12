@@ -34,7 +34,8 @@
     "build": "tsc",
     "format": "prettier --write src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
-    "test": "mocha -r ts-node/register -r test/init.ts test/*.tsx"
+    "test": "mocha -r ts-node/register -r test/init.ts test/*.tsx",
+    "test:preact10": "yarn test --preact-lib node_modules/preact10/dist/preact.js"
   },
   "dependencies": {
     "array.prototype.flatmap": "^1.2.1",
