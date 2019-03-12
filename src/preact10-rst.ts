@@ -19,7 +19,7 @@ import {
   getDOMNode,
   getRenderedVNode,
   getVNode,
-} from './preact-internals';
+} from './preact10-internals';
 import { getRealType } from './shallow-render-utils';
 import { getType } from './util';
 

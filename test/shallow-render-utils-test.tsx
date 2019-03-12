@@ -13,7 +13,7 @@ import {
   getChildren,
   getComponent,
   getRenderedVNode,
-} from '../src/preact-internals';
+} from '../src/preact10-internals';
 
 describe('shallow-render-utils', () => {
   let container: HTMLElement;

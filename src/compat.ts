@@ -10,7 +10,7 @@ import {
   getComponent,
   getChildren,
   getRenderedVNode,
-} from './preact-internals';
+} from './preact10-internals';
 
 import { componentForNode } from './preact8-internals';
 
