@@ -12,7 +12,8 @@ import { isPreact10 } from '../src/util';
 import {
   getChildren,
   getComponent,
-  getRenderedVNode,
+  getLastRenderOutput,
+  getLastVNodeRenderedIntoContainer,
 } from '../src/preact10-internals';
 
 describe('shallow-render-utils', () => {
@@ -106,9 +107,9 @@ describe('shallow-render-utils', () => {
       });
       let childComponent: Component;
       if (isPreact10()) {
-        const fragVNode = getRenderedVNode(container);
+        const fragVNode = getLastVNodeRenderedIntoContainer(container);
         const rootComponent = getComponent(getChildren(fragVNode)![0])!;
-        const rootOutput = getRenderedVNode(rootComponent);
+        const rootOutput = getLastRenderOutput(rootComponent);
         childComponent = getComponent(getChildren(rootOutput)![1])!;
       } else {
         const child = container.querySelector('shallow-render')!;

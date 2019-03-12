@@ -14,11 +14,11 @@ import flatMap from 'array.prototype.flatmap';
 
 import { childElements } from './compat';
 import {
-  getComponent,
   getChildren,
+  getComponent,
   getDOMNode,
-  getRenderedVNode,
-  getVNode,
+  getLastRenderOutput,
+  getLastVNodeRenderedIntoContainer,
 } from './preact10-internals';
 import { getRealType } from './shallow-render-utils';
 import { getType } from './util';
@@ -61,7 +61,7 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
 
   const component = getComponent(node);
   if (component) {
-    return rstNodeFromComponent(component);
+    return rstNodeFromComponent(node, component);
   }
   if (node.type === Fragment) {
     return rstNodesFromChildren(getChildren(node));
@@ -132,7 +132,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
 /**
  * Return a React Standard Tree (RST) node from a Preact `Component` instance.
  */
-function rstNodeFromComponent(component: Component): RSTNode {
+function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
   if (!(component instanceof Component)) {
     throw new Error(
       `Expected argument to be a Component but got ${getType(component)}`
@@ -142,7 +142,7 @@ function rstNodeFromComponent(component: Component): RSTNode {
   const nodeType = nodeTypeFromType(component.constructor);
 
   let rendered: RSTNodeTypes | RSTNodeTypes[] = rstNodeFromVNode(
-    getRenderedVNode(component)
+    getLastRenderOutput(component)
   );
 
   // If this was a shallow-rendered component, set the RST node's type to the
@@ -161,8 +161,6 @@ function rstNodeFromComponent(component: Component): RSTNode {
     renderedArray = [];
   }
 
-  const vnode = getVNode(component);
-
   return {
     nodeType,
     type,
@@ -178,7 +176,7 @@ function rstNodeFromComponent(component: Component): RSTNode {
  * Convert the Preact components rendered into `container` into an RST node.
  */
 export function getNode(container: HTMLElement): RSTNode {
-  const vnode = getRenderedVNode(container);
+  const vnode = getLastVNodeRenderedIntoContainer(container);
   const rstNode = rstNodeFromVNode(vnode);
 
   // There is currently a requirement that the root element produces a single
