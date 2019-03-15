@@ -13,7 +13,7 @@ import StringRenderer from './StringRenderer';
 import { addTypeAndPropsToVNode } from './compat';
 import { rstNodeFromElement } from './preact10-rst';
 
-export default class PreactAdapter extends EnzymeAdapter {
+export default class Adapter extends EnzymeAdapter {
   constructor() {
     super();
 

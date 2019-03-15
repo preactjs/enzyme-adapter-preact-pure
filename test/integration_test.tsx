@@ -4,7 +4,7 @@ import { Component, Fragment, h, options } from 'preact';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
-import PreactAdapter from '../src/PreactAdapter';
+import Adapter from '../src/Adapter';
 import { isPreact10 } from '../src/util';
 
 function itIf(cond: () => boolean, description: string, fn: () => any) {
@@ -347,7 +347,7 @@ function addInteractiveTests(render: typeof mount) {
 
 describe('integration tests', () => {
   before(() => {
-    configure({ adapter: new PreactAdapter() });
+    configure({ adapter: new Adapter() });
   });
 
   describe('"mount" rendering', () => {
@@ -355,7 +355,7 @@ describe('integration tests', () => {
     addInteractiveTests(mount);
 
     it('supports retrieving elements', () => {
-      // Test workaround for bug where `PreactAdapter.nodeToElement` is called
+      // Test workaround for bug where `Adapter.nodeToElement` is called
       // with undefined `this` by `ReactWrapper#get`.
       const wrapper = mount(
         <div>

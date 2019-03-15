@@ -28,9 +28,9 @@ provided by this package:
 
 ```js
 import { configure } from 'enzyme';
-import { PreactAdapter } from 'enzyme-adapter-preact-pure';
+import { Adapter } from 'enzyme-adapter-preact-pure';
 
-configure({ adapter: new PreactAdapter });
+configure({ adapter: new Adapter });
 ```
 
 Once the adapter is configured, you can write Enzyme tests for your Preact
