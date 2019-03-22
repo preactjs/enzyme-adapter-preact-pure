@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- Made the Preact 10 adapter compatible with preact/compat by removing an
+  `instanceof Component` check, which breaks if the `Component` class comes
+  from the 'preact/compat' bundle
+- Made the adapter the default export of the package. The previous named exports
+  have been kept for backwards compatibility
+
 ## [1.9.0] - 2019-03-15
 
 - Changed the name of the package's main export to `Adapter`. The export is
