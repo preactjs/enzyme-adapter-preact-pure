@@ -21,7 +21,6 @@ import {
   getLastVNodeRenderedIntoContainer,
 } from './preact10-internals';
 import { getRealType } from './shallow-render-utils';
-import { getType } from './util';
 
 type Props = { [prop: string]: any };
 type RSTNodeTypes = RSTNode | string | null;
@@ -133,12 +132,6 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
  * Return a React Standard Tree (RST) node from a Preact `Component` instance.
  */
 function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
-  if (!(component instanceof Component)) {
-    throw new Error(
-      `Expected argument to be a Component but got ${getType(component)}`
-    );
-  }
-
   const nodeType = nodeTypeFromType(component.constructor);
 
   let rendered: RSTNodeTypes | RSTNodeTypes[] = rstNodeFromVNode(
