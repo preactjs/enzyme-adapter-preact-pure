@@ -28,7 +28,7 @@ provided by this package:
 
 ```js
 import { configure } from 'enzyme';
-import { Adapter } from 'enzyme-adapter-preact-pure';
+import Adapter from 'enzyme-adapter-preact-pure';
 
 configure({ adapter: new Adapter });
 ```
@@ -55,6 +55,14 @@ const wrapper = mount(<div class="widget"/>);
 wrapper.props() // Returns `{ children: [], className: 'widget' }`
 wrapper.find('.widget').length // Returns `1`
 ```
+
+
+### Usage with preact/compat
+
+This package has the same interface as the official
+enzyme-adapter-react-$version packages. If you are using preact/compat, you can
+alias enzyme-adapter-react-$version to this package in the same way as
+[preact/compat](https://preactjs.com/guide/switching-to-preact).
 
 ## Development
 
