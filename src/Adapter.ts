@@ -57,7 +57,14 @@ export default class Adapter extends EnzymeAdapter {
     return h(node.type as any, node.props, ...childElements);
   }
 
-  nodeToHostNode(node: RSTNode): Node | null {
+  nodeToHostNode(node: RSTNode | string): Node | null {
+    if (typeof node === 'string') {
+      // Returning `null` here causes `wrapper.text()` to return nothing for a
+      // wrapper around a `Text` node. That's not intuitive perhaps, but it
+      // matches the React adapters' behaviour.
+      return null;
+    }
+
     if (node.nodeType === 'host') {
       return node.instance;
     } else if (node.rendered.length > 0) {

@@ -145,6 +145,33 @@ function addInteractiveTests(render: typeof mount) {
     assert.deepEqual(item.props(), { label: 'test', children: [] });
   });
 
+  it('can traverse a tree with text nodes', () => {
+    function Widget() {
+      return (
+        <div>
+          <span>foo</span>
+        </div>
+      );
+    }
+    const wrapper = render(<Widget />);
+    const matches = wrapper
+      .findWhere((n: any) => n.text() === 'foo')
+      .map((n: any) => n.type());
+
+    // The fact that the output here differs between full and shallow rendering
+    // is not intuitive, but it matches the output from the React wrappers.
+    let expected: Array<string | Function | undefined>;
+    if (render === mount) {
+      expected = [Widget, 'div', 'span'];
+    } else if (render === shallow) {
+      expected = ['div', 'span', undefined];
+    } else {
+      expected = [];
+    }
+
+    assert.deepEqual(matches, expected);
+  });
+
   it('can find child components by type', () => {
     function ListItem({ label }: any) {
       return <li>{label}</li>;
