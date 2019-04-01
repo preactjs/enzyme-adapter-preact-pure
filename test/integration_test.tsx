@@ -158,12 +158,12 @@ function addInteractiveTests(render: typeof mount) {
       .findWhere((n: any) => n.text() === 'foo')
       .map((n: any) => n.type());
 
-    // The fact that the output here differs between full and shallow rendering
-    // is not intuitive, but it matches the output from the React wrappers.
+    // nb. The node with `undefined` type is the Text node itself.
     let expected: Array<string | Function | undefined>;
     if (render === mount) {
-      expected = [Widget, 'div', 'span'];
+      expected = [Widget, 'div', 'span', undefined];
     } else if (render === shallow) {
+      // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
       expected = [];
