@@ -18,8 +18,8 @@
     "jsdom": "^14.0.0",
     "minimist": "^1.2.0",
     "mocha": "^6.0.2",
-    "pirates": "^4.0.1",
     "preact": "^8.4.2",
+    "preact-compat": "^3.18.4",
     "preact10": "npm:preact@10.0.0-alpha.2",
     "prettier": "1.16.4",
     "sinon": "^7.2.3",
@@ -35,7 +35,9 @@
     "format": "prettier --write src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
     "test": "mocha -r ts-node/register -r test/init.ts test/*.tsx",
-    "test:preact10": "yarn test --preact-lib node_modules/preact10/dist/preact.js"
+    "test:compat": "yarn test --preact-compat-lib preact-compat",
+    "test:preact10": "yarn test --preact-lib preact10",
+    "test:preact10-compat": "yarn test --preact-lib preact10 --preact-compat-lib preact10/compat"
   },
   "dependencies": {
     "array.prototype.flatmap": "^1.2.1",

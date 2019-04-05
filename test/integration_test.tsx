@@ -1,11 +1,15 @@
 import { configure, shallow, mount, render as renderToString } from 'enzyme';
-import { Component, Fragment, h, options } from 'preact';
+import { Component, Fragment, h, options, isCompat } from './preact';
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import Adapter from '../src/Adapter';
 import { isPreact10 } from '../src/util';
+
+function isNotPreact8Compat() {
+  return isPreact10() || !isCompat;
+}
 
 function itIf(cond: () => boolean, description: string, fn: () => any) {
   const itFn = cond() ? it : it.skip;
@@ -51,7 +55,7 @@ function addStaticTests(render: typeof mount) {
       assert.equal(wrapper.find('.widget').length, 1);
     });
 
-    it('can test if result contains subtree', () => {
+    itIf(isNotPreact8Compat, 'can test if result contains subtree', () => {
       function ListItem({ label }: any) {
         return <b>{label}</b>;
       }
@@ -145,7 +149,7 @@ function addInteractiveTests(render: typeof mount) {
     assert.deepEqual(item.props(), { label: 'test', children: [] });
   });
 
-  it('can traverse a tree with text nodes', () => {
+  itIf(isNotPreact8Compat, 'can traverse a tree with text nodes', () => {
     function Widget() {
       return (
         <div>
@@ -172,7 +176,7 @@ function addInteractiveTests(render: typeof mount) {
     assert.deepEqual(matches, expected);
   });
 
-  it('can find child components by type', () => {
+  itIf(isNotPreact8Compat, 'can find child components by type', () => {
     function ListItem({ label }: any) {
       return <li>{label}</li>;
     }

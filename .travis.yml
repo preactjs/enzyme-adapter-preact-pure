@@ -4,5 +4,9 @@ node_js:
 script:
   # Preact 8.x.
   - yarn test
+  # Preact 8.x with preact-compat
+  - yarn test:compat
   # Preact 10.
   - yarn test:preact10
+  # Preact 10 with preact/compat
+  - yarn test:preact10-compat
