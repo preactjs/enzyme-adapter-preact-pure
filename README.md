@@ -64,6 +64,17 @@ enzyme-adapter-react-$version packages. If you are using preact/compat, you can
 alias enzyme-adapter-react-$version to this package in the same way as
 [preact/compat](https://preactjs.com/guide/switching-to-preact).
 
+
+**preact-compat and functional components**
+
+preact-compat (for Preact v8) wraps functional components with a wrapper.
+This means that passing component types to Enzyme methods
+(eg. `wrapper.find(MyComponent)`) will not work if the component type is a function.
+Passing the _name_ of the function (`wrapper.find('MyComponent')`) will still
+work.
+
+This issue does not apply when using Preact 10 (with preact/compat).
+
 ## Development
 
 After cloning the repository, you can build it and run tests as follows:
