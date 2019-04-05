@@ -139,9 +139,13 @@ function rstNodeFromComponent(component: Component): RSTNode {
     // it.
     rendered = (rendered[0] as RSTNode).rendered;
   }
-  const type = shallowRenderedType
-    ? shallowRenderedType
-    : component.constructor;
+  let type = shallowRenderedType ? shallowRenderedType : component.constructor;
+
+  // Work around preact-compat setting the `displayName` of SFC wrapper
+  // components incorrectly if they do not have a `displayName` property.
+  if (type.name === 'cl' && !type.displayName) {
+    type.displayName = type.prototype.displayName;
+  }
 
   return {
     nodeType,

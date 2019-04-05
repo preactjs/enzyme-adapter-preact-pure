@@ -1,6 +1,4 @@
-import { readFileSync } from 'fs';
 import { JSDOM } from 'jsdom';
-import { addHook } from 'pirates';
 import minimist from 'minimist';
 
 // Setup DOM globals required by Preact rendering.
@@ -20,16 +18,27 @@ setupJSDOM();
 // nb. This must be invoked _before_ any modules are loaded which require Preact.
 const opts = minimist(process.argv.slice(2));
 if (opts['preact-lib']) {
-  const originalPath = require.resolve('preact');
-  const preactLibSource = readFileSync(opts['preact-lib']).toString();
+  const Module = require('module');
+  const origRequire = Module.prototype.require;
+  Module.prototype.require = function(path: string) {
+    if (path === 'preact' || path.startsWith('preact/')) {
+      path = path.replace(/^preact\b/, opts['preact-lib']);
+    }
+    return origRequire.apply(this, [path]);
+  };
+}
 
-  // Return JS from file specified by `--preact-lib` when `require('preact')`
-  // is called.
-  addHook(() => preactLibSource, {
-    exts: ['.js'],
-    matcher: filename => filename === originalPath,
-    ignoreNodeModules: false,
-  });
+if (opts['preact-compat-lib']) {
+  // Simulate a project which uses preact/compat as an alias for React.
+  const path = opts['preact-compat-lib'];
+  console.log(`Using React compat lib ${path}`);
+
+  const compatLib = require(path);
+
+  const preactTestImports = require('./preact');
+  preactTestImports.isCompat = true;
+  preactTestImports.h = compatLib.createElement;
+  preactTestImports.Component = compatLib.Component;
 }
 
 // Log details of which Preact library is being used.
