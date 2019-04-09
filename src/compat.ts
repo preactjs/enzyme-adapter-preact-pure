@@ -129,13 +129,14 @@ export function render(el: VNode, container: HTMLElement) {
  * Return the children of a VNode.
  */
 export function childElements(el: VNode): (VNode | string | null)[] {
-  if (typeof el.children !== 'undefined') {
-    // Preact 8. Children is always an array.
-    return el.children;
-  }
-  if (typeof el.props.children !== 'undefined') {
-    // Preact 10. Children may be a single object.
-    return toArray(el.props.children);
+  if (isPreact10()) {
+    if (typeof el.props.children !== 'undefined') {
+      return toArray(el.props.children);
+    }
+  } else {
+    if (typeof el.children !== 'undefined') {
+      return el.children;
+    }
   }
   return [];
 }
