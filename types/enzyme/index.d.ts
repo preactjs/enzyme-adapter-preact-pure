@@ -63,6 +63,9 @@ declare module 'enzyme' {
 
   export interface AdapterOptions {
     mode: 'mount' | 'shallow' | 'string';
+
+    /** DOM container to render into. */
+    attachTo?: HTMLElement;
   }
 
   /**

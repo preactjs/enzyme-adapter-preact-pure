@@ -39,7 +39,10 @@ export default class Adapter extends EnzymeAdapter {
   createRenderer(options: AdapterOptions) {
     switch (options.mode) {
       case 'mount':
-        return new MountRenderer();
+        // The `attachTo` option is only supported for DOM rendering, for
+        // consistency with React, even though the Preact adapter could easily
+        // support it for shallow rendering.
+        return new MountRenderer({ container: options.attachTo });
       case 'shallow':
         return new ShallowRenderer();
       case 'string':

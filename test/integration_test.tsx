@@ -396,6 +396,13 @@ describe('integration tests', () => {
       const div = wrapper.get(0);
       assert.deepEqual(div.type, 'div');
     });
+
+    it('supports rendering into an existing container', () => {
+      const container = document.createElement('div');
+      const wrapper = mount(<button />, { attachTo: container });
+      assert.ok(container.querySelector('button'));
+      wrapper.detach();
+    });
   });
 
   describe('"shallow" rendering', () => {
