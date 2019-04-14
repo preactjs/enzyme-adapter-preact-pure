@@ -4,6 +4,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import MountRenderer from '../src/MountRenderer';
+import { isPreact10 } from '../src/util';
 
 describe('MountRenderer', () => {
   describe('#render', () => {
@@ -18,7 +19,7 @@ describe('MountRenderer', () => {
     it('renders the element into the provided container', () => {
       const container = document.createElement('div');
       const renderer = new MountRenderer({ container });
-      renderer.render(<button/>);
+      renderer.render(<button />);
       assert.ok(container.querySelector('button'));
     });
 
@@ -55,6 +56,49 @@ describe('MountRenderer', () => {
       const container = renderer.getNode()!.instance.base!;
       assert.equal(container.innerHTML, '1');
     });
+
+    if (isPreact10()) {
+      const { useEffect, useLayoutEffect } = require('preact/hooks');
+
+      it('executes effect hooks on initial render', () => {
+        let effectCount = 0;
+        let layoutEffectCount = 0;
+
+        function TestComponent() {
+          useLayoutEffect(() => {
+            ++layoutEffectCount;
+          });
+          useEffect(() => {
+            ++effectCount;
+          });
+          return null;
+        }
+
+        const renderer = new MountRenderer();
+        renderer.render(<TestComponent />);
+
+        assert.equal(layoutEffectCount, 1);
+        assert.equal(effectCount, 1);
+      });
+
+      it('executes hook cleanup on unmount', () => {
+        let effectRemoved = false;
+
+        function TestComponent() {
+          useEffect(() => {
+            return () => (effectRemoved = true);
+          });
+          return null;
+        }
+
+        const renderer = new MountRenderer();
+        renderer.render(<TestComponent />);
+
+        assert.equal(effectRemoved, false);
+        renderer.unmount();
+        assert.equal(effectRemoved, true);
+      });
+    }
   });
 
   describe('#unmount', () => {
