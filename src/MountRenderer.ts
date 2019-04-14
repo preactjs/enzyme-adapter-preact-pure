@@ -3,10 +3,9 @@ import { VNode, h } from 'preact';
 
 import { getNode as getNodeClassic } from './preact8-rst';
 import { getNode as getNodeV10 } from './preact10-rst';
-import { getDisplayName, isPreact10 } from './util';
+import { getDisplayName, isPreact10, withReplacedMethod } from './util';
 import { render } from './compat';
 import { getLastVNodeRenderedIntoContainer } from './preact10-internals';
-import { withReplacedMethod } from './util';
 
 type EventDetails = { [prop: string]: any };
 
@@ -16,6 +15,23 @@ export interface Options {
    * If not specified, a detached element (not connected to the body) is used.
    */
   container?: HTMLElement;
+}
+
+let actImpl: (cb: () => any) => void;
+if (isPreact10()) {
+  actImpl = require('preact/test-utils').act;
+}
+
+/**
+ * Invoke `callback` and then immediately flush any effects or pending renders
+ * which were scheduled during the callback.
+ */
+function act(callback: () => any) {
+  if (actImpl) {
+    actImpl(callback);
+  } else {
+    callback();
+  }
 }
 
 export default class MountRenderer implements EnzymeRenderer {
@@ -33,7 +49,9 @@ export default class MountRenderer implements EnzymeRenderer {
   }
 
   render(el: VNode, context?: any, callback?: () => any) {
-    render(el, this._container);
+    act(() => {
+      render(el, this._container);
+    });
     const rootNode = this._getNode(this._container);
 
     // Monkey-patch the component's `setState` to make it force an update after
