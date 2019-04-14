@@ -10,12 +10,20 @@ import { withReplacedMethod } from './util';
 
 type EventDetails = { [prop: string]: any };
 
+export interface Options {
+  /**
+   * The container element to render into.
+   * If not specified, a detached element (not connected to the body) is used.
+   */
+  container?: HTMLElement;
+}
+
 export default class MountRenderer implements EnzymeRenderer {
   private _container: HTMLElement;
   private _getNode: typeof getNodeClassic;
 
-  constructor() {
-    this._container = document.createElement('div');
+  constructor({ container }: Options = {}) {
+    this._container = container || document.createElement('div');
 
     if (isPreact10()) {
       this._getNode = getNodeV10;

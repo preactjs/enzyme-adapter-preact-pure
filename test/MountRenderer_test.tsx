@@ -15,6 +15,13 @@ describe('MountRenderer', () => {
       assert.instanceOf(renderer.getNode()!.instance, HTMLDivElement);
     });
 
+    it('renders the element into the provided container', () => {
+      const container = document.createElement('div');
+      const renderer = new MountRenderer({ container });
+      renderer.render(<button/>);
+      assert.ok(container.querySelector('button'));
+    });
+
     it('invokes the post-render callback', () => {
       const renderer = new MountRenderer();
       const callback = sinon.stub();
