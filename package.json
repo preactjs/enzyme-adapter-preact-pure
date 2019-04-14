@@ -3,7 +3,7 @@
   "version": "1.11.0",
   "description": "Enzyme adapter for Preact",
   "main": "build/src/index.js",
-  "repository": "https://github.com/robertknight/enzyme-adapter-preact-pure",
+  "repository": "https://github.com/preactjs/enzyme-adapter-preact-pure",
   "author": "Robert Knight",
   "license": "MIT",
   "devDependencies": {

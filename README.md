@@ -1,6 +1,6 @@
 # enzyme-adapter-preact-pure
 
-[![Build Status](https://travis-ci.org/robertknight/enzyme-adapter-preact-pure.svg?branch=master)](https://travis-ci.org/robertknight/enzyme-adapter-preact-pure)
+[![Build Status](https://travis-ci.org/preactjs/enzyme-adapter-preact-pure.svg?branch=master)](https://travis-ci.org/preactjs/enzyme-adapter-preact-pure)
 
 This is an adapter to support using the [Enzyme](https://airbnb.io/enzyme/) UI
 component testing library with [Preact](https://preactjs.com).
