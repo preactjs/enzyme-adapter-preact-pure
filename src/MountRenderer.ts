@@ -124,7 +124,10 @@ export default class MountRenderer implements EnzymeRenderer {
       cancelable: args.cancelable,
     });
     Object.assign(event, args);
-    node.instance.dispatchEvent(event);
+
+    act(() => {
+      node.instance.dispatchEvent(event);
+    });
   }
 
   batchedUpdates(fn: () => {}) {
