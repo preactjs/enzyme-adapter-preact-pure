@@ -58,7 +58,7 @@ describe('MountRenderer', () => {
     });
 
     if (isPreact10()) {
-      const { useEffect, useLayoutEffect } = require('preact/hooks');
+      const { useEffect, useLayoutEffect, useState } = require('preact/hooks');
 
       it('executes effect hooks on initial render', () => {
         let effectCount = 0;
@@ -97,6 +97,30 @@ describe('MountRenderer', () => {
         assert.equal(effectRemoved, false);
         renderer.unmount();
         assert.equal(effectRemoved, true);
+      });
+
+      it('flushes hooks and state updates after a simulated event', () => {
+        let clicked = false;
+        let effectCount = 0;
+
+        function TestComponent() {
+          const [clicked_, setClicked] = useState(false);
+          useEffect(() => {
+            ++effectCount;
+            clicked = clicked_;
+          });
+          return <div onClick={() => setClicked(true)} />;
+        }
+
+        const renderer = new MountRenderer();
+        renderer.render(<TestComponent />);
+
+        effectCount = 0;
+        const divNode = renderer.getNode()!.rendered[0] as RSTNode;
+        renderer.simulateEvent(divNode, 'click');
+
+        assert.equal(effectCount, 1);
+        assert.equal(clicked, true);
       });
     }
   });
