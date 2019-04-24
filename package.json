@@ -34,7 +34,7 @@
     "build": "tsc",
     "format": "prettier --write src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
-    "test": "mocha -r ts-node/register -r test/init.ts test/*.tsx",
+    "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' mocha -r ts-node/register -r test/init.ts test/*.tsx",
     "test:compat": "yarn test --preact-compat-lib preact-compat",
     "test:preact10": "yarn test --preact-lib preact10",
     "test:preact10-compat": "yarn test --preact-lib preact10 --preact-compat-lib preact10/compat"
