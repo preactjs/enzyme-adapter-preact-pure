@@ -86,7 +86,7 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
 function nodeTypeFromType(type: any): NodeType {
   if (typeof type === 'string') {
     return 'host';
-  } else if (typeof type.prototype.render === 'function') {
+  } else if (type.prototype && typeof type.prototype.render === 'function') {
     return 'class';
   } else if (typeof type === 'function') {
     return 'function';

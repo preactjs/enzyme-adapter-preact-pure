@@ -29,6 +29,8 @@ function FunctionComponent({ label }: any) {
   return <div>{label}</div>;
 }
 
+const ArrowFunctionComponent = ({ label }: any) => <div>{label}</div>;
+
 function NumberComponent({ value }: { value: number }) {
   return <div>{value}</div>;
 }
@@ -159,6 +161,15 @@ const treeCases = [
     element: <FunctionComponent label="Hello" />,
     expectedTree: functionNode({
       type: FunctionComponent,
+      rendered: [hostNode({ type: 'div', rendered: ['Hello'] })],
+      props: { label: 'Hello' },
+    }),
+  },
+  {
+    description: 'function component (arrow function)',
+    element: <ArrowFunctionComponent label="Hello" />,
+    expectedTree: functionNode({
+      type: ArrowFunctionComponent,
       rendered: [hostNode({ type: 'div', rendered: ['Hello'] })],
       props: { label: 'Hello' },
     }),
