@@ -40,11 +40,18 @@ function convertDOMProps(props: Props) {
   return converted;
 }
 
-function rstNodesFromChildren(nodes: VNode[] | null): RSTNodeTypes[] {
+function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
   if (!nodes) {
     return [];
   }
   return flatMap(nodes, (node: VNode | null) => {
+    if (node === null) {
+      // The array of rendered children may have `null` entries as a result of
+      // eg. conditionally rendered children where the condition was false.
+      //
+      // These are omitted from the rendered tree that Enzyme works with.
+      return [];
+    }
     const rst = rstNodeFromVNode(node);
     return Array.isArray(rst) ? rst : [rst];
   });

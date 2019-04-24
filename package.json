@@ -20,7 +20,7 @@
     "mocha": "^6.0.2",
     "preact": "^8.4.2",
     "preact-compat": "^3.18.4",
-    "preact10": "npm:preact@10.0.0-alpha.2",
+    "preact10": "npm:preact@10.0.0-beta.0",
     "prettier": "1.16.4",
     "sinon": "^7.2.3",
     "ts-node": "^8.0.2",
@@ -28,7 +28,7 @@
   },
   "peerDependencies": {
     "enzyme": "^3.8.0",
-    "preact": "^8.4.2 || ^10.0.0-alpha"
+    "preact": "^8.4.2 || ^10.0.0-beta"
   },
   "scripts": {
     "build": "tsc",
