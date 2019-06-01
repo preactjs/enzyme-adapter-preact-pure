@@ -61,8 +61,18 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
   if (node == null) {
     return null;
   }
-  if (node.text !== null) {
+  if (node.text != null) {
+    // The `text` property was removed in Preact 10.0.0-beta 2
+    // (see https://github.com/preactjs/preact/pull/1600).
+    //
+    // If this change persists to the stable Preact 10 release then this branch
+    // can be removed.
     return String(node.text);
+  }
+  if (typeof node.props === 'string' || typeof node.props === 'number') {
+    // Preact 10.0.0-beta.2 represents text nodes as VNodes with
+    // `node.type == null` and `node.props` equal to the string content.
+    return String(node.props);
   }
 
   const component = getComponent(node);
