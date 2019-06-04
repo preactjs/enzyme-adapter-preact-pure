@@ -1,10 +1,10 @@
-import { EnzymeRenderer, JSXElement, RSTNode } from 'enzyme';
+import { Renderer, JSXElement, RSTNode } from 'enzyme';
 import { render as renderToString } from 'preact-render-to-string';
 import { h, render } from 'preact';
 
 import { isPreact10 } from './util';
 
-export default class StringRenderer implements EnzymeRenderer {
+export default class StringRenderer implements Renderer {
   render(el: JSXElement, context?: any) {
     if (isPreact10()) {
       // preact-render-to-string does not support Preact 10 yet.

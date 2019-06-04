@@ -1,4 +1,4 @@
-import { EnzymeRenderer, RSTNode } from 'enzyme';
+import { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 
 import { getNode as getNodeClassic } from './preact8-rst';
@@ -34,7 +34,7 @@ function act(callback: () => any) {
   }
 }
 
-export default class MountRenderer implements EnzymeRenderer {
+export default class MountRenderer implements AbstractMountRenderer {
   private _container: HTMLElement;
   private _getNode: typeof getNodeClassic;
 
