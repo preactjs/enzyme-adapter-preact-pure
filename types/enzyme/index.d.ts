@@ -38,9 +38,7 @@ declare module 'enzyme' {
   /**
    * A UI renderer created by an `EnzymeAdapter`
    */
-  export interface EnzymeRenderer {
-    render(el: JSXElement, context?: any, callback?: () => any): void;
-
+  export interface Renderer {
     /** Remove the rendered output from the DOM. */
     unmount(): void;
 
@@ -59,6 +57,41 @@ declare module 'enzyme' {
     simulateEvent(node: RSTNode, event: string, args: Object): void;
 
     batchedUpdates(fn: () => {}): void;
+  }
+
+  /**
+   * HTML renderer created by an adapter when `createRenderer` is called with
+   * `{ mode: "string" }`
+   */
+  export interface StringRenderer extends Renderer {
+    render(el: JSXElement, context?: any): void;
+  }
+
+  /**
+   * Full DOM renderer created by an adapter when `createRenderer` is called
+   * with `{ mode: "mount" }`
+   */
+  export interface MountRenderer extends Renderer {
+    render(el: JSXElement, context?: any, callback?: () => any): void;
+  }
+
+  /**
+   * Options passed to the `render` function of a shallow renderer.
+   */
+  export interface ShallowRenderOptions {
+    /**
+     * A map of context provider type, from the provider/consumer pair created
+     * by React's `createContext` API, to current value.
+     */
+    providerValues: Map<Object, any>;
+  }
+
+  /**
+   * Shallow renderer created by an adapter when `createRenderer` is called
+   * with `{ mode: "shallow" }`
+   */
+  export interface ShallowRenderer extends Renderer {
+    render(el: JSXElement, context?: any, options?: ShallowRenderOptions): void;
   }
 
   export interface AdapterOptions {
@@ -87,7 +120,7 @@ declare module 'enzyme' {
       props: Object,
       ...children: JSXElement[]
     ): JSXElement;
-    abstract createRenderer(options: AdapterOptions): EnzymeRenderer;
+    abstract createRenderer(options: AdapterOptions): Renderer;
     abstract elementToNode(element: JSXElement): RSTNode;
     abstract isValidElement(el: JSXElement): boolean;
     abstract nodeToElement(node: RSTNode): JSXElement;
