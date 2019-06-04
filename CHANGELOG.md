@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.3] - 2019-06-04
+
+- Fix shallow-rendering compatibility with Enzyme v3.10 (#51)
+
 ## [1.13.2] - 2019-06-01
 
 - Support Preact 10.0.0-beta.2 (#49)
