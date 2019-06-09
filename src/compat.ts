@@ -82,7 +82,14 @@ function findVNodeForDOM(vnode: VNode, el: Node): VNode | null {
   // Test the rendered output of this vnode.
   const component = getComponent(vnode);
   if (component) {
-    return findVNodeForDOM(getLastRenderOutput(component), el);
+    const rendered = getLastRenderOutput(component);
+    for (let v of rendered) {
+      const match = findVNodeForDOM(v, el);
+      if (match) {
+        return match;
+      }
+    }
+    return null;
   }
 
   return null;
@@ -130,6 +137,9 @@ export function render(el: VNode, container: HTMLElement) {
  */
 export function childElements(el: VNode): (VNode | string | null)[] {
   if (isPreact10()) {
+    if (typeof el.props !== 'object' || el.props == null) {
+      return [];
+    }
     if (typeof el.props.children !== 'undefined') {
       return toArray(el.props.children);
     }
