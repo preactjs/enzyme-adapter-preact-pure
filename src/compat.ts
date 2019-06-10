@@ -3,13 +3,12 @@
  * Preact.
  */
 
-import { Component, VNode, h, render as preactRender } from 'preact';
+import { Component, Fragment, VNode, h, render as preactRender } from 'preact';
 
 import {
   getDOMNode,
   getComponent,
   getChildren,
-  getLastRenderOutput,
   getLastVNodeRenderedIntoContainer,
 } from './preact10-internals';
 
@@ -59,9 +58,12 @@ export function addTypeAndPropsToVNode() {
 /**
  * Search a tree of Preact v10 VNodes for the one that produced a given DOM element.
  */
-function findVNodeForDOM(vnode: VNode, el: Node): VNode | null {
-  // Test the current vnode itself.
-  if (getDOMNode(vnode) === el) {
+function findVNodeForDOM(
+  vnode: VNode,
+  el: Node,
+  filter: (v: VNode) => boolean
+): VNode | null {
+  if (getDOMNode(vnode) === el && filter(vnode)) {
     return vnode;
   }
 
@@ -72,24 +74,18 @@ function findVNodeForDOM(vnode: VNode, el: Node): VNode | null {
       if (typeof child === 'string') {
         continue;
       }
-      const match = findVNodeForDOM(child, el);
+      const match = findVNodeForDOM(child, el, filter);
       if (match) {
         return match;
       }
     }
   }
 
-  // Test the rendered output of this vnode.
-  const component = getComponent(vnode);
-  if (component) {
-    return findVNodeForDOM(getLastRenderOutput(component), el);
-  }
-
   return null;
 }
 
 /**
- * Find the `Component` instance associated with a rendered DOM element.
+ * Find the `Component` instance that produced a given DOM node.
  */
 export function componentForDOMNode(el: Node): Component | null {
   // In Preact <= 8 this is easy, as rendered nodes have `_component` expando
@@ -98,21 +94,23 @@ export function componentForDOMNode(el: Node): Component | null {
     return componentForNode(el);
   }
 
-  // In Preact 10 we have to search up the tree until we find the root element
-  // which has a `_prevVNode` expando property, and then traverse the tree of
-  // VNodes until we find one with a matching `_dom` property.
-  const targetEl = el;
+  // In Preact 10 we have to search up the tree until we find the container
+  // that the root vnode was rendered into, then traverse the vnode tree to
+  // find the component vnode that produced the DOM element.
   let parentEl = el.parentNode;
-  while (parentEl) {
-    const rendered = getLastVNodeRenderedIntoContainer(parentEl);
-    if (rendered) {
-      const vnode = findVNodeForDOM(rendered, targetEl);
-      if (vnode) {
-        return getComponent(vnode);
-      }
-    }
+  let rootVNode = null;
+  while (parentEl && !rootVNode) {
+    rootVNode = getLastVNodeRenderedIntoContainer(parentEl);
     parentEl = parentEl.parentNode;
   }
+
+  if (rootVNode) {
+    const vnode = findVNodeForDOM(rootVNode, el, v => v.type !== Fragment);
+    if (vnode) {
+      return getComponent(vnode);
+    }
+  }
+
   return null;
 }
 
@@ -130,6 +128,9 @@ export function render(el: VNode, container: HTMLElement) {
  */
 export function childElements(el: VNode): (VNode | string | null)[] {
   if (isPreact10()) {
+    if (typeof el.props !== 'object' || el.props == null) {
+      return [];
+    }
     if (typeof el.props.children !== 'undefined') {
       return toArray(el.props.children);
     }

@@ -14,7 +14,11 @@ import { Component, VNode } from 'preact';
  * rendering.
  */
 interface PreactComponent extends Component {
+  // Original name: `_vnode`.
+  __v: VNode;
+
   // Original name: `_prevVNode`.
+  // Only present in Preact <= 10.0.0.beta.2.
   __t: VNode;
 }
 
@@ -22,8 +26,12 @@ interface PreactComponent extends Component {
  * A DOM element or text node created by Preact as a result of rendering.
  */
 interface PreactNode extends ChildNode {
+  // Original name: `_children`.
+  __k: PreactVNode;
+
   // Original name: `_prevVNode`.
-  __t: PreactVNode;
+  // Only present in Preact <= 10.0.0.beta.2, replaced by `_children`.
+  __t: VNode;
 }
 
 interface PreactVNode extends VNode {
@@ -42,18 +50,38 @@ interface PreactVNode extends VNode {
  * `render` function.
  */
 export function getLastVNodeRenderedIntoContainer(container: Node) {
-  return (container as PreactNode).__t;
+  const preactContainer = container as PreactNode;
+
+  // Preact 10 Beta 2 and earlier.
+  if (preactContainer.__t) {
+    return preactContainer.__t;
+  }
+
+  // Preact 10 Beta 3 and later.
+  return preactContainer.__k;
 }
 
 /**
  * Return the VNode returned when `component` was last rendered.
  */
 export function getLastRenderOutput(component: Component) {
-  return (component as PreactComponent).__t;
+  const preactComponent = component as PreactComponent;
+
+  // Preact 10 Beta 2 and earlier.
+  if (preactComponent.__t) {
+    return [preactComponent.__t];
+  }
+
+  // Preact 10 Beta 3 and later.
+  return getChildren(preactComponent.__v);
 }
 
 /**
  * Return the rendered DOM node associated with a rendered VNode.
+ *
+ * "Associated" here means either the DOM node directly output as a result of
+ * rendering the vnode (for DOM vnodes) or the first DOM node output by a
+ * child vnode for component vnodes.
  */
 export function getDOMNode(node: VNode): Node | null {
   return (node as PreactVNode).__e;
@@ -70,5 +98,5 @@ export function getComponent(node: VNode): Component | null {
  * Return the child VNodes associated with a rendered VNode.
  */
 export function getChildren(node: VNode) {
-  return (node as PreactVNode).__k;
+  return (node as PreactVNode).__k!;
 }

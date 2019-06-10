@@ -109,7 +109,7 @@ describe('shallow-render-utils', () => {
       if (isPreact10()) {
         const fragVNode = getLastVNodeRenderedIntoContainer(container);
         const rootComponent = getComponent(getChildren(fragVNode)![0])!;
-        const rootOutput = getLastRenderOutput(rootComponent);
+        const rootOutput = getLastRenderOutput(rootComponent)[0];
         childComponent = getComponent(getChildren(rootOutput)![1])!;
       } else {
         const child = container.querySelector('shallow-render')!;

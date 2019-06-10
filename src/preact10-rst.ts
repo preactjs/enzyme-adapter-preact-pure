@@ -40,6 +40,9 @@ function convertDOMProps(props: Props) {
   return converted;
 }
 
+/**
+ * Convert the rendered output of a vnode to RST nodes.
+ */
 function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
   if (!nodes) {
     return [];
@@ -75,12 +78,13 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
     return String(node.props);
   }
 
+  if (node.type === Fragment) {
+    return rstNodesFromChildren(getChildren(node));
+  }
+
   const component = getComponent(node);
   if (component) {
     return rstNodeFromComponent(node, component);
-  }
-  if (node.type === Fragment) {
-    return rstNodesFromChildren(getChildren(node));
   }
 
   if (!getDOMNode(node)) {
@@ -92,7 +96,7 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
   return {
     nodeType: 'host',
     type: node.type!,
-    props: convertDOMProps(node.props),
+    props: convertDOMProps(node.props!),
     key: node.key || null,
     ref: node.ref || null,
     instance: getDOMNode(node),
@@ -127,12 +131,16 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
   }
   const children = childElements(node).map(rstNodeFromElement);
   const nodeType = nodeTypeFromType(node.type);
-  const props =
-    nodeType === 'host'
-      ? convertDOMProps(node.props)
-      : stripSpecialProps(node.props);
 
-  const ref = node.ref || node.props.ref || null;
+  let props = {};
+  if (typeof node.props === 'object' && node.props) {
+    props =
+      nodeType === 'host'
+        ? convertDOMProps(node.props)
+        : stripSpecialProps(node.props);
+  }
+
+  const ref = node.ref /* Preact 10 */ || node.props.ref /* Preact 8 */ || null;
 
   return {
     nodeType,
@@ -151,9 +159,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
 function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
   const nodeType = nodeTypeFromType(component.constructor);
 
-  let rendered: RSTNodeTypes | RSTNodeTypes[] = rstNodeFromVNode(
-    getLastRenderOutput(component)
-  );
+  let rendered = rstNodesFromChildren(getLastRenderOutput(component));
 
   // If this was a shallow-rendered component, set the RST node's type to the
   // real component function/class.
@@ -162,15 +168,6 @@ function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
     ? shallowRenderedType
     : component.constructor;
 
-  let renderedArray: RSTNodeTypes[];
-  if (Array.isArray(rendered)) {
-    renderedArray = rendered;
-  } else if (rendered !== null) {
-    renderedArray = [rendered];
-  } else {
-    renderedArray = [];
-  }
-
   return {
     nodeType,
     type,
@@ -178,7 +175,7 @@ function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
     key: vnode.key || null,
     ref: vnode.ref || null,
     instance: component,
-    rendered: renderedArray,
+    rendered,
   };
 }
 
@@ -186,8 +183,8 @@ function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
  * Convert the Preact components rendered into `container` into an RST node.
  */
 export function getNode(container: HTMLElement): RSTNode {
-  const vnode = getLastVNodeRenderedIntoContainer(container);
-  const rstNode = rstNodeFromVNode(vnode);
+  const rendered = getLastVNodeRenderedIntoContainer(container);
+  const rstNode = rstNodeFromVNode(rendered);
 
   // There is currently a requirement that the root element produces a single
   // RST node. Fragments do not appear in the RST tree, so it is fine if the
