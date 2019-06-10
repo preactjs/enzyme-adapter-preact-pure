@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.4] - 2019-06-10
+
+- Prepare for upcoming internal changes to fragments and components in the
+  next Preact 10 release (#55)
+
 ## [1.13.3] - 2019-06-04
 
 - Fix shallow-rendering compatibility with Enzyme v3.10 (#51)
