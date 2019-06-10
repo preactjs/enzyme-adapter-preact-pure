@@ -78,6 +78,10 @@ export function getLastRenderOutput(component: Component) {
 
 /**
  * Return the rendered DOM node associated with a rendered VNode.
+ *
+ * "Associated" here means either the DOM node directly output as a result of
+ * rendering the vnode (for DOM vnodes) or the first DOM node output by a
+ * child vnode for component vnodes.
  */
 export function getDOMNode(node: VNode): Node | null {
   return (node as PreactVNode).__e;
