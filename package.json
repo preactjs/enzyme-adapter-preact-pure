@@ -19,7 +19,7 @@
     "minimist": "^1.2.0",
     "mocha": "^6.0.2",
     "preact": "^8.4.2",
-    "preact-compat": "^3.18.4",
+    "preact-compat": "^3.19.0",
     "preact10": "npm:preact@^10.0.0-beta.2",
     "prettier": "1.18.0",
     "sinon": "^7.2.3",
