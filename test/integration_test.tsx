@@ -11,7 +11,11 @@ function isNotPreact8Compat() {
   return isPreact10() || !isCompat;
 }
 
-function itIf(cond: () => boolean, description: string, fn: () => any) {
+function itIf(
+  cond: () => boolean,
+  description: string,
+  fn: (done?: () => any) => any
+) {
   const itFn = cond() ? it : it.skip;
   itFn(description, fn);
 }
@@ -324,7 +328,7 @@ function addInteractiveTests(render: typeof mount) {
     );
   });
 
-  itIf(isPreact10, 'supports simulating errors', () => {
+  itIf(isPreact10, 'supports simulating errors', done => {
     // let lastError = null;
 
     function Child() {
@@ -371,8 +375,11 @@ function addInteractiveTests(render: typeof mount) {
     // assert.equal(lastError, err);
 
     // Reset the error and render again, we should see the original content.
-    wrapper.setState({ error: null });
-    assert.equal(wrapper.text(), expectedText);
+    wrapper.setState({ error: null }, () => {
+      wrapper.update();
+      assert.equal(wrapper.text(), expectedText);
+      done!();
+    });
   });
 }
 
