@@ -23,6 +23,8 @@ export interface Options {
 
 let testUtils: any;
 if (isPreact10()) {
+  // nb. We require the whole module here rather than just getting a reference
+  // to the `act` function because `act` is patched in `debounce-render-hook`.
   testUtils = require('preact/test-utils');
 }
 
