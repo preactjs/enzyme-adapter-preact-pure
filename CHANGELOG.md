@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2019-06-17
+
+- The adapter no longer patches `setState` to make it synchronous
+  [#57](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/57).
+
+**Breaking Changes**
+
+Calls to `setState` on components rendered by Enzyme are no longer synchronous
+but are batched as Preact normally does outside of tests. Pending updates are
+automatically flushed when an Enzyme wrapper is updated, either as a result
+of an Enzyme API call (eg. `wrapper.simulate`, `wrapper.setProps`) or when
+[`wrapper.update()`](https://airbnb.io/enzyme/docs/api/ReactWrapper/update.html) is called.
+
+Most tests should be unaffected as they will trigger updates either through
+Enzyme API methods or will have needed to call `wrapper.update()` anyway.
+Tests can no longer depend on the tree being updated immediately
+after `wrapper.setState` returns however. Instead they should wait for the
+optional callback to `setState` to be invoked.
+
 ## [1.13.4] - 2019-06-10
 
 - Prepare for upcoming internal changes to fragments and components in the
