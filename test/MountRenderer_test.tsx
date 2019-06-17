@@ -30,33 +30,6 @@ describe('MountRenderer', () => {
       sinon.assert.called(callback);
     });
 
-    it('makes `setState` trigger an immediate update', () => {
-      class Counter extends Component<any, any> {
-        constructor(props: any) {
-          super(props);
-          this.state = { count: 0 };
-        }
-
-        increment() {
-          this.setState((state: any) => ({ count: this.state.count + 1 }));
-        }
-
-        render() {
-          return <div>{this.state.count}</div>;
-        }
-      }
-      const renderer = new MountRenderer();
-      renderer.render(<Counter />);
-
-      // Modify component state and check that the DOM has been updated
-      // immediately. `setState` changes are normally applied asynchronously in
-      // Preact.
-      (renderer.getNode() as RSTNode).instance.increment();
-
-      const container = renderer.getNode()!.instance.base!;
-      assert.equal(container.innerHTML, '1');
-    });
-
     if (isPreact10()) {
       const { useEffect, useLayoutEffect, useState } = require('preact/hooks');
 
@@ -147,6 +120,41 @@ describe('MountRenderer', () => {
       const renderer = new MountRenderer();
       renderer.render(<Component />);
       assert.notEqual(renderer.getNode(), null);
+    });
+
+    it('flushes any pending renders enqueued by `setState`', () => {
+      class Counter extends Component<any, any> {
+        constructor(props: any) {
+          super(props);
+          this.state = { count: 0 };
+        }
+
+        increment() {
+          this.setState((state: any) => ({ count: this.state.count + 1 }));
+        }
+
+        render() {
+          return <div>{this.state.count}</div>;
+        }
+      }
+      const renderer = new MountRenderer();
+
+      // Perform an initial render.
+      renderer.render(<Counter />);
+      let container = renderer.getNode()!.instance.base!;
+      assert.equal(container.innerHTML, '0');
+
+      // Trigger a state change. This will not update the DOM immediately
+      // because `setState` calls are asynchronous in Preact.
+      (renderer.getNode() as RSTNode).instance.increment();
+      assert.equal(container.innerHTML, '0');
+
+      // Invoke `renderer.getNode()`, which should flush any pending re-renders.
+      // Enzyme calls `getNode()` whenever `wrapper.update()` is called
+      // explicitly or whenever performing an action which is likely to result
+      // in updates (eg. `simulate`).
+      renderer.getNode();
+      assert.equal(container.innerHTML, '1');
     });
   });
 

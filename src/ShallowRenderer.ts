@@ -37,15 +37,15 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
         return;
       }
 
-      // Monkey-patch the component's `setState` to make it shallow-render and
-      // force an update after rendering.
+      // Monkey-patch the component's `render` to make it shallow-render.
       const instance = rootNode.instance;
-      const originalSetState = instance.setState;
-      instance.setState = function(...args: any[]) {
+      const originalRender = instance.render;
+      instance.render = function(...args: any[]) {
+        let result;
         withShallowRendering(() => {
-          originalSetState.call(this, ...args);
+          result = originalRender.call(this, ...args);
         });
-        this.forceUpdate();
+        return result;
       };
 
       // Monkey-patch `componentDidMount` to prevent it being called a second
