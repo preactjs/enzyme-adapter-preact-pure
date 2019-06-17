@@ -6,6 +6,10 @@ import { getNode as getNodeV10 } from './preact10-rst';
 import { getDisplayName, isPreact10, withReplacedMethod } from './util';
 import { render } from './compat';
 import { getLastVNodeRenderedIntoContainer } from './preact10-internals';
+import {
+  installHook as installDebounceHook,
+  flushRenders,
+} from './debounce-render-hook';
 
 type EventDetails = { [prop: string]: any };
 
@@ -17,9 +21,9 @@ export interface Options {
   container?: HTMLElement;
 }
 
-let actImpl: (cb: () => any) => void;
+let testUtils: any;
 if (isPreact10()) {
-  actImpl = require('preact/test-utils').act;
+  testUtils = require('preact/test-utils');
 }
 
 /**
@@ -27,8 +31,8 @@ if (isPreact10()) {
  * which were scheduled during the callback.
  */
 function act(callback: () => any) {
-  if (actImpl) {
-    actImpl(callback);
+  if (testUtils) {
+    testUtils.act(callback);
   } else {
     callback();
   }
@@ -39,6 +43,8 @@ export default class MountRenderer implements AbstractMountRenderer {
   private _getNode: typeof getNodeClassic;
 
   constructor({ container }: Options = {}) {
+    installDebounceHook();
+
     this._container = container || document.createElement('div');
 
     if (isPreact10()) {
@@ -52,18 +58,6 @@ export default class MountRenderer implements AbstractMountRenderer {
     act(() => {
       render(el, this._container);
     });
-    const rootNode = this._getNode(this._container);
-
-    // Monkey-patch the component's `setState` to make it force an update after
-    // rendering.
-    const instance = rootNode.instance;
-    if (instance.setState) {
-      const originalSetState = instance.setState;
-      instance.setState = function(...args: any[]) {
-        originalSetState.call(this, ...args);
-        this.forceUpdate();
-      };
-    }
 
     if (callback) {
       callback();
@@ -78,6 +72,8 @@ export default class MountRenderer implements AbstractMountRenderer {
   }
 
   getNode() {
+    flushRenders();
+
     const container = this._container;
     if (
       // Preact 8 requires DOM nodes to represent any rendered content.
