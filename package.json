@@ -18,11 +18,13 @@
     "jsdom": "^15.1.0",
     "minimist": "^1.2.0",
     "mocha": "^6.0.2",
+    "nyc": "^14.1.1",
     "preact": "^8.4.2",
     "preact-compat": "^3.18.4",
     "preact10": "npm:preact@^10.0.0-beta.2",
     "prettier": "1.18.2",
     "sinon": "^7.2.3",
+    "source-map-support": "^0.5.12",
     "ts-node": "^8.0.2",
     "typescript": "^3.3.3"
   },
@@ -34,7 +36,7 @@
     "build": "tsc",
     "format": "prettier --write src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
-    "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' mocha -r ts-node/register -r test/init.ts test/*.tsx",
+    "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' nyc mocha -r ts-node/register/transpile-only -r source-map-support/register -r test/init.ts test/*.tsx",
     "test:compat": "yarn test --preact-compat-lib preact-compat",
     "test:preact10": "yarn test --preact-lib preact10",
     "test:preact10-compat": "yarn test --preact-lib preact10 --preact-compat-lib preact10/compat"
@@ -45,5 +47,20 @@
   },
   "files": [
     "build/src/**/*"
-  ]
+  ],
+  "nyc": {
+    "cache": false,
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "build/**",
+      "coverage/**",
+      "test/**",
+      ".yalc/**"
+    ],
+    "reporter": "html",
+    "all": true
+  }
 }
