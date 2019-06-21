@@ -5,17 +5,16 @@
 This is an adapter to support using the [Enzyme](https://airbnb.io/enzyme/) UI
 component testing library with [Preact](https://preactjs.com).
 
-The name has a "-pure" suffix to distinguish it from
-[enzyme-adapter-preact](https://github.com/aweary/enzyme-adapter-preact) which
-indirectly depends on React. This library is a "pure" Preact adapter which does
-not require Preact's React compatibility library (preact-compat). Hopefully
-these packages can be unified in future to avoid confusion for developers.
+## Supported Preact versions
+
+The adapter supports the latest stable release (currently v8) as well as the
+latest v10 pre-release.
 
 ## Usage
 
 Add the library to your development dependencies:
 
-```
+```sh
 # If using npm
 npm install --save-dev enzyme-adapter-preact-pure
 
@@ -35,7 +34,8 @@ configure({ adapter: new Adapter });
 
 Once the adapter is configured, you can write Enzyme tests for your Preact
 UI components following the [Enzyme docs](https://airbnb.io/enzyme/).
-
+The full DOM rendering, shallow rendering and string rendering modes are
+supported.
 
 ## Differences compared to Enzyme + React
 
@@ -184,8 +184,18 @@ yarn test
 yarn test --preact-lib <path to Preact bundle>
 ```
 
-## Notes
+## FAQ
 
-This library is written in TypeScript and includes partial typings for the
-parts of Enzyme that adapter library authors use. These may be useful if you
-want to write an adapter for a different library.
+**Can I use this library to test components that use hooks?**
+
+Yes. This library supports components that use the "Hooks" APIs available in
+Preact v10+. You may need to use the `act` function from `preact/test-utils`
+to flush effects synchronously in certain places. See the notes above about
+state updates in tests.
+
+**Why does the package name have a "-pure" suffix?**
+
+The name has a "-pure" suffix to distinguish it from
+[enzyme-adapter-preact](https://github.com/aweary/enzyme-adapter-preact)
+package which indirectly depends on React. This library is a "pure" Preact
+adapter which does not require Preact's React compatibility add-on.
