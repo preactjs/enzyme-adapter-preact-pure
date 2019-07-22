@@ -107,6 +107,29 @@ describe('MountRenderer', () => {
       renderer.unmount();
       assert.equal(container.childNodes.length, 0);
     });
+
+    if (isPreact10()) {
+      const { useEffect } = require('preact/hooks');
+
+      it('runs effect cleanup callbacks', () => {
+        let unmountCount = 0;
+
+        function Widget() {
+          useEffect(() => {
+            return () => {
+              unmountCount += 1;
+            };
+          });
+          return <div>Test</div>;
+        }
+
+        const renderer = new MountRenderer();
+        renderer.render(<Widget />);
+        renderer.unmount();
+
+        assert.equal(unmountCount, 1);
+      });
+    }
   });
 
   describe('#getNode', () => {
