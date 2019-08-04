@@ -10,3 +10,5 @@ script:
   - yarn test:preact10
   # Preact 10 with preact/compat
   - yarn test:preact10-compat
+  # Example projects
+  - examples/run-all.sh
