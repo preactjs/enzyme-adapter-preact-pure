@@ -37,6 +37,17 @@ UI components following the [Enzyme docs](https://airbnb.io/enzyme/).
 The full DOM rendering, shallow rendering and string rendering modes are
 supported.
 
+## Example projects
+
+For runnable example projects, see the [examples/]() directory. To run the
+examples locally, clone this repository, then run:
+
+```sh
+cd examples/<project name>
+npm install
+npm test
+```
+
 ## Differences compared to Enzyme + React
 
 The general intent is that tests written using Enzyme + React can be easily made

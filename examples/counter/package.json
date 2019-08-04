@@ -1,0 +1,25 @@
+{
+  "name": "enzyme-preact-counter-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -r @babel/register"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/register": "^7.5.5",
+    "chai": "^4.2.0",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-preact-pure": "^2.0.1",
+    "jsdom": "^15.1.1",
+    "mocha": "^6.2.0"
+  },
+  "dependencies": {
+    "preact": "^10.0.0-rc.0"
+  }
+}
