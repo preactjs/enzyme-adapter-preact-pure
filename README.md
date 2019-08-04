@@ -39,7 +39,7 @@ supported.
 
 ## Example projects
 
-For runnable example projects, see the [examples/]() directory. To run the
+For runnable example projects, see the [examples/](examples/) directory. To run the
 examples locally, clone this repository, then run:
 
 ```sh
