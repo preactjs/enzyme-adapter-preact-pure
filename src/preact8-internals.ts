@@ -8,6 +8,7 @@ import { Component } from 'preact';
  * ones (they are "mangled") during the build.
  */
 
+// @ts-ignore - Ignore error about `__k` and `__r` being private in `Component`
 interface Preact8Component extends Component {
   __k: string | null;
   __r: Function | null;
@@ -29,9 +30,9 @@ export function propsForNode(node: Node) {
 }
 
 export function componentKey(component: Component) {
-  return (component as Preact8Component).__k;
+  return ((component as unknown) as Preact8Component).__k;
 }
 
 export function componentRef(component: Component) {
-  return (component as Preact8Component).__r;
+  return ((component as unknown) as Preact8Component).__r;
 }
