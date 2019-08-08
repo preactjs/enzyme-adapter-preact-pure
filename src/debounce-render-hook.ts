@@ -1,7 +1,5 @@
 import { options } from 'preact';
 
-import { isPreact10 } from './util';
-
 let hookInstalled = false;
 const pendingCallbacks = new Set();
 
@@ -23,18 +21,6 @@ function defer(callback: () => any) {
 export function installHook() {
   if (hookInstalled) {
     return;
-  }
-
-  if (isPreact10()) {
-    // Install a workaround for https://github.com/preactjs/preact/issues/1681.
-    // This is only required for 10.0.0.beta.2 and earlier.
-    const testUtils = require('preact/test-utils');
-    const origAct = testUtils.act;
-    testUtils.act = (callback: () => any) => {
-      const prevHook = options.debounceRendering;
-      origAct(callback);
-      options.debounceRendering = prevHook;
-    };
   }
 
   const origDebounce = options.debounceRendering || defer;

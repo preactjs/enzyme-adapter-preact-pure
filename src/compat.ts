@@ -47,14 +47,14 @@ export function addTypeAndPropsToVNode() {
     set(val) {
       this.nodeName = val;
     },
-    
+
     configurable: true,
   });
   Object.defineProperty(VNode.prototype, 'props', {
     get() {
       return this.attributes || {};
     },
-    
+
     configurable: true,
   });
 }
