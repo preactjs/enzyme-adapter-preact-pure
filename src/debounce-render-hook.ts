@@ -1,7 +1,7 @@
 import { options } from 'preact';
 
 let hookInstalled = false;
-const pendingCallbacks = new Set();
+const pendingCallbacks = new Set<() => any>();
 
 /**
  * Default implementation of debounced rendering, taken from Preact's
