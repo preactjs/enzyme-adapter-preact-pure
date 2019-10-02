@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "array.prototype.flatmap": "^1.2.1",
-    "preact-render-to-string": "^4.1.0"
+    "preact-render-to-string": "^5.0.6"
   },
   "files": [
     "build/src/**/*"
