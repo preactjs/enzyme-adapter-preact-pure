@@ -100,7 +100,9 @@ export default class MountRenderer implements AbstractMountRenderer {
     };
 
     withReplacedMethod(errNode.instance, 'render', render, () => {
-      errNode.instance.forceUpdate();
+      act(() => {
+        errNode.instance.forceUpdate();
+      });
     });
   }
 
