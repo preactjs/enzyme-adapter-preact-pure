@@ -1,4 +1,5 @@
-import { VNode, h } from 'preact';
+import { VNode } from 'preact';
+import * as preact from 'preact';
 import { assert } from 'chai';
 import { RSTNode } from 'enzyme';
 
@@ -11,7 +12,7 @@ describe('Adapter', () => {
   it('adds `type` and `props` attributes to VNodes', () => {
     // Add extra properties to vnodes for compatibility with Enzyme.
     new Adapter();
-    const el = h('img', { alt: 'A test image' }) as any;
+    const el = preact.h('img', { alt: 'A test image' }) as any;
     assert.equal(el.type, 'img');
     assert.deepEqual(el.props, {
       alt: 'A test image',

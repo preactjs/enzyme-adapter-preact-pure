@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { Component, Fragment, VNode, h } from 'preact';
+import { Component, Fragment, VNode } from 'preact';
+import * as preact from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
 import { getNode as getNodeV10, rstNodeFromElement } from '../src/preact10-rst';
