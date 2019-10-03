@@ -11,7 +11,9 @@ import MountRenderer from './MountRenderer';
 import ShallowRenderer from './ShallowRenderer';
 import StringRenderer from './StringRenderer';
 import { addTypeAndPropsToVNode } from './compat';
-import { rstNodeFromElement } from './preact10-rst';
+import { isPreact10 } from './util';
+import { rstNodeFromElement as rstNodeFromElementV10 } from './preact10-rst';
+import { rstNodeFromElement as rstNodeFromElementV8 } from './preact8-rst';
 
 export default class Adapter extends EnzymeAdapter {
   constructor() {
@@ -99,6 +101,9 @@ export default class Adapter extends EnzymeAdapter {
   }
 
   elementToNode(el: JSXElement): RSTNode {
+    const rstNodeFromElement = isPreact10()
+      ? rstNodeFromElementV10
+      : rstNodeFromElementV8;
     return rstNodeFromElement(el as VNode) as RSTNode;
   }
 }

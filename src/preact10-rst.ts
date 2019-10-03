@@ -119,11 +119,6 @@ function nodeTypeFromType(type: any): NodeType {
 /**
  * Convert a JSX element tree returned by Preact's `h` function into an RST
  * node.
- *
- * This function accepts vnodes produced by both Preact 10 and earlier versions.
- * Since the elements have not been rendered, none of the private properties
- * which store references to the associated DOM element, component instance etc.
- * will have been set.
  */
 export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
   if (node == null || typeof node === 'string') {
@@ -140,7 +135,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
         : stripSpecialProps(node.props);
   }
 
-  const ref = node.ref /* Preact 10 */ || null;
+  const ref = node.ref || null;
 
   return {
     nodeType,

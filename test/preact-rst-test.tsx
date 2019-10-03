@@ -3,8 +3,14 @@ import { Component, Fragment, VNode } from 'preact';
 import * as preact from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import { getNode as getNodeV10, rstNodeFromElement } from '../src/preact10-rst';
-import { getNode as getNodeClassic } from '../src/preact8-rst';
+import {
+  getNode as getNodeV10,
+  rstNodeFromElement as rstNodeFromElementV10,
+} from '../src/preact10-rst';
+import {
+  getNode as getNodeV8,
+  rstNodeFromElement as rstNodeFromElementV8,
+} from '../src/preact8-rst';
 import { getType, isPreact10 } from '../src/util';
 import { render } from '../src/compat';
 
@@ -286,9 +292,7 @@ function renderToRST(el: VNode, container?: HTMLElement): RSTNode | null {
     container = document.createElement('div');
   }
   render(el, container);
-  const rootNode = isPreact10()
-    ? getNodeV10(container)
-    : getNodeClassic(container);
+  const rootNode = isPreact10() ? getNodeV10(container) : getNodeV8(container);
   return filterNode(rootNode);
 }
 
@@ -435,6 +439,10 @@ describe('preact8-rst, preact10-rst', () => {
   });
 
   describe('rstNodeFromElement', () => {
+    const rstNodeFromElement = isPreact10()
+      ? rstNodeFromElementV10
+      : rstNodeFromElementV8;
+
     function stripInstances(node: RSTNode | string | null) {
       if (node == null || typeof node === 'string') {
         return node;
