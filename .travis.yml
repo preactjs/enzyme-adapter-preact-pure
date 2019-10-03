@@ -2,13 +2,13 @@ language: node_js
 node_js:
   - "node"
 script:
-  # Preact 8.x.
-  - yarn test
-  # Preact 8.x with preact-compat
-  - yarn test:compat
   # Preact 10.
-  - yarn test:preact10
+  - yarn test
   # Preact 10 with preact/compat
-  - yarn test:preact10-compat
+  - yarn test:compat
+  # Preact 8.x.
+  - yarn test:preact8
+  # Preact 8.x with preact-compat
+  - yarn test:preact8-compat
   # Example projects
   - examples/run-all.sh

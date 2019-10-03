@@ -92,9 +92,9 @@ function findVNodeForDOM(
  * Find the `Component` instance that produced a given DOM node.
  */
 export function componentForDOMNode(el: Node): Component | null {
-  // In Preact <= 8 this is easy, as rendered nodes have `_component` expando
+  // In Preact 8 this is easy, as rendered nodes have `_component` expando
   // property.
-  if ('_component' in el) {
+  if (!isPreact10()) {
     return componentForNode(el);
   }
 

@@ -1,5 +1,6 @@
-import { Component, Fragment, VNode, cloneElement, h } from 'preact';
+import { Component, Fragment, VNode, cloneElement } from 'preact';
 import { assert } from 'chai';
+import * as preact from 'preact';
 
 import {
   getRealType,
@@ -123,9 +124,9 @@ describe('shallow-render-utils', () => {
 
   describe('shallowRenderVNodeTree', () => {
     it('modifies nodes to shallow-render', () => {
-      function Parent() {
+      const Parent: any = () => {
         return null;
-      }
+      };
       function Child() {
         return null;
       }

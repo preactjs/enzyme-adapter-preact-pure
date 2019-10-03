@@ -1,5 +1,6 @@
 import { configure, shallow, mount, render as renderToString } from 'enzyme';
-import { Component, Fragment, h, options, isCompat } from './preact';
+import { Component, Fragment, options, isCompat } from './preact';
+import * as preact from 'preact';
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -463,9 +464,9 @@ describe('integration tests', () => {
     });
 
     it('renders children of non-rendered components', () => {
-      function Component() {
+      const Component: any = () => {
         return null;
-      }
+      };
       const wrapper = shallow(
         <div>
           <Component>

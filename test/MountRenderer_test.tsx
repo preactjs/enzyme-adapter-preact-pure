@@ -1,7 +1,8 @@
-import { Component, h } from 'preact';
+import { Component } from 'preact';
 import { RSTNode } from 'enzyme';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
+import * as preact from 'preact';
 
 import MountRenderer from '../src/MountRenderer';
 import { isPreact10 } from '../src/util';

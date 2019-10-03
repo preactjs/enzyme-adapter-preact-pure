@@ -11,9 +11,6 @@ function setupJSDOM() {
   g.window = dom.window;
   g.document = dom.window.document;
   g.requestAnimationFrame = dom.window.requestAnimationFrame;
-
-  // FIXME - Remove this after upgrading Preact 10 to 10.0.0-beta.2 or later.
-  g.self = dom.window;
 }
 setupJSDOM();
 

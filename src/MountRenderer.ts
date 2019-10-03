@@ -1,7 +1,7 @@
 import { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 
-import { getNode as getNodeClassic } from './preact8-rst';
+import { getNode as getNodeV8 } from './preact8-rst';
 import { getNode as getNodeV10 } from './preact10-rst';
 import { getDisplayName, isPreact10, withReplacedMethod } from './util';
 import { render } from './compat';
@@ -42,7 +42,7 @@ function act(callback: () => any) {
 
 export default class MountRenderer implements AbstractMountRenderer {
   private _container: HTMLElement;
-  private _getNode: typeof getNodeClassic;
+  private _getNode: typeof getNodeV10;
 
   constructor({ container }: Options = {}) {
     installDebounceHook();
@@ -52,7 +52,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     if (isPreact10()) {
       this._getNode = getNodeV10;
     } else {
-      this._getNode = getNodeClassic;
+      this._getNode = getNodeV8;
     }
   }
 

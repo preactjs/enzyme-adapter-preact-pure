@@ -9,7 +9,7 @@
  * metadata attached to DOM nodes.
  */
 
-import { Component } from 'preact';
+import { Component, VNode } from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
 import {
@@ -18,6 +18,7 @@ import {
   componentKey,
   componentRef,
 } from './preact8-internals';
+import { childElements } from './compat';
 import { getRealType } from './shallow-render-utils';
 
 /**
@@ -50,22 +51,6 @@ function rstNodesFromDOMNodes(nodes: Node[]) {
 
 type Props = { [prop: string]: any };
 type RSTNodeTypes = RSTNode | string | null;
-
-function convertDOMProps(props: Props) {
-  const converted: Props = {
-    children: props.children || [],
-  };
-
-  Object.keys(props).forEach(srcProp => {
-    if (srcProp === 'children' || srcProp === 'key' || srcProp === 'ref') {
-      return;
-    }
-    const destProp = srcProp === 'class' ? 'className' : srcProp;
-    converted[destProp] = props[srcProp];
-  });
-
-  return converted;
-}
 
 /**
  * Return a React Standard Tree (RST) node from a host (DOM) element.
@@ -163,4 +148,65 @@ function rstNodeFromComponent(component: Component): RSTNode {
  */
 export function getNode(container: HTMLElement): RSTNode {
   return rstNodeFromDOMElementOrComponent(container.firstChild!);
+}
+
+function nodeTypeFromType(type: any): NodeType {
+  if (typeof type === 'string') {
+    return 'host';
+  } else if (type.prototype && typeof type.prototype.render === 'function') {
+    return 'class';
+  } else if (typeof type === 'function') {
+    return 'function';
+  } else {
+    throw new Error(`Unknown node type: ${type}`);
+  }
+}
+
+function convertDOMProps(props: Props) {
+  const converted: Props = {};
+
+  Object.keys(props).forEach(srcProp => {
+    if (srcProp === 'children' || srcProp === 'key' || srcProp === 'ref') {
+      return;
+    }
+    const destProp = srcProp === 'class' ? 'className' : srcProp;
+    converted[destProp] = props[srcProp];
+  });
+
+  return converted;
+}
+
+function stripSpecialProps(props: Props) {
+  const { children, key, ref, ...otherProps } = props;
+  return otherProps;
+}
+
+/**
+ * Convert a JSX element tree returned by Preact's `h` function into an RST
+ * node.
+ */
+export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
+  if (node == null || typeof node === 'string') {
+    return node;
+  }
+  const children = childElements(node).map(rstNodeFromElement);
+  const nodeType = nodeTypeFromType(node.type);
+
+  let props = {};
+  if (typeof node.props === 'object' && node.props) {
+    props =
+      nodeType === 'host'
+        ? convertDOMProps(node.props)
+        : stripSpecialProps(node.props);
+  }
+
+  return {
+    nodeType,
+    type: node.type as NodeType,
+    props,
+    key: node.key || null,
+    ref: (node.props && (node.props as any).ref) || null,
+    instance: null,
+    rendered: children,
+  };
 }
