@@ -7,17 +7,14 @@ import { ComponentChildren, ComponentFactory, VNode } from 'preact';
 
 declare module 'preact' {
   /**
-   * Preact v10 vnodes.
+   * Preact v8 vnodes.
    */
-  export interface VNode<P = any> {
-    type: ComponentFactory<P>|string|null;
-    text?: string|number|null;
-    ref?: Ref<any>;
-    props: P & { children: ComponentChildren };
-  }
+  export interface VNode<P = {}> {
+		nodeName: ComponentFactory<P> | string;
+		attributes: P;
+		children: Array<VNode<any> | string>;
+		key: Key | null;
 
-  /**
-   * Fragment support was introduced in Preact 10.
-   */
-  const Fragment: ComponentConstructor<{}, {}>;
+    text?: string | number | null;
+  }
 }

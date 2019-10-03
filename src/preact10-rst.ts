@@ -140,7 +140,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
         : stripSpecialProps(node.props);
   }
 
-  const ref = node.ref /* Preact 10 */ || node.props.ref /* Preact 8 */ || null;
+  const ref = node.ref /* Preact 10 */ || null;
 
   return {
     nodeType,

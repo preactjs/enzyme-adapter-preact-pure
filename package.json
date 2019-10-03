@@ -19,9 +19,9 @@
     "minimist": "^1.2.0",
     "mocha": "^6.0.2",
     "nyc": "^14.1.1",
-    "preact": "^8.4.2",
+    "preact": "^10.0.0",
     "preact-compat": "^3.18.4",
-    "preact10": "npm:preact@^10.0.0",
+    "preact8": "npm:preact@^8.4.2",
     "prettier": "1.18.2",
     "sinon": "^7.2.3",
     "source-map-support": "^0.5.12",
@@ -30,16 +30,16 @@
   },
   "peerDependencies": {
     "enzyme": "^3.8.0",
-    "preact": "^8.4.2 || ^10.0.0-beta"
+    "preact": "^8.4.2 || ^10.0.0"
   },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
     "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' nyc mocha -r ts-node/register/transpile-only -r source-map-support/register -r test/init.ts test/*.tsx",
-    "test:compat": "yarn test --preact-compat-lib preact-compat",
-    "test:preact10": "yarn test --preact-lib preact10",
-    "test:preact10-compat": "yarn test --preact-lib preact10 --preact-compat-lib preact10/compat"
+    "test:compat": "yarn test --preact-compat-lib preact/compat",
+    "test:preact8": "yarn test --preact-lib preact8",
+    "test:preact8-compat": "yarn test --preact-lib preact8 --preact-compat-lib preact-compat"
   },
   "dependencies": {
     "array.prototype.flatmap": "^1.2.1",
