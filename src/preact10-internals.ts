@@ -16,10 +16,6 @@ import { Component, VNode } from 'preact';
 interface PreactComponent extends Component {
   // Original name: `_vnode`.
   __v: VNode;
-
-  // Original name: `_prevVNode`.
-  // Only present in Preact <= 10.0.0.beta.2.
-  __t: VNode;
 }
 
 /**
@@ -28,10 +24,6 @@ interface PreactComponent extends Component {
 interface PreactNode extends ChildNode {
   // Original name: `_children`.
   __k: PreactVNode;
-
-  // Original name: `_prevVNode`.
-  // Only present in Preact <= 10.0.0.beta.2, replaced by `_children`.
-  __t: VNode;
 }
 
 interface PreactVNode extends VNode {
@@ -51,13 +43,6 @@ interface PreactVNode extends VNode {
  */
 export function getLastVNodeRenderedIntoContainer(container: Node) {
   const preactContainer = container as PreactNode;
-
-  // Preact 10 Beta 2 and earlier.
-  if (preactContainer.__t) {
-    return preactContainer.__t;
-  }
-
-  // Preact 10 Beta 3 and later.
   return preactContainer.__k;
 }
 
@@ -66,13 +51,6 @@ export function getLastVNodeRenderedIntoContainer(container: Node) {
  */
 export function getLastRenderOutput(component: Component) {
   const preactComponent = component as PreactComponent;
-
-  // Preact 10 Beta 2 and earlier.
-  if (preactComponent.__t) {
-    return [preactComponent.__t];
-  }
-
-  // Preact 10 Beta 3 and later.
   return getChildren(preactComponent.__v);
 }
 
