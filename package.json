@@ -62,5 +62,10 @@
     ],
     "reporter": "html",
     "all": true
+  },
+  "greenkeeper": {
+    "ignore": [
+      "preact-render-to-string"
+    ]
   }
 }
