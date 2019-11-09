@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "jsx": "react",
+    "jsxFactory": "preact.h",
+    "outDir": "build",
+    "strict": true,
+    "esModuleInterop": true
+  }
+}
