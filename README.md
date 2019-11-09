@@ -177,6 +177,16 @@ work.
 
 This issue does not apply when using Preact 10 (with preact/compat).
 
+### Usage with TypeScript
+
+This package includes type definitions for the adapter. Types for Enzyme are
+provided in the `@types/enzyme` package.
+
+This package includes some extensions to the types for the `preact` package to
+make them compatible with the types used by `@types/enzyme`. As long as your
+project imports the `enzyme-adapter-preact-pure` package somewhere, those
+extensions should be included in the build.
+
 ## Development
 
 After cloning the repository, you can build it and run tests as follows:

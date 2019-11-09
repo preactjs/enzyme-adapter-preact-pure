@@ -46,7 +46,8 @@
     "preact-render-to-string": "^4.1.0"
   },
   "files": [
-    "build/src/**/*"
+    "build/src/**/*.js",
+    "index.d.ts"
   ],
   "nyc": {
     "cache": false,
