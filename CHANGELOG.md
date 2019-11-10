@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2019-11-10
+
+- Improve support for projects written in TypeScript by integrating with
+  the `@types/enzyme` package [#84](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/84).
+  See the [Usage with TypeScript](https://github.com/preactjs/enzyme-adapter-preact-pure#usage-with-typescript) section in the README and example project in `examples/typescript`.
+
 ## [2.1.0] - 2019-10-03
 
 - Fix `simulateError` under Preact 10.0.0 [#75](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/75)
