@@ -1,16 +1,32 @@
-/**
- * This module declares the types needed to implement adapters for Enzyme.
- *
- * Types for the consumer-facing API of Enzyme are available from DefinitelyTyped.
- */
+import { ComponentFactory, VNode } from 'preact';
+import 'enzyme';
+import { ReactElement, ReactInstance } from 'react';
 
+// Extensions to the Preact types for compatibility with the Enzyme types.
+declare module 'preact' {
+  // Extensions to the VNode type from Preact 10 to support compiling against
+  // Preact 8.
+  export interface VNode<P = {}> {
+		nodeName: ComponentFactory<P> | string;
+		attributes: P;
+		children: Array<VNode<any> | string>;
+		key: Key | null;
+
+    text?: string | number | null;
+  }
+
+  // Extensions to the `Component` type to make the types of Preact vnodes
+  // (returned by `h`) compatible with the `ReactElement` type referenced by
+  // the Enzyme type definitions.
+  export interface Component {
+    refs: {
+      [key: string]: ReactInstance;
+    };
+  }
+}
+
+// Extensions to the Enzyme types needed for writing an adapter.
 declare module 'enzyme' {
-  /**
-   * The component class/function or host node type (eg. "div" for DOM `<div>`)
-   * of an element.
-   */
-  export type ElementType = string | Function;
-
   export type NodeType = 'function' | 'class' | 'host';
 
   /**
@@ -24,7 +40,7 @@ declare module 'enzyme' {
     nodeType: NodeType;
 
     /** The host type (HTML element tag) or component constructor function. */
-    type: ElementType;
+    type: string | Function;
 
     props: { [prop: string]: any };
     key: any;
@@ -64,7 +80,7 @@ declare module 'enzyme' {
    * `{ mode: "string" }`
    */
   export interface StringRenderer extends Renderer {
-    render(el: JSXElement, context?: any): void;
+    render(el: ReactElement, context?: any): void;
   }
 
   /**
@@ -72,7 +88,7 @@ declare module 'enzyme' {
    * with `{ mode: "mount" }`
    */
   export interface MountRenderer extends Renderer {
-    render(el: JSXElement, context?: any, callback?: () => any): void;
+    render(el: ReactElement, context?: any, callback?: () => any): void;
   }
 
   /**
@@ -91,7 +107,7 @@ declare module 'enzyme' {
    * with `{ mode: "shallow" }`
    */
   export interface ShallowRenderer extends Renderer {
-    render(el: JSXElement, context?: any, options?: ShallowRenderOptions): void;
+    render(el: ReactElement, context?: any, options?: ShallowRenderOptions): void;
   }
 
   export interface AdapterOptions {
@@ -102,29 +118,22 @@ declare module 'enzyme' {
   }
 
   /**
-   * An element created by the `createElement` function of the React-like library.
-   *
-   * The internals of this will vary depending on the library.
-   */
-  export type JSXElement = Object;
-
-  /**
    * An adapter that enables Enzyme to work with a specific React-like library.
    */
-  export abstract class EnzymeAdapter {
+  export interface EnzymeAdapter {
     options: Object;
 
     // Required methods.
-    abstract createElement(
-      type: ElementType,
+    createElement(
+      type: string | Function,
       props: Object,
-      ...children: JSXElement[]
-    ): JSXElement;
-    abstract createRenderer(options: AdapterOptions): Renderer;
-    abstract elementToNode(element: JSXElement): RSTNode;
-    abstract isValidElement(el: JSXElement): boolean;
-    abstract nodeToElement(node: RSTNode): JSXElement;
-    abstract nodeToHostNode(node: RSTNode): Node | null;
+      ...children: ReactElement[]
+    ): ReactElement;
+    createRenderer(options: AdapterOptions): Renderer;
+    elementToNode(element: ReactElement): RSTNode;
+    isValidElement(el: ReactElement): boolean;
+    nodeToElement(node: RSTNode): ReactElement | string;
+    nodeToHostNode(node: RSTNode): Node | null;
 
     // Optional methods.
     displayNameOfNode?(node: RSTNode): string;
@@ -132,12 +141,6 @@ declare module 'enzyme' {
     isCustomComponentElement?(instance: RSTNode): boolean;
     isFragment?(node: RSTNode): boolean;
     isValidElementType?(obj: any): boolean;
-    wrap?(element: JSXElement): JSXElement;
+    wrap?(element: ReactElement): ReactElement;
   }
-
-  // TODO
-  export var mount: any;
-  export var render: any;
-  export var shallow: any;
-  export var configure: any;
 }

@@ -1,10 +1,9 @@
 import {
   AdapterOptions,
-  ElementType,
   EnzymeAdapter,
-  JSXElement,
   RSTNode,
 } from 'enzyme';
+import { ReactElement } from 'react';
 import { VNode, h } from 'preact';
 
 import MountRenderer from './MountRenderer';
@@ -54,7 +53,7 @@ export default class Adapter extends EnzymeAdapter {
     }
   }
 
-  nodeToElement(node: RSTNode | string): JSXElement {
+  nodeToElement(node: RSTNode | string): ReactElement | string {
     if (typeof node === 'string') {
       return node;
     }
@@ -96,11 +95,11 @@ export default class Adapter extends EnzymeAdapter {
     return true;
   }
 
-  createElement(type: ElementType, props: Object, ...children: JSXElement[]) {
+  createElement(type: string | Function, props: Object, ...children: ReactElement[]) {
     return h(type as any, props, ...children);
   }
 
-  elementToNode(el: JSXElement): RSTNode {
+  elementToNode(el: ReactElement): RSTNode {
     const rstNodeFromElement = isPreact10()
       ? rstNodeFromElementV10
       : rstNodeFromElementV8;
