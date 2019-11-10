@@ -9,6 +9,7 @@
   "devDependencies": {
     "@types/array.prototype.flatmap": "^1.2.0",
     "@types/chai": "^4.1.7",
+    "@types/enzyme": "^3.10.3",
     "@types/jsdom": "^12.2.1",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^5.2.5",
@@ -26,7 +27,8 @@
     "sinon": "^7.2.3",
     "source-map-support": "^0.5.12",
     "ts-node": "^8.0.2",
-    "typescript": "^3.3.3"
+    "typescript": "^3.3.3",
+    "yalc": "^1.0.0-pre.34"
   },
   "peerDependencies": {
     "enzyme": "^3.8.0",
@@ -46,7 +48,8 @@
     "preact-render-to-string": "^4.1.0"
   },
   "files": [
-    "build/src/**/*"
+    "build/src/**/*",
+    "index.d.ts"
   ],
   "nyc": {
     "cache": false,

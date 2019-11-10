@@ -1,6 +1,7 @@
-import { configure, shallow, mount, render as renderToString } from 'enzyme';
+import { CommonWrapper, configure, shallow, mount, render as renderToString } from 'enzyme';
 import { Component, Fragment, options, isCompat } from './preact';
 import * as preact from 'preact';
+import { ReactElement } from 'react';
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -21,10 +22,14 @@ function itIf(
   itFn(description, fn);
 }
 
+interface Wrapper extends CommonWrapper {
+  find(query: any): CommonWrapper;
+}
+
 /**
  * Register tests for static and interactive rendering modes.
  */
-function addStaticTests(render: typeof mount) {
+function addStaticTests(render: (el: ReactElement) => Wrapper) {
   it('renders a simple component', () => {
     function Button({ label }: any) {
       return <button>{label}</button>;
@@ -51,7 +56,7 @@ function addStaticTests(render: typeof mount) {
     assert.equal(wrapper.html(), '<button>Click me</button>');
   });
 
-  if (render !== renderToString) {
+  if ((render as any) !== renderToString) {
     it('can find DOM nodes by class name', () => {
       function Widget() {
         return <div class="widget">Test</div>;
@@ -94,7 +99,7 @@ function addStaticTests(render: typeof mount) {
     });
   }
 
-  if (render !== renderToString) {
+  if ((render as any) !== renderToString) {
     itIf(isPreact10, 'returns contents of fragments', () => {
       const el = (
         <div>
@@ -107,7 +112,7 @@ function addStaticTests(render: typeof mount) {
           </Fragment>
         </div>
       );
-      const wrapper = render(el)
+      const wrapper = (render(el) as any)
         .find('div')
         .children();
       assert.equal(wrapper.length, 3);
@@ -171,7 +176,7 @@ function addInteractiveTests(render: typeof mount) {
     let expected: Array<string | Function | undefined>;
     if (render === mount) {
       expected = [Widget, 'div', 'span', undefined];
-    } else if (render === shallow) {
+    } else if ((render as any)=== shallow) {
       // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
@@ -361,7 +366,7 @@ function addInteractiveTests(render: typeof mount) {
 
     const wrapper = render(<Parent />);
     const expectedText =
-      render === shallow ? '<Child />' : 'Everything is working';
+      (render as any) === shallow ? '<Child />' : 'Everything is working';
 
     // Initial render, we should see the original content.
     assert.equal(wrapper.text(), expectedText);
@@ -415,7 +420,7 @@ describe('integration tests', () => {
 
   describe('"shallow" rendering', () => {
     addStaticTests(shallow);
-    addInteractiveTests(shallow);
+    addInteractiveTests(shallow as any);
 
     it('does not render child components', () => {
       function Child() {
@@ -480,6 +485,6 @@ describe('integration tests', () => {
   });
 
   describe('"string" rendering', () => {
-    addStaticTests(renderToString);
+    addStaticTests(renderToString as any);
   });
 });

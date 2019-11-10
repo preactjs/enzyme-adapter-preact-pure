@@ -166,6 +166,21 @@ enzyme-adapter-react-$version packages. If you are using preact/compat, you can
 alias enzyme-adapter-react-$version to this package in the same way as
 [preact/compat](https://preactjs.com/guide/switching-to-preact).
 
+### Usage with TypeScript
+
+This package is compatible with TypeScript and ships with type declarations.
+In order to mix Enzymes types from `@types/enzyme` with Preact, you will need
+to include some extensions to the "preact" types which are provided by this
+project.
+
+To do that, add the following line to one of the source files or `.d.ts` files
+for your project:
+
+```ts
+/// <reference types="enzyme-adapter-preact-pure" />
+```
+
+See the TypeScript example in `examples/typescript` for a runnable example.
 
 **preact-compat and functional components**
 
