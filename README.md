@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/preactjs/enzyme-adapter-preact-pure.svg?branch=master)](https://travis-ci.org/preactjs/enzyme-adapter-preact-pure) [![Greenkeeper badge](https://badges.greenkeeper.io/preactjs/enzyme-adapter-preact-pure.svg)](https://greenkeeper.io/)
 
 This is an adapter to support using the [Enzyme](https://airbnb.io/enzyme/) UI
-component testing library with [Preact](https://preactjs.com).
+component testing library with [Preact](https://preactjs.com). For documentation, please see [the testing guide on the PreactJS website](https://preactjs.com/guide/v10/unit-testing-with-enzyme).
 
 ## Supported Preact versions
 
