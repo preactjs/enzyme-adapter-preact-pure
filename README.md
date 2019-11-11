@@ -7,8 +7,7 @@ component testing library with [Preact](https://preactjs.com). For documentation
 
 ## Supported Preact versions
 
-The adapter supports the latest stable release (currently v8) as well as the
-latest v10 pre-release.
+The adapter supports both Preact 10+ and the latest Preact v8.x release. Using Preact 10+ is recommended.
 
 ## Usage
 
