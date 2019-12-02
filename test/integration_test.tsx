@@ -1,4 +1,10 @@
-import { CommonWrapper, configure, shallow, mount, render as renderToString } from 'enzyme';
+import {
+  CommonWrapper,
+  configure,
+  shallow,
+  mount,
+  render as renderToString,
+} from 'enzyme';
 import { Component, Fragment, options, isCompat } from './preact';
 import * as preact from 'preact';
 import { ReactElement } from 'react';
@@ -112,9 +118,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
           </Fragment>
         </div>
       );
-      const wrapper = (render(el) as any)
-        .find('div')
-        .children();
+      const wrapper = (render(el) as any).find('div').children();
       assert.equal(wrapper.length, 3);
     });
   }
@@ -176,7 +180,7 @@ function addInteractiveTests(render: typeof mount) {
     let expected: Array<string | Function | undefined>;
     if (render === mount) {
       expected = [Widget, 'div', 'span', undefined];
-    } else if ((render as any)=== shallow) {
+    } else if ((render as any) === shallow) {
       // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
