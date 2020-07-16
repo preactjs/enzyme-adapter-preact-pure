@@ -1,8 +1,4 @@
-import {
-  AdapterOptions,
-  EnzymeAdapter,
-  RSTNode,
-} from 'enzyme';
+import { AdapterOptions, EnzymeAdapter, RSTNode } from 'enzyme';
 import { ReactElement } from 'react';
 import { VNode, h } from 'preact';
 
@@ -95,7 +91,11 @@ export default class Adapter extends EnzymeAdapter {
     return true;
   }
 
-  createElement(type: string | Function, props: Object, ...children: ReactElement[]) {
+  createElement(
+    type: string | Function,
+    props: Object,
+    ...children: ReactElement[]
+  ) {
     return h(type as any, props, ...children);
   }
 

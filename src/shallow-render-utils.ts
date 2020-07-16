@@ -55,6 +55,18 @@ export function getRealType(component: Component) {
 }
 
 /**
+ * Return true if a value is something that can be returned from a render
+ * function.
+ */
+function isRenderable(value: any) {
+  return (
+    value === null ||
+    typeof value === 'string' ||
+    (typeof value === 'object' && value.type !== undefined)
+  );
+}
+
+/**
  * Create a dummy component to replace an existing component in rendered output.
  *
  * The dummy renders nothing but has the same display name as the original.
@@ -67,7 +79,12 @@ function makeShallowRenderComponent(
   function ShallowRenderStub({ children }: { children?: any }) {
     if (isPreact10()) {
       // Preact 10 can render fragments, so we can return the children directly.
-      return children;
+      //
+      // There is an exception for `children` values which are not directly
+      // renderable but need to be processed by the component being stubbed.
+      // For example, a function used as part of the "render prop" pattern
+      // (https://reactjs.org/docs/render-props.html).
+      return isRenderable(children) ? children : null;
     }
     // Older versions of Preact need a dummy DOM element to contain the children.
     return h(
