@@ -1,4 +1,10 @@
-import { CommonWrapper, configure, shallow, mount, render as renderToString } from 'enzyme';
+import {
+  CommonWrapper,
+  configure,
+  shallow,
+  mount,
+  render as renderToString,
+} from 'enzyme';
 import { Component, Fragment, options, isCompat } from './preact';
 import * as preact from 'preact';
 import { ReactElement } from 'react';
@@ -112,9 +118,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
           </Fragment>
         </div>
       );
-      const wrapper = (render(el) as any)
-        .find('div')
-        .children();
+      const wrapper = (render(el) as any).find('div').children();
       assert.equal(wrapper.length, 3);
     });
   }
@@ -176,7 +180,7 @@ function addInteractiveTests(render: typeof mount) {
     let expected: Array<string | Function | undefined>;
     if (render === mount) {
       expected = [Widget, 'div', 'span', undefined];
-    } else if ((render as any)=== shallow) {
+    } else if ((render as any) === shallow) {
       // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
@@ -482,6 +486,24 @@ describe('integration tests', () => {
       const output = wrapper.debug().replace(/\s+/g, '');
       assert.equal(output, '<div><Component><p>foo</p></Component></div>');
     });
+
+    if (isPreact10()) {
+      it('renders components that take a function as `children`', () => {
+        function Child(props: any) {
+          return props.children();
+        }
+
+        function Parent(props: any) {
+          return <Child>{() => <div>Example</div>}</Child>;
+        }
+
+        let wrapper = shallow(<Parent />);
+        const childrenFunc = wrapper.prop('children') as any;
+        wrapper = shallow(childrenFunc());
+
+        assert.equal(wrapper.text(), 'Example');
+      });
+    }
   });
 
   describe('"string" rendering', () => {
