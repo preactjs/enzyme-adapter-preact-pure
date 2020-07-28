@@ -9,17 +9,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "@babel/preset-react": "^7.0.0",
-    "@babel/register": "^7.5.5",
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "@babel/register": "^7.10.5",
     "chai": "^4.2.0",
-    "enzyme": "^3.10.0",
-    "enzyme-adapter-preact-pure": "^2.0.1",
-    "jsdom": "^15.1.1",
-    "mocha": "^6.2.0"
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-preact-pure": "^2.2.1",
+    "jsdom": "^16.3.0",
+    "mocha": "^8.0.1"
   },
   "dependencies": {
-    "preact": "^10.0.0-rc.0"
+    "preact": "^10.4.6"
   }
 }
