@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2020-08-08
+
+- Fix a regression in 2.2.1 when a component that is stubbed out during shallow
+  rendering is passed multiple children [#119](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/119)
+
 ## [2.2.1] - 2020-07-19
 
 - Fix exception when shallow rendering a component that uses the "render prop"
