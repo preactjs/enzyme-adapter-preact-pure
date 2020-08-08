@@ -487,6 +487,29 @@ describe('integration tests', () => {
       assert.equal(output, '<div><Component><p>foo</p></Component></div>');
     });
 
+    it('renders children of components rendered without JSX', () => {
+      const Component: any = (props: any) => {
+        return (
+          <div>
+            {props.children}
+          </div>
+        );
+      };
+
+      const wrapper = shallow(
+        <div>
+          {
+            preact.h(Component, null,
+              preact.h('p', null, 'foo'),
+              preact.h('p', null, 'bar'),
+            )
+          }
+        </div>
+      );
+      const output = wrapper.debug().replace(/\s+/g, '');
+      assert.equal(output, '<div><Component><p>foo</p><p>bar</p></Component></div>');
+    });
+
     if (isPreact10()) {
       it('renders components that take a function as `children`', () => {
         function Child(props: any) {
