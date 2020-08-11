@@ -488,7 +488,7 @@ describe('integration tests', () => {
 
         const output = wrapperWithHTMLElement.debug().replace(/\s+/g, '');
         assert.equal(output, '<div><Component><p>foo</p></Component></div>');
-      })
+      });
 
       it('renders multiple HTML component children', () => {
         const wrapperWithMultipleHTMLElements = shallow(
@@ -498,62 +498,61 @@ describe('integration tests', () => {
               <span>bar</span>
             </Component>
           </div>
-        )
+        );
 
-        const output = wrapperWithMultipleHTMLElements.debug().replace(/\s+/g, '');
-        assert.equal(output, '<div><Component><p>foo</p><span>bar</span></Component></div>');
-      })
+        const output = wrapperWithMultipleHTMLElements
+          .debug()
+          .replace(/\s+/g, '');
+        assert.equal(
+          output,
+          '<div><Component><p>foo</p><span>bar</span></Component></div>'
+        );
+      });
 
       it('renders with a string child', () => {
         const wrapperWithString = shallow(
           <div>
-            <Component>
-              Foobar
-          </Component>
+            <Component>Foobar</Component>
           </div>
-        )
+        );
 
         const output = wrapperWithString.debug().replace(/\s+/g, '');
         assert.equal(output, '<div><Component>Foobar</Component></div>');
-      })
+      });
 
       it('renders with a number child', () => {
         const numberValue = 1234;
         const wrapperWithNumber = shallow(
           <div>
-            <Component>
-              {numberValue}
-          </Component>
+            <Component>{numberValue}</Component>
           </div>
-        )
+        );
 
         const output = wrapperWithNumber.debug().replace(/\s+/g, '');
         assert.equal(output, '<div><Component>1234</Component></div>');
-      })
-
-    })
+      });
+    });
 
     it('renders children of components rendered without JSX', () => {
       const Component: any = (props: any) => {
-        return (
-          <div>
-            {props.children}
-          </div>
-        );
+        return <div>{props.children}</div>;
       };
 
       const wrapper = shallow(
         <div>
-          {
-            preact.h(Component, null,
-              preact.h('p', null, 'foo'),
-              preact.h('p', null, 'bar'),
-            )
-          }
+          {preact.h(
+            Component,
+            null,
+            preact.h('p', null, 'foo'),
+            preact.h('p', null, 'bar')
+          )}
         </div>
       );
       const output = wrapper.debug().replace(/\s+/g, '');
-      assert.equal(output, '<div><Component><p>foo</p><p>bar</p></Component></div>');
+      assert.equal(
+        output,
+        '<div><Component><p>foo</p><p>bar</p></Component></div>'
+      );
     });
 
     if (isPreact10()) {

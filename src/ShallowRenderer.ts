@@ -40,7 +40,7 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
       // Monkey-patch the component's `render` to make it shallow-render.
       const instance = rootNode.instance;
       const originalRender = instance.render;
-      instance.render = function(...args: any[]) {
+      instance.render = function (...args: any[]) {
         let result;
         withShallowRendering(() => {
           result = originalRender.call(this, ...args);

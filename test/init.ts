@@ -22,7 +22,7 @@ const opts = minimist(process.argv.slice(2));
 if (opts['preact-lib']) {
   const Module = require('module');
   const origRequire = Module.prototype.require;
-  Module.prototype.require = function(path: string) {
+  Module.prototype.require = function (path: string) {
     if (path === 'preact' || path.startsWith('preact/')) {
       path = path.replace(/^preact\b/, opts['preact-lib']);
     }
