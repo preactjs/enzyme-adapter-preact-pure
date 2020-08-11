@@ -472,20 +472,66 @@ describe('integration tests', () => {
       assert.equal(output, '<div><Component/></div>');
     });
 
-    it('renders children of non-rendered components', () => {
+    describe('rendering children of non-rendered components', () => {
       const Component: any = () => {
         return null;
       };
-      const wrapper = shallow(
-        <div>
-          <Component>
-            <p>foo</p>
+
+      it('renders one HTML component child', () => {
+        const wrapperWithHTMLElement = shallow(
+          <div>
+            <Component>
+              <p>foo</p>
+            </Component>
+          </div>
+        );
+
+        const output = wrapperWithHTMLElement.debug().replace(/\s+/g, '');
+        assert.equal(output, '<div><Component><p>foo</p></Component></div>');
+      })
+
+      it('renders multiple HTML component children', () => {
+        const wrapperWithMultipleHTMLElements = shallow(
+          <div>
+            <Component>
+              <p>foo</p>
+              <span>bar</span>
+            </Component>
+          </div>
+        )
+
+        const output = wrapperWithMultipleHTMLElements.debug().replace(/\s+/g, '');
+        assert.equal(output, '<div><Component><p>foo</p><span>bar</span></Component></div>');
+      })
+
+      it('renders with a string child', () => {
+        const wrapperWithString = shallow(
+          <div>
+            <Component>
+              Foobar
           </Component>
-        </div>
-      );
-      const output = wrapper.debug().replace(/\s+/g, '');
-      assert.equal(output, '<div><Component><p>foo</p></Component></div>');
-    });
+          </div>
+        )
+
+        const output = wrapperWithString.debug().replace(/\s+/g, '');
+        assert.equal(output, '<div><Component>Foobar</Component></div>');
+      })
+
+      it('renders with a number child', () => {
+        const numberValue = 1234;
+        const wrapperWithNumber = shallow(
+          <div>
+            <Component>
+              {numberValue}
+          </Component>
+          </div>
+        )
+
+        const output = wrapperWithNumber.debug().replace(/\s+/g, '');
+        assert.equal(output, '<div><Component>1234</Component></div>');
+      })
+
+    })
 
     it('renders children of components rendered without JSX', () => {
       const Component: any = (props: any) => {

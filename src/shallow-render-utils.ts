@@ -62,6 +62,7 @@ function isRenderable(value: any) {
   return (
     value === null ||
     Array.isArray(value) ||
+    typeof value == 'number' ||
     typeof value === 'string' ||
     (typeof value === 'object' && value.type !== undefined)
   );
