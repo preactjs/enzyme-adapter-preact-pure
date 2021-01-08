@@ -118,12 +118,13 @@ export default class MountRenderer implements AbstractMountRenderer {
     // To be more faithful to a real browser, this should use the appropriate
     // constructor for the event type. This implementation is good enough for
     // many components though.
+    const { bubbles, composed, cancelable, ...extra } = args;
     const event = new Event(eventName, {
-      bubbles: args.bubbles,
-      composed: args.composed,
-      cancelable: args.cancelable,
+      bubbles,
+      composed,
+      cancelable,
     });
-    Object.assign(event, args);
+    Object.assign(event, extra);
 
     act(() => {
       node.instance.dispatchEvent(event);
