@@ -7,4 +7,4 @@ script:
   # Preact 10 with preact/compat
   - yarn test:compat
   # Example projects
-  - examples/run-all.sh
+  - examples/run-all.js
