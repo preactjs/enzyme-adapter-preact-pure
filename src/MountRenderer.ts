@@ -1,9 +1,8 @@
 import { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 
-import { getNode as getNodeV8 } from './preact8-rst';
-import { getNode as getNodeV10 } from './preact10-rst';
-import { getDisplayName, isPreact10, withReplacedMethod } from './util';
+import { getNode } from './preact10-rst';
+import { getDisplayName, withReplacedMethod } from './util';
 import { render } from './compat';
 import { getLastVNodeRenderedIntoContainer } from './preact10-internals';
 import {
@@ -21,39 +20,27 @@ export interface Options {
   container?: HTMLElement;
 }
 
-let testUtils: any;
-if (isPreact10()) {
-  // nb. We require the whole module here rather than just getting a reference
-  // to the `act` function because `act` is patched in `debounce-render-hook`.
-  testUtils = require('preact/test-utils');
-}
+// nb. We require the whole module here rather than just getting a reference
+// to the `act` function because `act` is patched in `debounce-render-hook`.
+let testUtils: any = require('preact/test-utils');
 
 /**
  * Invoke `callback` and then immediately flush any effects or pending renders
  * which were scheduled during the callback.
  */
 function act(callback: () => any) {
-  if (testUtils) {
-    testUtils.act(callback);
-  } else {
-    callback();
-  }
+  testUtils.act(callback);
 }
 
 export default class MountRenderer implements AbstractMountRenderer {
   private _container: HTMLElement;
-  private _getNode: typeof getNodeV10;
+  private _getNode: typeof getNode;
 
   constructor({ container }: Options = {}) {
     installDebounceHook();
 
     this._container = container || document.createElement('div');
-
-    if (isPreact10()) {
-      this._getNode = getNodeV10;
-    } else {
-      this._getNode = getNodeV8;
-    }
+    this._getNode = getNode;
   }
 
   render(el: VNode, context?: any, callback?: () => any) {

@@ -3,15 +3,8 @@ import { Component, Fragment, VNode } from 'preact';
 import * as preact from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import {
-  getNode as getNodeV10,
-  rstNodeFromElement as rstNodeFromElementV10,
-} from '../src/preact10-rst';
-import {
-  getNode as getNodeV8,
-  rstNodeFromElement as rstNodeFromElementV8,
-} from '../src/preact8-rst';
-import { getType, isPreact10 } from '../src/util';
+import { getNode, rstNodeFromElement } from '../src/preact10-rst';
+import { getType } from '../src/util';
 import { render } from '../src/compat';
 
 function Child({ label }: any) {
@@ -292,11 +285,11 @@ function renderToRST(el: VNode, container?: HTMLElement): RSTNode | null {
     container = document.createElement('div');
   }
   render(el, container);
-  const rootNode = isPreact10() ? getNodeV10(container) : getNodeV8(container);
+  const rootNode = getNode(container);
   return filterNode(rootNode);
 }
 
-describe('preact8-rst, preact10-rst', () => {
+describe('preact10-rst', () => {
   let container: HTMLElement;
 
   beforeEach(() => {
@@ -314,109 +307,107 @@ describe('preact8-rst, preact10-rst', () => {
       });
     });
 
-    if (isPreact10()) {
-      it('ignores fragments in result', () => {
-        const el = (
-          <ul>
-            <Fragment>
-              <li>1</li>
-              <li>2</li>
-            </Fragment>
-            <Fragment>
-              <li>3</li>
-              <li>4</li>
-            </Fragment>
-          </ul>
-        );
-        const expectedTree = hostNode({
-          type: 'ul',
-          rendered: [
-            hostNode({ type: 'li', rendered: ['1'] }),
-            hostNode({ type: 'li', rendered: ['2'] }),
-            hostNode({ type: 'li', rendered: ['3'] }),
-            hostNode({ type: 'li', rendered: ['4'] }),
-          ],
-        });
-        assert.deepEqual(renderToRST(el), expectedTree);
-      });
-
-      it('flattens nested fragments', () => {
-        const el = (
-          <ul>
-            <Fragment>
-              <li>1</li>
-              <Fragment>
-                <li>2</li>
-                <li>3</li>
-              </Fragment>
-              <li>4</li>
-            </Fragment>
-          </ul>
-        );
-        const expectedTree = hostNode({
-          type: 'ul',
-          rendered: [
-            hostNode({ type: 'li', rendered: ['1'] }),
-            hostNode({ type: 'li', rendered: ['2'] }),
-            hostNode({ type: 'li', rendered: ['3'] }),
-            hostNode({ type: 'li', rendered: ['4'] }),
-          ],
-        });
-        assert.deepEqual(renderToRST(el), expectedTree);
-      });
-
-      it('supports components that return fragments', () => {
-        function ListItems({ items }: { items: number[] }) {
-          return (
-            <Fragment>
-              {items.map(item => (
-                <li>{item}</li>
-              ))}
-            </Fragment>
-          );
-        }
-        const el = (
-          <ul>
-            <ListItems items={[1, 2]} />
-            <ListItems items={[3, 4]} />
-          </ul>
-        );
-        const expectedTree = hostNode({
-          type: 'ul',
-          rendered: [
-            functionNode({
-              type: ListItems,
-              props: { items: [1, 2] },
-              rendered: [
-                hostNode({ type: 'li', rendered: ['1'] }),
-                hostNode({ type: 'li', rendered: ['2'] }),
-              ],
-            }),
-            functionNode({
-              type: ListItems,
-              props: { items: [3, 4] },
-              rendered: [
-                hostNode({ type: 'li', rendered: ['3'] }),
-                hostNode({ type: 'li', rendered: ['4'] }),
-              ],
-            }),
-          ],
-        });
-        assert.deepEqual(renderToRST(el), expectedTree);
-      });
-
-      it('throws an error if the root node renders multiple children', () => {
-        const el = (
+    it('ignores fragments in result', () => {
+      const el = (
+        <ul>
           <Fragment>
             <li>1</li>
             <li>2</li>
           </Fragment>
-        );
-        assert.throws(() => {
-          renderToRST(el);
-        }, 'Root element must not be a fragment with multiple children');
+          <Fragment>
+            <li>3</li>
+            <li>4</li>
+          </Fragment>
+        </ul>
+      );
+      const expectedTree = hostNode({
+        type: 'ul',
+        rendered: [
+          hostNode({ type: 'li', rendered: ['1'] }),
+          hostNode({ type: 'li', rendered: ['2'] }),
+          hostNode({ type: 'li', rendered: ['3'] }),
+          hostNode({ type: 'li', rendered: ['4'] }),
+        ],
       });
-    }
+      assert.deepEqual(renderToRST(el), expectedTree);
+    });
+
+    it('flattens nested fragments', () => {
+      const el = (
+        <ul>
+          <Fragment>
+            <li>1</li>
+            <Fragment>
+              <li>2</li>
+              <li>3</li>
+            </Fragment>
+            <li>4</li>
+          </Fragment>
+        </ul>
+      );
+      const expectedTree = hostNode({
+        type: 'ul',
+        rendered: [
+          hostNode({ type: 'li', rendered: ['1'] }),
+          hostNode({ type: 'li', rendered: ['2'] }),
+          hostNode({ type: 'li', rendered: ['3'] }),
+          hostNode({ type: 'li', rendered: ['4'] }),
+        ],
+      });
+      assert.deepEqual(renderToRST(el), expectedTree);
+    });
+
+    it('supports components that return fragments', () => {
+      function ListItems({ items }: { items: number[] }) {
+        return (
+          <Fragment>
+            {items.map(item => (
+              <li>{item}</li>
+            ))}
+          </Fragment>
+        );
+      }
+      const el = (
+        <ul>
+          <ListItems items={[1, 2]} />
+          <ListItems items={[3, 4]} />
+        </ul>
+      );
+      const expectedTree = hostNode({
+        type: 'ul',
+        rendered: [
+          functionNode({
+            type: ListItems,
+            props: { items: [1, 2] },
+            rendered: [
+              hostNode({ type: 'li', rendered: ['1'] }),
+              hostNode({ type: 'li', rendered: ['2'] }),
+            ],
+          }),
+          functionNode({
+            type: ListItems,
+            props: { items: [3, 4] },
+            rendered: [
+              hostNode({ type: 'li', rendered: ['3'] }),
+              hostNode({ type: 'li', rendered: ['4'] }),
+            ],
+          }),
+        ],
+      });
+      assert.deepEqual(renderToRST(el), expectedTree);
+    });
+
+    it('throws an error if the root node renders multiple children', () => {
+      const el = (
+        <Fragment>
+          <li>1</li>
+          <li>2</li>
+        </Fragment>
+      );
+      assert.throws(() => {
+        renderToRST(el);
+      }, 'Root element must not be a fragment with multiple children');
+    });
 
     it('converts components with text children to RST nodes', () => {
       function TestComponent() {
@@ -439,10 +430,6 @@ describe('preact8-rst, preact10-rst', () => {
   });
 
   describe('rstNodeFromElement', () => {
-    const rstNodeFromElement = isPreact10()
-      ? rstNodeFromElementV10
-      : rstNodeFromElementV8;
-
     function stripInstances(node: RSTNode | string | null) {
       if (node == null || typeof node === 'string') {
         return node;

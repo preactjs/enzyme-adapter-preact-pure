@@ -1,4 +1,4 @@
-import { Component, Fragment, VNode, cloneElement } from 'preact';
+import { Fragment, VNode, cloneElement } from 'preact';
 import { assert } from 'chai';
 import * as preact from 'preact';
 
@@ -9,7 +9,6 @@ import {
   shallowRenderVNodeTree,
 } from '../src/shallow-render-utils';
 import { componentForDOMNode, render, childElements } from '../src/compat';
-import { isPreact10 } from '../src/util';
 import {
   getChildren,
   getComponent,
@@ -43,13 +42,7 @@ describe('shallow-render-utils', () => {
   describe('withShallowRendering', () => {
     it('replaces child components with placeholders', () => {
       const fullOutput = 'Hello<span>world</span>';
-      let shallowOutput: string;
-      if (isPreact10()) {
-        shallowOutput = 'Hello';
-      } else {
-        shallowOutput =
-          'Hello<shallow-render component="Child"></shallow-render>';
-      }
+      let shallowOutput = 'Hello';
 
       // Normal render should return full output.
       const el = <Component />;
@@ -76,19 +69,17 @@ describe('shallow-render-utils', () => {
       assert.equal(container.firstElementChild!.innerHTML, fullOutput);
     });
 
-    if (isPreact10()) {
-      it('does not shallow-render fragments', () => {
-        const el = (
-          <ul>
-            <Fragment>
-              <li>1</li>
-            </Fragment>
-          </ul>
-        );
-        render(el, container);
-        assert.equal(container.innerHTML, '<ul><li>1</li></ul>');
-      });
-    }
+    it('does not shallow-render fragments', () => {
+      const el = (
+        <ul>
+          <Fragment>
+            <li>1</li>
+          </Fragment>
+        </ul>
+      );
+      render(el, container);
+      assert.equal(container.innerHTML, '<ul><li>1</li></ul>');
+    });
   });
 
   describe('getRealType', () => {
@@ -106,16 +97,12 @@ describe('shallow-render-utils', () => {
       withShallowRendering(() => {
         render(el, container);
       });
-      let childComponent: Component;
-      if (isPreact10()) {
-        const fragVNode = getLastVNodeRenderedIntoContainer(container);
-        const rootComponent = getComponent(getChildren(fragVNode)![0])!;
-        const rootOutput = getLastRenderOutput(rootComponent)[0];
-        childComponent = getComponent(getChildren(rootOutput)![1])!;
-      } else {
-        const child = container.querySelector('shallow-render')!;
-        childComponent = componentForDOMNode(child)!;
-      }
+
+      const fragVNode = getLastVNodeRenderedIntoContainer(container);
+      const rootComponent = getComponent(getChildren(fragVNode)![0])!;
+      const rootOutput = getLastRenderOutput(rootComponent)[0];
+      const childComponent = getComponent(getChildren(rootOutput)![1])!;
+
       assert.ok(childComponent);
       assert.equal(childComponent instanceof Child, false);
       assert.equal(getRealType(childComponent), Child);

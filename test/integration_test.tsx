@@ -5,7 +5,7 @@ import {
   mount,
   render as renderToString,
 } from 'enzyme';
-import { Component, Fragment, options, isCompat } from './preact';
+import { Component, Fragment, options } from './preact';
 import * as preact from 'preact';
 import { ReactElement } from 'react';
 
@@ -13,20 +13,6 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import Adapter from '../src/Adapter';
-import { isPreact10 } from '../src/util';
-
-function isNotPreact8Compat() {
-  return isPreact10() || !isCompat;
-}
-
-function itIf(
-  cond: () => boolean,
-  description: string,
-  fn: (done?: () => any) => any
-) {
-  const itFn = cond() ? it : it.skip;
-  itFn(description, fn);
-}
 
 interface Wrapper extends CommonWrapper {
   find(query: any): CommonWrapper;
@@ -71,7 +57,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
       assert.equal(wrapper.find('.widget').length, 1);
     });
 
-    itIf(isNotPreact8Compat, 'can test if result contains subtree', () => {
+    it('can test if result contains subtree', () => {
       function ListItem({ label }: any) {
         return <b>{label}</b>;
       }
@@ -106,7 +92,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
   }
 
   if ((render as any) !== renderToString) {
-    itIf(isPreact10, 'returns contents of fragments', () => {
+    it('returns contents of fragments', () => {
       const el = (
         <div>
           <Fragment>
@@ -163,7 +149,7 @@ function addInteractiveTests(render: typeof mount) {
     assert.deepEqual(item.props(), { label: 'test', children: [] });
   });
 
-  itIf(isNotPreact8Compat, 'can traverse a tree with text nodes', () => {
+  it('can traverse a tree with text nodes', () => {
     function Widget() {
       return (
         <div>
@@ -190,7 +176,7 @@ function addInteractiveTests(render: typeof mount) {
     assert.deepEqual(matches, expected);
   });
 
-  itIf(isNotPreact8Compat, 'can find child components by type', () => {
+  it('can find child components by type', () => {
     function ListItem({ label }: any) {
       return <li>{label}</li>;
     }
@@ -338,7 +324,7 @@ function addInteractiveTests(render: typeof mount) {
     );
   });
 
-  itIf(isPreact10, 'supports simulating errors', done => {
+  it('supports simulating errors', done => {
     // let lastError = null;
 
     function Child() {
@@ -555,23 +541,21 @@ describe('integration tests', () => {
       );
     });
 
-    if (isPreact10()) {
-      it('renders components that take a function as `children`', () => {
-        function Child(props: any) {
-          return props.children();
-        }
+    it('renders components that take a function as `children`', () => {
+      function Child(props: any) {
+        return props.children();
+      }
 
-        function Parent(props: any) {
-          return <Child>{() => <div>Example</div>}</Child>;
-        }
+      function Parent(props: any) {
+        return <Child>{() => <div>Example</div>}</Child>;
+      }
 
-        let wrapper = shallow(<Parent />);
-        const childrenFunc = wrapper.prop('children') as any;
-        wrapper = shallow(childrenFunc());
+      let wrapper = shallow(<Parent />);
+      const childrenFunc = wrapper.prop('children') as any;
+      wrapper = shallow(childrenFunc());
 
-        assert.equal(wrapper.text(), 'Example');
-      });
-    }
+      assert.equal(wrapper.text(), 'Example');
+    });
   });
 
   describe('"string" rendering', () => {

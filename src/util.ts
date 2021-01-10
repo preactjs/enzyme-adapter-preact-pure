@@ -1,18 +1,11 @@
 import { RSTNode } from 'enzyme';
-import { VNode, h } from 'preact';
-
-import { getComponent } from './preact10-internals';
+import { VNode } from 'preact';
 
 export function getType(obj: Object) {
   if (obj == null) {
     return String(obj);
   }
   return obj.constructor.name;
-}
-
-export function isPreact10() {
-  const vnode = h('div', {});
-  return typeof getComponent(vnode) !== 'undefined';
 }
 
 /**
