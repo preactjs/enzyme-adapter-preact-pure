@@ -1,5 +1,6 @@
 import { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
+import { act } from 'preact/test-utils';
 
 import { getNode } from './preact10-rst';
 import { getDisplayName, withReplacedMethod } from './util';
@@ -18,18 +19,6 @@ export interface Options {
    * If not specified, a detached element (not connected to the body) is used.
    */
   container?: HTMLElement;
-}
-
-// nb. We require the whole module here rather than just getting a reference
-// to the `act` function because `act` is patched in `debounce-render-hook`.
-let testUtils: any = require('preact/test-utils');
-
-/**
- * Invoke `callback` and then immediately flush any effects or pending renders
- * which were scheduled during the callback.
- */
-function act(callback: () => any) {
-  testUtils.act(callback);
 }
 
 export default class MountRenderer implements AbstractMountRenderer {
