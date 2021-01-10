@@ -3,7 +3,7 @@
  * Preact.
  */
 
-import { Component, Fragment, VNode, h, render as preactRender } from 'preact';
+import { Component, Fragment, VNode, render as preactRender } from 'preact';
 
 import {
   getDOMNode,
@@ -12,52 +12,7 @@ import {
   getLastVNodeRenderedIntoContainer,
 } from './preact10-internals';
 
-import { componentForNode } from './preact8-internals';
-
-import { toArray, isPreact10 } from './util';
-
-/**
- * Add `type` and  `props` properties to Preact elements as aliases of
- * `nodeName` and `attributes`.
- *
- * This only applies to older versions of Preact. Preact 10 uses the
- * names `type` and `props` already.
- *
- * This normalizes VNodes across different versions of Preact and also Enzyme
- * internally depends on the node type and properties object being exposed
- * under these names.
- */
-export function addTypeAndPropsToVNode() {
-  // nb. VNodes are class instances in Preact <= 8 but object literals in
-  // Preact 10.
-  if ('type' in h('div', {})) {
-    // Extra properties have already been added.
-    return;
-  }
-
-  // We could add these properties using a VNode hook, but since older versions
-  // of Preact use a class for VNodes, we can also add accessors on the
-  // prototype.
-  const VNode = h('div', {}).constructor;
-  Object.defineProperty(VNode.prototype, 'type', {
-    get() {
-      return this.nodeName;
-    },
-
-    set(val) {
-      this.nodeName = val;
-    },
-
-    configurable: true,
-  });
-  Object.defineProperty(VNode.prototype, 'props', {
-    get() {
-      return this.attributes || {};
-    },
-
-    configurable: true,
-  });
-}
+import { toArray } from './util';
 
 /**
  * Search a tree of Preact v10 VNodes for the one that produced a given DOM element.
@@ -92,12 +47,6 @@ function findVNodeForDOM(
  * Find the `Component` instance that produced a given DOM node.
  */
 export function componentForDOMNode(el: Node): Component | null {
-  // In Preact 8 this is easy, as rendered nodes have `_component` expando
-  // property.
-  if (!isPreact10()) {
-    return componentForNode(el);
-  }
-
   // In Preact 10 we have to search up the tree until we find the container
   // that the root vnode was rendered into, then traverse the vnode tree to
   // find the component vnode that produced the DOM element.
@@ -119,29 +68,18 @@ export function componentForDOMNode(el: Node): Component | null {
 }
 
 export function render(el: VNode, container: HTMLElement) {
-  if (isPreact10()) {
-    preactRender(el, container);
-  } else {
-    const preact8Render = preactRender as any;
-    preact8Render(el, container, container.firstChild);
-  }
+  preactRender(el, container);
 }
 
 /**
  * Return the children of a VNode.
  */
 export function childElements(el: VNode): (VNode | string | null)[] {
-  if (isPreact10()) {
-    if (typeof el.props !== 'object' || el.props == null) {
-      return [];
-    }
-    if (typeof el.props.children !== 'undefined') {
-      return toArray(el.props.children);
-    }
-  } else {
-    if (typeof el.children !== 'undefined') {
-      return el.children;
-    }
+  if (typeof el.props !== 'object' || el.props == null) {
+    return [];
+  }
+  if (typeof el.props.children !== 'undefined') {
+    return toArray(el.props.children);
   }
   return [];
 }

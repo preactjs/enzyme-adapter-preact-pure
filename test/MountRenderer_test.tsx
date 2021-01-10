@@ -3,9 +3,9 @@ import { RSTNode } from 'enzyme';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as preact from 'preact';
+import { useEffect, useLayoutEffect, useState } from 'preact/hooks';
 
 import MountRenderer from '../src/MountRenderer';
-import { isPreact10 } from '../src/util';
 
 describe('MountRenderer', () => {
   describe('#render', () => {
@@ -31,72 +31,68 @@ describe('MountRenderer', () => {
       sinon.assert.called(callback);
     });
 
-    if (isPreact10()) {
-      const { useEffect, useLayoutEffect, useState } = require('preact/hooks');
+    it('executes effect hooks on initial render', () => {
+      let effectCount = 0;
+      let layoutEffectCount = 0;
 
-      it('executes effect hooks on initial render', () => {
-        let effectCount = 0;
-        let layoutEffectCount = 0;
+      function TestComponent() {
+        useLayoutEffect(() => {
+          ++layoutEffectCount;
+        });
+        useEffect(() => {
+          ++effectCount;
+        });
+        return null;
+      }
 
-        function TestComponent() {
-          useLayoutEffect(() => {
-            ++layoutEffectCount;
-          });
-          useEffect(() => {
-            ++effectCount;
-          });
-          return null;
-        }
+      const renderer = new MountRenderer();
+      renderer.render(<TestComponent />);
 
-        const renderer = new MountRenderer();
-        renderer.render(<TestComponent />);
+      assert.equal(layoutEffectCount, 1);
+      assert.equal(effectCount, 1);
+    });
 
-        assert.equal(layoutEffectCount, 1);
-        assert.equal(effectCount, 1);
-      });
+    it('executes hook cleanup on unmount', () => {
+      let effectRemoved = false;
 
-      it('executes hook cleanup on unmount', () => {
-        let effectRemoved = false;
+      function TestComponent() {
+        useEffect(() => {
+          return () => (effectRemoved = true);
+        });
+        return null;
+      }
 
-        function TestComponent() {
-          useEffect(() => {
-            return () => (effectRemoved = true);
-          });
-          return null;
-        }
+      const renderer = new MountRenderer();
+      renderer.render(<TestComponent />);
 
-        const renderer = new MountRenderer();
-        renderer.render(<TestComponent />);
+      assert.equal(effectRemoved, false);
+      renderer.unmount();
+      assert.equal(effectRemoved, true);
+    });
 
-        assert.equal(effectRemoved, false);
-        renderer.unmount();
-        assert.equal(effectRemoved, true);
-      });
+    it('flushes hooks and state updates after a simulated event', () => {
+      let clicked = false;
+      let effectCount = 0;
 
-      it('flushes hooks and state updates after a simulated event', () => {
-        let clicked = false;
-        let effectCount = 0;
+      function TestComponent() {
+        const [clicked_, setClicked] = useState(false);
+        useEffect(() => {
+          ++effectCount;
+          clicked = clicked_;
+        });
+        return <div onClick={() => setClicked(true)} />;
+      }
 
-        function TestComponent() {
-          const [clicked_, setClicked] = useState(false);
-          useEffect(() => {
-            ++effectCount;
-            clicked = clicked_;
-          });
-          return <div onClick={() => setClicked(true)} />;
-        }
+      const renderer = new MountRenderer();
+      renderer.render(<TestComponent />);
 
-        const renderer = new MountRenderer();
-        renderer.render(<TestComponent />);
+      effectCount = 0;
+      const divNode = renderer.getNode()!.rendered[0] as RSTNode;
+      renderer.simulateEvent(divNode, 'click');
 
-        effectCount = 0;
-        const divNode = renderer.getNode()!.rendered[0] as RSTNode;
-        renderer.simulateEvent(divNode, 'click');
-
-        assert.equal(effectCount, 1);
-        assert.equal(clicked, true);
-      });
-    }
+      assert.equal(effectCount, 1);
+      assert.equal(clicked, true);
+    });
   });
 
   describe('#unmount', () => {
@@ -109,28 +105,24 @@ describe('MountRenderer', () => {
       assert.equal(container.childNodes.length, 0);
     });
 
-    if (isPreact10()) {
-      const { useEffect } = require('preact/hooks');
+    it('runs effect cleanup callbacks', () => {
+      let unmountCount = 0;
 
-      it('runs effect cleanup callbacks', () => {
-        let unmountCount = 0;
+      function Widget() {
+        useEffect(() => {
+          return () => {
+            unmountCount += 1;
+          };
+        });
+        return <div>Test</div>;
+      }
 
-        function Widget() {
-          useEffect(() => {
-            return () => {
-              unmountCount += 1;
-            };
-          });
-          return <div>Test</div>;
-        }
+      const renderer = new MountRenderer();
+      renderer.render(<Widget />);
+      renderer.unmount();
 
-        const renderer = new MountRenderer();
-        renderer.render(<Widget />);
-        renderer.unmount();
-
-        assert.equal(unmountCount, 1);
-      });
-    }
+      assert.equal(unmountCount, 1);
+    });
   });
 
   describe('#getNode', () => {

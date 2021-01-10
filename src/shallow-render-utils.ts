@@ -1,14 +1,6 @@
-import {
-  ComponentFactory,
-  Component,
-  Fragment,
-  VNode,
-  h,
-  options,
-} from 'preact';
+import { ComponentFactory, Component, Fragment, VNode, options } from 'preact';
 
 import { childElements } from './compat';
-import { isPreact10 } from './util';
 
 interface ShallowRenderFunction extends Function {
   originalType: Function;
@@ -79,23 +71,13 @@ function makeShallowRenderComponent(
   type: ComponentFactory<any>
 ): ShallowRenderFunction {
   function ShallowRenderStub({ children }: { children?: any }) {
-    if (isPreact10()) {
-      // Preact 10 can render fragments, so we can return the children directly.
-      //
-      // There is an exception for `children` values which are not directly
-      // renderable but need to be processed by the component being stubbed.
-      // For example, a function used as part of the "render prop" pattern
-      // (https://reactjs.org/docs/render-props.html).
-      return isRenderable(children) ? children : null;
-    }
-    // Older versions of Preact need a dummy DOM element to contain the children.
-    return h(
-      'shallow-render',
-      {
-        component: getDisplayName(type),
-      },
-      children
-    );
+    // Preact 10 can render fragments, so we can return the children directly.
+    //
+    // There is an exception for `children` values which are not directly
+    // renderable but need to be processed by the component being stubbed.
+    // For example, a function used as part of the "render prop" pattern
+    // (https://reactjs.org/docs/render-props.html).
+    return isRenderable(children) ? children : null;
   }
   ShallowRenderStub.originalType = type;
   ShallowRenderStub.displayName = getDisplayName(type);

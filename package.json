@@ -21,8 +21,6 @@
     "mocha": "^7.0.1",
     "nyc": "^14.1.1",
     "preact": "^10.0.4",
-    "preact-compat": "^3.18.4",
-    "preact8": "npm:preact@^8.4.2",
     "prettier": "2.0.0",
     "sinon": "^7.2.3",
     "source-map-support": "^0.5.12",
@@ -32,20 +30,17 @@
   },
   "peerDependencies": {
     "enzyme": "^3.8.0",
-    "preact": "^8.4.2 || ^10.0.0"
+    "preact": "^10.0.0"
   },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write src/**/*.ts test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
     "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' nyc mocha -r ts-node/register/transpile-only -r source-map-support/register -r test/init.ts test/*.tsx",
-    "test:compat": "yarn test --preact-compat-lib preact/compat",
-    "test:preact8": "yarn test --preact-lib preact8",
-    "test:preact8-compat": "yarn test --preact-lib preact8 --preact-compat-lib preact-compat"
+    "test:compat": "yarn test --preact-compat-lib preact/compat"
   },
   "dependencies": {
-    "array.prototype.flatmap": "^1.2.1",
-    "preact-render-to-string": "^4.1.0"
+    "array.prototype.flatmap": "^1.2.1"
   },
   "files": [
     "build/src/**/*",
@@ -65,10 +60,5 @@
     ],
     "reporter": "html",
     "all": true
-  },
-  "greenkeeper": {
-    "ignore": [
-      "preact-render-to-string"
-    ]
   }
 }
