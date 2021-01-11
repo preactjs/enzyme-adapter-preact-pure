@@ -7,7 +7,8 @@ component testing library with [Preact](https://preactjs.com). For documentation
 
 ## Supported Preact versions
 
-The adapter supports both Preact 10+ and the latest Preact v8.x release. Using Preact 10+ is recommended.
+Version 3.x of the adapter supports Preact v10+. Earlier versions support both
+Preact v8 and v10.
 
 ## Usage
 
@@ -180,16 +181,6 @@ for your project:
 ```
 
 See the TypeScript example in `examples/typescript` for a runnable example.
-
-**preact-compat and functional components**
-
-preact-compat (for Preact v8) wraps functional components with a wrapper.
-This means that passing component types to Enzyme methods
-(eg. `wrapper.find(MyComponent)`) will not work if the component type is a function.
-Passing the _name_ of the function (`wrapper.find('MyComponent')`) will still
-work.
-
-This issue does not apply when using Preact 10 (with preact/compat).
 
 ## Development
 
