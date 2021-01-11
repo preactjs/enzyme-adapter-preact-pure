@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2021-01-11
+
+- This release removes support for Preact v8 to simplify ongoing maintenance.
+  See [#117](https://github.com/preactjs/enzyme-adapter-preact-pure/issues/117).
+
+  Users of Preact v8 will need to either stick with the last 2.x release of this
+  package or upgrade their applications to Preact v10.
+
 ## [2.2.4] - 2021-01-09
 
 - Fix error when setting certain event properties when calling
