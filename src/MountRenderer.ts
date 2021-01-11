@@ -54,11 +54,8 @@ export default class MountRenderer implements AbstractMountRenderer {
 
     const container = this._container;
     if (
-      // Preact 8 requires DOM nodes to represent any rendered content.
-      container.childNodes.length === 0 &&
-      // If the root component rendered null in Preact 10 then the only
-      // indicator that content has been rendered will be metadata attached to
-      // the container.
+      // If the root component rendered null then the only indicator that content
+      // has been rendered will be metadata attached to the container.
       typeof getLastVNodeRenderedIntoContainer(container) === 'undefined'
     ) {
       return null;
