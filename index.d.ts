@@ -4,17 +4,6 @@ import { ReactElement, ReactInstance } from 'react';
 
 // Extensions to the Preact types for compatibility with the Enzyme types.
 declare module 'preact' {
-  // Extensions to the VNode type from Preact 10 to support compiling against
-  // Preact 8.
-  export interface VNode<P = {}> {
-		nodeName: ComponentFactory<P> | string;
-		attributes: P;
-		children: Array<VNode<any> | string>;
-		key: Key | null;
-
-    text?: string | number | null;
-  }
-
   // Extensions to the `Component` type to make the types of Preact vnodes
   // (returned by `h`) compatible with the `ReactElement` type referenced by
   // the Enzyme type definitions.
@@ -107,7 +96,11 @@ declare module 'enzyme' {
    * with `{ mode: "shallow" }`
    */
   export interface ShallowRenderer extends Renderer {
-    render(el: ReactElement, context?: any, options?: ShallowRenderOptions): void;
+    render(
+      el: ReactElement,
+      context?: any,
+      options?: ShallowRenderOptions
+    ): void;
   }
 
   export interface AdapterOptions {
