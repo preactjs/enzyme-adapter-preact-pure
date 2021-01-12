@@ -2,14 +2,15 @@ import type { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 import { act } from 'preact/test-utils';
 
-import { getNode } from './preact10-rst.js';
-import { getDisplayName, withReplacedMethod } from './util.js';
 import { render } from './compat.js';
-import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
 import {
   installHook as installDebounceHook,
   flushRenders,
 } from './debounce-render-hook.js';
+import { eventData } from './event-data.js';
+import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
+import { getNode } from './preact10-rst.js';
+import { getDisplayName, withReplacedMethod } from './util.js';
 
 type EventDetails = { [prop: string]: any };
 
@@ -19,6 +20,15 @@ export interface Options {
    * If not specified, a detached element (not connected to the body) is used.
    */
   container?: HTMLElement;
+}
+
+function constructEvent(type: string, init: EventInit) {
+  const meta = eventData[type];
+  const defaultInit = meta?.defaultInit ?? {};
+  return new Event(type, {
+    ...defaultInit,
+    ...init,
+  });
 }
 
 export default class MountRenderer implements AbstractMountRenderer {
@@ -92,11 +102,17 @@ export default class MountRenderer implements AbstractMountRenderer {
     // constructor for the event type. This implementation is good enough for
     // many components though.
     const { bubbles, composed, cancelable, ...extra } = args;
-    const event = new Event(eventName, {
-      bubbles,
-      composed,
-      cancelable,
-    });
+    const init = {} as EventInit;
+    if (typeof bubbles === 'boolean') {
+      init.bubbles = bubbles;
+    }
+    if (typeof composed === 'boolean') {
+      init.composed = composed;
+    }
+    if (typeof cancelable === 'boolean') {
+      init.cancelable = cancelable;
+    }
+    const event = constructEvent(eventName, init);
     Object.assign(event, extra);
 
     act(() => {
