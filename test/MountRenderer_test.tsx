@@ -212,4 +212,16 @@ describe('MountRenderer', () => {
       });
     });
   });
+
+  describe('#wrapInvoke', () => {
+    it('returns result of callback', () => {
+      const Widget = () => <div />;
+      const renderer = new MountRenderer();
+      renderer.render(<Widget />);
+
+      const result = renderer.wrapInvoke(() => 'test');
+
+      assert.equal(result, 'test');
+    });
+  });
 });

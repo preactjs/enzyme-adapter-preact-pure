@@ -111,4 +111,12 @@ export default class MountRenderer implements AbstractMountRenderer {
   container() {
     return this._container;
   }
+
+  wrapInvoke(callback: () => any) {
+    let result;
+    act(() => {
+      result = callback();
+    });
+    return result;
+  }
 }
