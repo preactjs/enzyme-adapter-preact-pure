@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2021-04-08
+
+- Add support for [`invoke`](https://github.com/enzymejs/enzyme/blob/master/docs/api/ReactWrapper/invoke.md) wrapper method.
+  The Preact adapter currently only supports this for full (`mount`) rendering
+  [#135](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/135)
+
 ## [3.0.0] - 2021-01-11
 
 - This release removes support for Preact v8 to simplify ongoing maintenance.
