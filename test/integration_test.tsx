@@ -7,6 +7,7 @@ import {
 } from 'enzyme';
 import { Component, Fragment, options } from './preact';
 import * as preact from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { ReactElement } from 'react';
 
 import { assert } from 'chai';
@@ -400,6 +401,28 @@ describe('integration tests', () => {
       const wrapper = mount(<button />, { attachTo: container });
       assert.ok(container.querySelector('button'));
       wrapper.detach();
+    });
+
+    it('flushes effects and state updates when using `invoke`', () => {
+      let effectCount = 0;
+
+      const Child = ({ children, onClick }: any) => (
+        <button onClick={onClick}>{children}</button>
+      );
+      const Parent = () => {
+        const [count, setCount] = useState(0);
+        useEffect(() => {
+          effectCount = count;
+        }, [count]);
+        return <Child onClick={() => setCount(c => c + 1)}>{count}</Child>;
+      };
+
+      const wrapper = mount(<Parent />);
+      // @ts-ignore - `onClick` type is wrong
+      wrapper.find('Child').invoke('onClick')();
+
+      assert.equal(wrapper.text(), '1');
+      assert.equal(effectCount, 1);
     });
   });
 
