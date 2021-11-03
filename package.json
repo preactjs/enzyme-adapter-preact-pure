@@ -2,7 +2,8 @@
   "name": "enzyme-adapter-preact-pure",
   "version": "3.1.0",
   "description": "Enzyme adapter for Preact",
-  "main": "build/src/index.js",
+  "main": "build-cjs/src/index.js",
+  "module": "build/src/index.js",
   "repository": "https://github.com/preactjs/enzyme-adapter-preact-pure",
   "author": "Robert Knight",
   "license": "MIT",
@@ -24,7 +25,6 @@
     "prettier": "2.0.0",
     "sinon": "^7.2.3",
     "source-map-support": "^0.5.12",
-    "ts-node": "^8.0.2",
     "typescript": "^3.3.3",
     "yalc": "^1.0.0-pre.34"
   },
@@ -33,11 +33,12 @@
     "preact": "^10.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build tsconfig.json",
+    "build-cjs": "tsc --build tsconfig-cjs.json",
     "checkformatting": "prettier --check src/**/*.ts test/**/*.{ts,tsx}",
     "format": "prettier --list-different --write src/**/*.ts test/**/*.{ts,tsx}",
-    "prepublish": "rm -rf build && yarn run build",
-    "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' nyc mocha -r ts-node/register/transpile-only -r source-map-support/register -r test/init.ts test/*.tsx",
+    "prepublish": "rm -rf build && yarn build && yarn build-cjs",
+    "test": "yarn build-cjs && nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js",
     "test:compat": "yarn test --preact-compat-lib preact/compat"
   },
   "dependencies": {

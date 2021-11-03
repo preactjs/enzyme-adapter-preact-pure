@@ -4,15 +4,13 @@
     "esModuleInterop": true,
     "jsx": "react",
     "jsxFactory": "preact.h",
-    "module": "commonjs",
+    "module": "es2020",
+    "moduleResolution": "node",
     "noUnusedLocals": true,
     "outDir": "build",
     "strict": true,
-    "target": "es5",
+    "target": "es2020",
     "typeRoots": ["types", "node_modules/@types"]
   },
-  "exclude": [
-    "build",
-    "examples"
-  ]
+  "exclude": ["build", "build-cjs", "examples"]
 }
