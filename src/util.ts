@@ -1,4 +1,4 @@
-import { RSTNode } from 'enzyme';
+import type { RSTNode } from 'enzyme';
 import { VNode } from 'preact';
 
 export function getType(obj: Object) {

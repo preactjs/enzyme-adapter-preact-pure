@@ -8,7 +8,7 @@
  * The rendered result is converted to RST by traversing these vnode references.
  */
 
-import { NodeType, RSTNode } from 'enzyme';
+import type { NodeType, RSTNode } from 'enzyme';
 import { Component, Fragment, VNode } from 'preact';
 import flatMap from 'array.prototype.flatmap';
 
