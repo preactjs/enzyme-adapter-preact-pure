@@ -1,4 +1,4 @@
-import { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
+import type { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 import { act } from 'preact/test-utils';
 

@@ -8,7 +8,7 @@ import {
 import { Component, Fragment, options } from './preact';
 import * as preact from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';

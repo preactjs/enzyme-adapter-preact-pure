@@ -1,5 +1,5 @@
-import { Renderer, RSTNode } from 'enzyme';
-import { ReactElement } from 'react';
+import type { Renderer, RSTNode } from 'enzyme';
+import type { ReactElement } from 'react';
 import { h, render } from 'preact';
 
 export default class StringRenderer implements Renderer {

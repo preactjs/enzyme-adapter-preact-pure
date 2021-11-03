@@ -1,5 +1,6 @@
-import { AdapterOptions, EnzymeAdapter, RSTNode } from 'enzyme';
-import { ReactElement } from 'react';
+import type { AdapterOptions, RSTNode } from 'enzyme';
+import { EnzymeAdapter } from 'enzyme';
+import type { ReactElement } from 'react';
 import { VNode, h } from 'preact';
 
 import MountRenderer from './MountRenderer';
