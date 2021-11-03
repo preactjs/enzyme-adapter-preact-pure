@@ -46,6 +46,7 @@
   },
   "files": [
     "build/src/**/*",
+    "build-cjs/src/**/*",
     "index.d.ts"
   ],
   "nyc": {
