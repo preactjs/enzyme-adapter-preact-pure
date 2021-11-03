@@ -1,4 +1,4 @@
-import Adapter from './Adapter';
+import Adapter from './Adapter.js';
 
 export {
   // Non-default exports for backwards compatibility with earlier v1.x releases.

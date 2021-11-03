@@ -5,12 +5,12 @@ import {
 } from 'enzyme';
 import { VNode } from 'preact';
 
-import MountRenderer from './MountRenderer';
+import MountRenderer from './MountRenderer.js';
 import {
   withShallowRendering,
   shallowRenderVNodeTree,
-} from './shallow-render-utils';
-import { childElements } from './compat';
+} from './shallow-render-utils.js';
+import { childElements } from './compat.js';
 
 export default class ShallowRenderer implements AbstractShallowRenderer {
   private _mountRenderer: MountRenderer;

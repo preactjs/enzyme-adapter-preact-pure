@@ -3,10 +3,10 @@ import * as preact from 'preact';
 import { assert } from 'chai';
 import { RSTNode } from 'enzyme';
 
-import Adapter from '../src/Adapter';
-import MountRenderer from '../src/MountRenderer';
-import ShallowRenderer from '../src/ShallowRenderer';
-import StringRenderer from '../src/StringRenderer';
+import Adapter from '../src/Adapter.js';
+import MountRenderer from '../src/MountRenderer.js';
+import ShallowRenderer from '../src/ShallowRenderer.js';
+import StringRenderer from '../src/StringRenderer.js';
 
 describe('Adapter', () => {
   it('adds `type` and `props` attributes to VNodes', () => {
