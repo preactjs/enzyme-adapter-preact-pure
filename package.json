@@ -34,7 +34,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write src/**/*.ts test/**/*.{ts,tsx}",
+    "checkformatting": "prettier --check src/**/*.ts test/**/*.{ts,tsx}",
+    "format": "prettier --list-different --write src/**/*.ts test/**/*.{ts,tsx}",
     "prepublish": "rm -rf build && yarn run build",
     "test": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"esnext\"}' nyc mocha -r ts-node/register/transpile-only -r source-map-support/register -r test/init.ts test/*.tsx",
     "test:compat": "yarn test --preact-compat-lib preact/compat"
