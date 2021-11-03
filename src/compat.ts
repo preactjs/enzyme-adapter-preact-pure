@@ -10,9 +10,9 @@ import {
   getComponent,
   getChildren,
   getLastVNodeRenderedIntoContainer,
-} from './preact10-internals';
+} from './preact10-internals.js';
 
-import { toArray } from './util';
+import { toArray } from './util.js';
 
 /**
  * Search a tree of Preact v10 VNodes for the one that produced a given DOM element.

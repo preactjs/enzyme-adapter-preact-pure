@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { NodeType } from 'enzyme';
 
-import { getDisplayName } from '../src/util';
+import { getDisplayName } from '../src/util.js';
 
 describe('util', () => {
   describe('getDisplayName', () => {

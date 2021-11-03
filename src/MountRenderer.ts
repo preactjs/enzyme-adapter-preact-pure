@@ -2,14 +2,14 @@ import type { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
 import { VNode, h } from 'preact';
 import { act } from 'preact/test-utils';
 
-import { getNode } from './preact10-rst';
-import { getDisplayName, withReplacedMethod } from './util';
-import { render } from './compat';
-import { getLastVNodeRenderedIntoContainer } from './preact10-internals';
+import { getNode } from './preact10-rst.js';
+import { getDisplayName, withReplacedMethod } from './util.js';
+import { render } from './compat.js';
+import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
 import {
   installHook as installDebounceHook,
   flushRenders,
-} from './debounce-render-hook';
+} from './debounce-render-hook.js';
 
 type EventDetails = { [prop: string]: any };
 

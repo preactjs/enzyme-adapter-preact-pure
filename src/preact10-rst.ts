@@ -12,15 +12,15 @@ import type { NodeType, RSTNode } from 'enzyme';
 import { Component, Fragment, VNode } from 'preact';
 import flatMap from 'array.prototype.flatmap';
 
-import { childElements } from './compat';
+import { childElements } from './compat.js';
 import {
   getChildren,
   getComponent,
   getDOMNode,
   getLastRenderOutput,
   getLastVNodeRenderedIntoContainer,
-} from './preact10-internals';
-import { getRealType } from './shallow-render-utils';
+} from './preact10-internals.js';
+import { getRealType } from './shallow-render-utils.js';
 
 type Props = { [prop: string]: any };
 type RSTNodeTypes = RSTNode | string | null;

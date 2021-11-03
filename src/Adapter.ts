@@ -1,12 +1,14 @@
 import type { AdapterOptions, RSTNode } from 'enzyme';
-import { EnzymeAdapter } from 'enzyme';
+import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
 import { VNode, h } from 'preact';
 
-import MountRenderer from './MountRenderer';
-import ShallowRenderer from './ShallowRenderer';
-import StringRenderer from './StringRenderer';
-import { rstNodeFromElement } from './preact10-rst';
+import MountRenderer from './MountRenderer.js';
+import ShallowRenderer from './ShallowRenderer.js';
+import StringRenderer from './StringRenderer.js';
+import { rstNodeFromElement } from './preact10-rst.js';
+
+export const { EnzymeAdapter } = enzyme;
 
 export default class Adapter extends EnzymeAdapter {
   constructor() {

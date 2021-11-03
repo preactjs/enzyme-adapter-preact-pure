@@ -1,11 +1,11 @@
-import { Component } from 'preact';
-import { RSTNode } from 'enzyme';
 import { assert } from 'chai';
-import * as sinon from 'sinon';
+import { RSTNode } from 'enzyme';
+import { Component } from 'preact';
 import * as preact from 'preact';
 import { useEffect, useLayoutEffect, useState } from 'preact/hooks';
+import sinon from 'sinon';
 
-import MountRenderer from '../src/MountRenderer';
+import MountRenderer from '../src/MountRenderer.js';
 
 describe('MountRenderer', () => {
   describe('#render', () => {

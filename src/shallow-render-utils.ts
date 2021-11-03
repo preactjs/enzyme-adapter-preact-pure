@@ -1,6 +1,6 @@
 import { ComponentFactory, Component, Fragment, VNode, options } from 'preact';
 
-import { childElements } from './compat';
+import { childElements } from './compat.js';
 
 interface ShallowRenderFunction extends Function {
   originalType: Function;

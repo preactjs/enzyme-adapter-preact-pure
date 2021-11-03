@@ -3,9 +3,9 @@ import { Component, Fragment, VNode } from 'preact';
 import * as preact from 'preact';
 import { NodeType, RSTNode } from 'enzyme';
 
-import { getNode, rstNodeFromElement } from '../src/preact10-rst';
-import { getType } from '../src/util';
-import { render } from '../src/compat';
+import { getNode, rstNodeFromElement } from '../src/preact10-rst.js';
+import { getType } from '../src/util.js';
+import { render } from '../src/compat.js';
 
 function Child({ label }: any) {
   return <div>{label}</div>;

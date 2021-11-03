@@ -7,14 +7,14 @@ import {
   withShallowRendering,
   isShallowRendered,
   shallowRenderVNodeTree,
-} from '../src/shallow-render-utils';
-import { componentForDOMNode, render, childElements } from '../src/compat';
+} from '../src/shallow-render-utils.js';
+import { componentForDOMNode, render, childElements } from '../src/compat.js';
 import {
   getChildren,
   getComponent,
   getLastRenderOutput,
   getLastVNodeRenderedIntoContainer,
-} from '../src/preact10-internals';
+} from '../src/preact10-internals.js';
 
 describe('shallow-render-utils', () => {
   let container: HTMLElement;

@@ -1,19 +1,16 @@
-import {
-  CommonWrapper,
-  configure,
-  shallow,
-  mount,
-  render as renderToString,
-} from 'enzyme';
-import { Component, Fragment, options } from './preact';
+import type { CommonWrapper } from 'enzyme';
+import enzyme from 'enzyme';
+import { Component, Fragment, options } from 'preact';
 import * as preact from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import type { ReactElement } from 'react';
 
 import { assert } from 'chai';
-import * as sinon from 'sinon';
+import sinon from 'sinon';
 
-import Adapter from '../src/Adapter';
+import Adapter from '../src/Adapter.js';
+
+const { configure, shallow, mount, render: renderToString } = enzyme;
 
 interface Wrapper extends CommonWrapper {
   find(query: any): CommonWrapper;
