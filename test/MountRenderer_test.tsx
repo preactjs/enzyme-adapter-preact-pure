@@ -185,6 +185,44 @@ describe('MountRenderer', () => {
       sinon.assert.called(callback);
     });
 
+    [
+      {
+        type: 'click',
+        bubbles: true,
+        cancelable: true,
+      },
+      {
+        type: 'focus',
+        bubbles: false,
+        cancelable: false,
+      },
+      {
+        type: 'animationstart',
+        bubbles: true,
+        cancelable: false,
+      },
+      {
+        type: 'somecustomevent',
+        bubbles: false,
+        cancelable: false,
+      },
+    ].forEach(({ type, bubbles, cancelable }) => {
+      it('sets default event properties based on event type', () => {
+        const renderer = new MountRenderer();
+        const callback = sinon.stub();
+        const eventProp = 'on' + type;
+        const props = { [eventProp]: callback };
+        renderer.render(<button type="button" {...props} />);
+
+        renderer.simulateEvent(renderer.getNode() as RSTNode, type, {});
+
+        sinon.assert.calledOnce(callback);
+        const event = callback.getCall(0).args[0];
+        assert.equal(event.bubbles, bubbles);
+        assert.equal(event.cancelable, cancelable);
+      });
+    });
+
     it('passes arguments to event handler', () => {
       const renderer = new MountRenderer();
       const callback = sinon.stub();
