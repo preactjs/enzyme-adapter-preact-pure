@@ -7,7 +7,7 @@ import {
   installHook as installDebounceHook,
   flushRenders,
 } from './debounce-render-hook.js';
-import { eventData } from './event-data.js';
+import { eventMap } from './event-map.js';
 import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
 import { getNode } from './preact10-rst.js';
 import { getDisplayName, withReplacedMethod } from './util.js';
@@ -23,7 +23,7 @@ export interface Options {
 }
 
 function constructEvent(type: string, init: EventInit) {
-  const meta = eventData[type];
+  const meta = eventMap[type];
   const defaultInit = meta?.defaultInit ?? {};
   return new Event(type, {
     ...defaultInit,

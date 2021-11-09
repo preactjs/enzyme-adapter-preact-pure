@@ -7,9 +7,11 @@ export interface EventData {
  * Metadata for events which have different flags set by default than the
  * `Event` constructor defaults or which use a subclass of `Event`.
  *
- * Adapted from `event-data.js` in https://github.com/testing-library/dom-testing-library.
+ * Adapted from `event-map.js` in https://github.com/testing-library/dom-testing-library,
+ * but changed to lower-case event names to match the actual values that would
+ * be seen in the `Event.type` field.
  */
-export const eventData: Record<string, EventData> = {
+export const eventMap: Record<string, EventData> = {
   // Clipboard Events
   copy: {
     EventType: 'ClipboardEvent',
@@ -203,6 +205,10 @@ export const eventData: Record<string, EventData> = {
   },
 
   // UI Events
+  resize: {
+    EventType: 'UIEvent',
+    defaultInit: { bubbles: false, cancelable: false },
+  },
   scroll: {
     EventType: 'UIEvent',
     defaultInit: { bubbles: false, cancelable: false },
@@ -215,6 +221,7 @@ export const eventData: Record<string, EventData> = {
   },
 
   // Media Events
+  // (nb. These are currently incomplete)
   loadstart: {
     EventType: 'ProgressEvent',
     defaultInit: { bubbles: false, cancelable: false },
@@ -227,6 +234,10 @@ export const eventData: Record<string, EventData> = {
   // Image Events
   load: {
     EventType: 'UIEvent',
+    defaultInit: { bubbles: false, cancelable: false },
+  },
+  error: {
+    EventType: 'Event',
     defaultInit: { bubbles: false, cancelable: false },
   },
 
@@ -245,9 +256,21 @@ export const eventData: Record<string, EventData> = {
   },
 
   // Transition Events
+  transitioncancel: {
+    EventType: 'TransitionEvent',
+    defaultInit: { bubbles: true, cancelable: false },
+  },
   transitionend: {
     EventType: 'TransitionEvent',
     defaultInit: { bubbles: true, cancelable: true },
+  },
+  transitionrun: {
+    EventType: 'TransitionEvent',
+    defaultInit: { bubbles: true, cancelable: false },
+  },
+  transitionstart: {
+    EventType: 'TransitionEvent',
+    defaultInit: { bubbles: true, cancelable: false },
   },
 
   // Pointer events
