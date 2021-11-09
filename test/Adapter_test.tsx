@@ -8,6 +8,28 @@ import MountRenderer from '../src/MountRenderer.js';
 import ShallowRenderer from '../src/ShallowRenderer.js';
 import StringRenderer from '../src/StringRenderer.js';
 
+/**
+ * Return a deep copy of a vnode, omitting internal fields that have a `__`
+ * prefix.
+ *
+ * Stripping private fields is useful when comparing vnodes because the private
+ * fields may differ even if the VNodes are logically the same value. For example
+ * in some Preact versions VNodes include an ID counter field.
+ */
+function stripInternalVNodeFields(obj: object) {
+  const result = {} as Record<string, any>;
+  for (let [key, value] of Object.entries(obj)) {
+    if (!key.startsWith('__')) {
+      if (typeof value === 'object' && value !== null) {
+        result[key] = stripInternalVNodeFields(value);
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+
 describe('Adapter', () => {
   it('adds `type` and `props` attributes to VNodes', () => {
     // Add extra properties to vnodes for compatibility with Enzyme.
@@ -28,10 +50,12 @@ describe('Adapter', () => {
         adapter.createElement('img', { alt: 'bar' })
       );
       assert.deepEqual(
-        el,
-        <div title="foo">
-          <img alt="bar" />
-        </div>
+        stripInternalVNodeFields(el),
+        stripInternalVNodeFields(
+          <div title="foo">
+            <img alt="bar" />
+          </div>
+        )
       );
     });
   });
