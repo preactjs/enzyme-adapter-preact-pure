@@ -1,12 +1,20 @@
-import type { AdapterOptions, RSTNode } from 'enzyme';
+import type {
+  AdapterOptions,
+  MountRendererProps,
+  RSTNode,
+  ShallowRendererProps,
+} from 'enzyme';
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
-import { VNode, h } from 'preact';
+import type { VNode } from 'preact';
+import { h } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import ShallowRenderer from './ShallowRenderer.js';
 import StringRenderer from './StringRenderer.js';
 import { rstNodeFromElement } from './preact10-rst.js';
+import wrapWithWrappingComponent from './wrapWithWrappingComponent.js';
+import RootFinder from './RootFinder.js';
 
 export const { EnzymeAdapter } = enzyme;
 
@@ -31,13 +39,13 @@ export default class Adapter extends EnzymeAdapter {
     this.nodeToElement = this.nodeToElement.bind(this);
   }
 
-  createRenderer(options: AdapterOptions) {
+  createRenderer(options: AdapterOptions & MountRendererProps) {
     switch (options.mode) {
       case 'mount':
         // The `attachTo` option is only supported for DOM rendering, for
         // consistency with React, even though the Preact adapter could easily
         // support it for shallow rendering.
-        return new MountRenderer({ container: options.attachTo });
+        return new MountRenderer({ ...options, container: options.attachTo });
       case 'shallow':
         return new ShallowRenderer();
       case 'string':
@@ -91,7 +99,7 @@ export default class Adapter extends EnzymeAdapter {
 
   createElement(
     type: string | Function,
-    props: Object,
+    props: Object | null,
     ...children: ReactElement[]
   ) {
     return h(type as any, props, ...children);
@@ -100,4 +108,24 @@ export default class Adapter extends EnzymeAdapter {
   elementToNode(el: ReactElement): RSTNode {
     return rstNodeFromElement(el as VNode) as RSTNode;
   }
+
+  // This function is only called during shallow rendering
+  wrapWithWrappingComponent = (
+    node: ReactElement,
+    /**
+     * Tip:
+     * The use of `wrappingComponent` and `wrappingComponentProps` is discouraged!
+     * Using those props complicates a potential future migration to a different testing library.
+     * Instead, wrap a component like this:
+     * ```
+     * shallow(<Wrapper><Component/></Wrapper>)
+     * ```
+     */
+    options?: ShallowRendererProps
+  ) => {
+    return {
+      RootFinder: RootFinder,
+      node: wrapWithWrappingComponent(this.createElement, node, options),
+    };
+  };
 }

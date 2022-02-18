@@ -1,5 +1,10 @@
-import type { MountRenderer as AbstractMountRenderer, RSTNode } from 'enzyme';
-import { VNode, h } from 'preact';
+import type {
+  MountRenderer as AbstractMountRenderer,
+  MountRendererProps,
+  RSTNode,
+} from 'enzyme';
+import { VNode, h, createElement } from 'preact';
+import type { ReactElement } from 'react';
 import { act } from 'preact/test-utils';
 
 import { render } from './compat.js';
@@ -14,7 +19,7 @@ import { getDisplayName, withReplacedMethod } from './util.js';
 
 type EventDetails = { [prop: string]: any };
 
-export interface Options {
+export interface Options extends MountRendererProps {
   /**
    * The container element to render into.
    * If not specified, a detached element (not connected to the body) is used.
@@ -34,17 +39,32 @@ function constructEvent(type: string, init: EventInit) {
 export default class MountRenderer implements AbstractMountRenderer {
   private _container: HTMLElement;
   private _getNode: typeof getNode;
+  private _options: Options;
 
-  constructor({ container }: Options = {}) {
+  constructor(options: Options = {}) {
     installDebounceHook();
 
-    this._container = container || document.createElement('div');
+    this._container = options.container || document.createElement('div');
     this._getNode = getNode;
+    this._options = options;
   }
 
   render(el: VNode, context?: any, callback?: () => any) {
     act(() => {
-      render(el, this._container);
+      if (!this._options.wrappingComponent) {
+        render(el, this._container);
+        return;
+      }
+
+      // `this._options.wrappingComponent` is only available during mount-rendering,
+      // even though ShallowRenderer uses an instance of MountRenderer under the hood.
+      // For shallow-rendered components, we need to utilize `wrapWithWrappingComponent`.
+      const wrappedComponent: ReactElement = createElement(
+        this._options.wrappingComponent,
+        this._options.wrappingComponentProps || null,
+        el
+      );
+      render(wrappedComponent, this._container);
     });
 
     if (callback) {
@@ -70,6 +90,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     ) {
       return null;
     }
+
     return this._getNode(this._container);
   }
 
@@ -134,5 +155,9 @@ export default class MountRenderer implements AbstractMountRenderer {
       result = callback();
     });
     return result;
+  }
+
+  getWrappingComponentRenderer() {
+    return this;
   }
 }

@@ -119,7 +119,7 @@ declare module 'enzyme' {
     // Required methods.
     createElement(
       type: string | Function,
-      props: Object,
+      props: Object | null,
       ...children: ReactElement[]
     ): ReactElement;
     createRenderer(options: AdapterOptions): Renderer;
