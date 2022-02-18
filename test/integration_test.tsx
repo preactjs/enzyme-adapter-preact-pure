@@ -523,29 +523,14 @@ describe('integration tests', () => {
       );
     });
 
-    it('passes context option to RootFinder', () => {
-      function Component() {
-        return <span>test</span>;
-      }
-      const wrapper = shallow(<Component />, {
-        wrappingComponent: WrappingComponent,
-        context: { test: 'abc' },
-      });
-
-      const output = debugWrappedComponent(wrapper);
-      assert.equal(
-        output,
-        '<div><RootFinder context={{...}}><Component /></RootFinder></div>'
-      );
-    });
-
-    it('passes wrappingComponentProps.context option to wrappingComponent and RootFinder', () => {
+    it('passes wrappingComponentProps to wrappingComponent', () => {
       function Component() {
         return <span>test</span>;
       }
       const wrapper = shallow(<Component />, {
         wrappingComponent: WrappingComponent,
         wrappingComponentProps: {
+          foo: 'bar',
           context: { test: 'abc' },
         },
       });
@@ -553,7 +538,7 @@ describe('integration tests', () => {
       const output = debugWrappedComponent(wrapper);
       assert.equal(
         output,
-        '<div context={{...}}><RootFinder context={{...}}><Component /></RootFinder></div>'
+        '<div foo="bar" context={{...}}><RootFinder><Component /></RootFinder></div>'
       );
     });
 

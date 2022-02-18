@@ -9,7 +9,7 @@ export default function wrapWithWrappingComponent(
   node: ReactElement,
   options: ShallowRendererProps = {}
 ) {
-  const { wrappingComponent, wrappingComponentProps = {}, context } = options;
+  const { wrappingComponent, wrappingComponentProps = {} } = options;
 
   if (!wrappingComponent) {
     return node;
@@ -24,15 +24,9 @@ export default function wrapWithWrappingComponent(
     nodeWithValidChildren.props.children = childElements(nodeWithValidChildren);
   }
 
-  const rootFinderContext =
-    (wrappingComponentProps as { context: any })?.context || context;
-  const rootFinderProps = rootFinderContext
-    ? { context: rootFinderContext }
-    : null;
-
   return createElement(
     wrappingComponent,
     wrappingComponentProps,
-    createElement(RootFinder, rootFinderProps, nodeWithValidChildren)
+    createElement(RootFinder, null, nodeWithValidChildren)
   );
 }
