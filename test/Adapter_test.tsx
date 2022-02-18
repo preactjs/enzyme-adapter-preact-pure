@@ -215,4 +215,54 @@ describe('Adapter', () => {
       });
     });
   });
+
+  describe('#wrapWithWrappingComponent', () => {
+    function Button() {
+      return <button>Click me</button>;
+    }
+
+    function WrappingComponent({
+      children,
+      ...wrappingComponentProps
+    }: {
+      children: preact.ComponentChildren;
+    }) {
+      return <div {...wrappingComponentProps}>{children}</div>;
+    }
+
+    it('returns original component when not wrapped', () => {
+      const button = <Button />;
+      const adapter = new Adapter();
+      const hostNode = adapter.wrapWithWrappingComponent(button);
+
+      assert.ok(hostNode);
+      assert.typeOf(hostNode.RootFinder, 'function');
+      assert.deepEqual(hostNode.node, button);
+    });
+
+    it('returns wrapped component', () => {
+      const button = <Button />;
+      const wrappingComponentProps = { foo: 'bar' };
+      const wrappedComponent = (
+        <WrappingComponent {...wrappingComponentProps}>
+          {button}
+        </WrappingComponent>
+      );
+
+      const adapter = new Adapter();
+      const hostNode = adapter.wrapWithWrappingComponent(button, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps,
+      });
+
+      assert.ok(hostNode);
+
+      const rootFinderInHostNode = hostNode.node.props.children.type;
+      assert.equal(hostNode.RootFinder, rootFinderInHostNode);
+
+      const buttonInWrappedComponent = wrappedComponent.props.children;
+      const buttonInHostNode = hostNode.node.props.children.props.children;
+      assert.equal(buttonInHostNode, buttonInWrappedComponent);
+    });
+  });
 });

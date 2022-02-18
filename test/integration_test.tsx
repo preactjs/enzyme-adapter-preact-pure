@@ -12,6 +12,23 @@ import Adapter from '../src/Adapter.js';
 
 const { configure, shallow, mount, render: renderToString } = enzyme;
 
+function normalizeDebugMessage(message: string) {
+  return message.replace(/\s{2,}/g, '').replace(/>\s/g, '>');
+}
+
+function debugWrappedComponent(wrapper: enzyme.ShallowWrapper) {
+  return normalizeDebugMessage(wrapper.getWrappingComponent().debug());
+}
+
+function WrappingComponent({
+  children,
+  ...wrappingComponentProps
+}: {
+  children: preact.ComponentChildren;
+}) {
+  return <div {...wrappingComponentProps}>{children}</div>;
+}
+
 interface Wrapper extends CommonWrapper {
   find(query: any): CommonWrapper;
 }
@@ -421,6 +438,23 @@ describe('integration tests', () => {
       assert.equal(wrapper.text(), '1');
       assert.equal(effectCount, 1);
     });
+
+    it('renders wrapped component with wrapper and props', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+
+      const wrapper = mount(<Component />, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps: { foo: 'bar' },
+      });
+
+      const output = normalizeDebugMessage(wrapper.debug());
+      assert.equal(
+        output,
+        '<WrappingComponent foo="bar"><div foo="bar"><Component><span>test</span></Component></div></WrappingComponent>'
+      );
+    });
   });
 
   describe('"shallow" rendering', () => {
@@ -469,8 +503,58 @@ describe('integration tests', () => {
           <Component />
         </div>
       );
-      const output = wrapper.debug().replace(/\s+/g, '');
-      assert.equal(output, '<div><Component/></div>');
+      const output = normalizeDebugMessage(wrapper.debug());
+      assert.equal(output, '<div><Component /></div>');
+    });
+
+    it('renders wrapped component with wrapper and props', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps: { foo: 'bar' },
+      });
+
+      const output = debugWrappedComponent(wrapper);
+      assert.equal(
+        output,
+        '<div foo="bar"><RootFinder><Component /></RootFinder></div>'
+      );
+    });
+
+    it('passes context option to RootFinder', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponent,
+        context: { test: 'abc' },
+      });
+
+      const output = debugWrappedComponent(wrapper);
+      assert.equal(
+        output,
+        '<div><RootFinder context={{...}}><Component /></RootFinder></div>'
+      );
+    });
+
+    it('passes wrappingComponentProps.context option to wrappingComponent and RootFinder', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps: {
+          context: { test: 'abc' },
+        },
+      });
+
+      const output = debugWrappedComponent(wrapper);
+      assert.equal(
+        output,
+        '<div context={{...}}><RootFinder context={{...}}><Component /></RootFinder></div>'
+      );
     });
 
     describe('rendering children of non-rendered components', () => {
@@ -487,7 +571,7 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithHTMLElement.debug().replace(/\s+/g, '');
+        const output = normalizeDebugMessage(wrapperWithHTMLElement.debug());
         assert.equal(output, '<div><Component><p>foo</p></Component></div>');
       });
 
@@ -501,9 +585,9 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithMultipleHTMLElements
-          .debug()
-          .replace(/\s+/g, '');
+        const output = normalizeDebugMessage(
+          wrapperWithMultipleHTMLElements.debug()
+        );
         assert.equal(
           output,
           '<div><Component><p>foo</p><span>bar</span></Component></div>'
@@ -517,7 +601,7 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithString.debug().replace(/\s+/g, '');
+        const output = normalizeDebugMessage(wrapperWithString.debug());
         assert.equal(output, '<div><Component>Foobar</Component></div>');
       });
 
@@ -529,7 +613,7 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithNumber.debug().replace(/\s+/g, '');
+        const output = normalizeDebugMessage(wrapperWithNumber.debug());
         assert.equal(output, '<div><Component>1234</Component></div>');
       });
     });
@@ -549,7 +633,7 @@ describe('integration tests', () => {
           )}
         </div>
       );
-      const output = wrapper.debug().replace(/\s+/g, '');
+      const output = normalizeDebugMessage(wrapper.debug());
       assert.equal(
         output,
         '<div><Component><p>foo</p><p>bar</p></Component></div>'
