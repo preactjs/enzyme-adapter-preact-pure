@@ -289,14 +289,7 @@ describe('MountRenderer', () => {
         .instance;
       const expectedInstance = renderedTree[0].instance;
 
-      assert.equal(resultInstance.toString(), expectedInstance.toString());
-      assert.equal(resultInstance.nodeType, expectedInstance.nodeType);
-      assert.equal(resultInstance.nodeName, expectedInstance.nodeName);
-      assert.equal(resultInstance.nodeValue, expectedInstance.nodeValue);
-      assert.equal(
-        resultInstance.childNodes.length,
-        expectedInstance.childNodes.length
-      );
+      assert.equal(resultInstance.outerHTML, expectedInstance.outerHTML);
     });
   });
 });

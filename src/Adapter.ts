@@ -114,11 +114,11 @@ export default class Adapter extends EnzymeAdapter {
     node: ReactElement,
     /**
      * Tip:
-     * The use of `wrappingComponent` and `wrappingComponentProps` is discouraged!
+     * The use of `wrappingComponent` and `wrappingComponentProps` is discouraged.
      * Using those props complicates a potential future migration to a different testing library.
      * Instead, wrap a component like this:
      * ```
-     * shallow(<Wrapper><Component/></Wrapper>)
+     * shallow(<Wrapper><Component/></Wrapper>).dive()
      * ```
      */
     options?: ShallowRendererProps
