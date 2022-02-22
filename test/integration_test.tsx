@@ -2,13 +2,17 @@ import type { CommonWrapper } from 'enzyme';
 import enzyme from 'enzyme';
 import { Component, Fragment, options } from 'preact';
 import * as preact from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useState } from 'preact/hooks';
 import type { ReactElement } from 'react';
 
 import { assert } from 'chai';
 import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
+
+const TestContext = preact.createContext<{ myTestString: string }>({
+  myTestString: 'default',
+});
 
 const { configure, shallow, mount, render: renderToString } = enzyme;
 
@@ -453,6 +457,24 @@ describe('integration tests', () => {
       assert.equal(
         output,
         '<WrappingComponent foo="bar"><div foo="bar"><Component><span>test</span></Component></div></WrappingComponent>'
+      );
+    });
+
+    it('passes context to mounted component wrapped with provider', () => {
+      function Component() {
+        const { myTestString } = useContext(TestContext);
+        return <span>{myTestString}</span>;
+      }
+
+      const wrapper = mount(<Component />, {
+        wrappingComponent: TestContext.Provider,
+        wrappingComponentProps: { value: { myTestString: 'override' } },
+      });
+
+      const output = normalizeDebugMessage(wrapper.debug());
+      assert.equal(
+        output,
+        '<Provider value={{...}}><Component><span>override</span></Component></Provider>'
       );
     });
   });
