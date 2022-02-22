@@ -10,7 +10,9 @@ import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
 
-const TestContext = preact.createContext<{ myTestString: string }>({
+type TestContextValue = { myTestString: string };
+
+const TestContext = preact.createContext<TestContextValue>({
   myTestString: 'default',
 });
 
@@ -20,7 +22,7 @@ function normalizeDebugMessage(message: string) {
   return message.replace(/\s{2,}/g, '').replace(/>\s/g, '>');
 }
 
-function debugWrappedComponent(wrapper: enzyme.ShallowWrapper) {
+function debugWrappedShallowComponent(wrapper: enzyme.ShallowWrapper) {
   return normalizeDebugMessage(wrapper.getWrappingComponent().debug());
 }
 
@@ -538,7 +540,7 @@ describe('integration tests', () => {
         wrappingComponentProps: { foo: 'bar' },
       });
 
-      const output = debugWrappedComponent(wrapper);
+      const output = debugWrappedShallowComponent(wrapper);
       assert.equal(
         output,
         '<div foo="bar"><RootFinder><Component /></RootFinder></div>'
@@ -557,11 +559,66 @@ describe('integration tests', () => {
         },
       });
 
-      const output = debugWrappedComponent(wrapper);
+      const output = debugWrappedShallowComponent(wrapper);
       assert.equal(
         output,
         '<div foo="bar" context={{...}}><RootFinder><Component /></RootFinder></div>'
       );
+    });
+
+    it('passes context to shallow component with function returning TestContext.Provider', () => {
+      function WrappingComponentWithContextProvider({
+        children,
+        value,
+      }: {
+        children: preact.ComponentChildren;
+        value: TestContextValue;
+      }) {
+        return (
+          <TestContext.Provider value={value}>{children}</TestContext.Provider>
+        );
+      }
+
+      function Component() {
+        const { myTestString } = useContext(TestContext);
+        return <span>{myTestString}</span>;
+      }
+
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponentWithContextProvider,
+        wrappingComponentProps: { value: { myTestString: 'override' } },
+      });
+
+      const output = debugWrappedShallowComponent(wrapper);
+      assert.equal(
+        output,
+        '<Provider value={{...}}><RootFinder><Component /></RootFinder></Provider>'
+      );
+
+      const outputHtml = wrapper.getWrappingComponent().html();
+      assert.equal(outputHtml, '<span>override</span>');
+    });
+
+    it('passes context to shallow component with TestContext.Provider as wrappingComponent', () => {
+      function Component() {
+        const { myTestString } = useContext(TestContext);
+        return <span>{myTestString}</span>;
+      }
+
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: TestContext.Provider,
+        wrappingComponentProps: { value: { myTestString: 'override' } },
+      });
+
+      const output = debugWrappedShallowComponent(wrapper);
+      assert.equal(output, '<RootFinder><Component /></RootFinder>');
+
+      const outputHtml = wrapper.getWrappingComponent().html();
+      // NOTE:
+      // Ideally the value of `outputHtml` would be `<span>override</span>` but Enzyme and this library
+      // currently don't forwarding context values set via wrappingComponentProps, see also:
+      // https://github.com/enzymejs/enzyme/issues/2176
+      assert.equal(outputHtml, '<span>default</span>');
     });
 
     describe('rendering children of non-rendered components', () => {
