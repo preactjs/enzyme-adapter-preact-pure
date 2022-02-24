@@ -262,4 +262,34 @@ describe('MountRenderer', () => {
       assert.equal(result, 'test');
     });
   });
+
+  describe('getNode', () => {
+    it('can get the node', () => {
+      const renderedTree = [
+        {
+          nodeType: 'host',
+          type: 'div',
+          props: {},
+          key: null,
+          ref: null,
+          instance: document.createElement('span'),
+          rendered: [],
+        },
+      ];
+
+      const Widget = () => <span />;
+      const renderer = new MountRenderer();
+      renderer.render(<Widget />);
+
+      const result = renderer.getWrappingComponentRenderer();
+
+      assert.equal(result.getNode()?.rendered.length, 1);
+
+      const resultInstance = (result.getNode()?.rendered[0] as RSTNode)
+        .instance;
+      const expectedInstance = renderedTree[0].instance;
+
+      assert.equal(resultInstance.outerHTML, expectedInstance.outerHTML);
+    });
+  });
 });

@@ -2,7 +2,7 @@ import type { CommonWrapper } from 'enzyme';
 import enzyme from 'enzyme';
 import { Component, Fragment, options } from 'preact';
 import * as preact from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useState } from 'preact/hooks';
 import type { ReactElement } from 'react';
 
 import { assert } from 'chai';
@@ -10,7 +10,30 @@ import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
 
+type TestContextValue = { myTestString: string };
+
+const TestContext = preact.createContext<TestContextValue>({
+  myTestString: 'default',
+});
+
 const { configure, shallow, mount, render: renderToString } = enzyme;
+
+function normalizeDebugMessage(message: string) {
+  return message.replace(/\s{2,}/g, '').replace(/>\s/g, '>');
+}
+
+function debugWrappedShallowComponent(wrapper: enzyme.ShallowWrapper) {
+  return normalizeDebugMessage(wrapper.getWrappingComponent().debug());
+}
+
+function WrappingComponent({
+  children,
+  ...wrappingComponentProps
+}: {
+  children: preact.ComponentChildren;
+}) {
+  return <div {...wrappingComponentProps}>{children}</div>;
+}
 
 interface Wrapper extends CommonWrapper {
   find(query: any): CommonWrapper;
@@ -421,6 +444,41 @@ describe('integration tests', () => {
       assert.equal(wrapper.text(), '1');
       assert.equal(effectCount, 1);
     });
+
+    it('renders wrapped component with wrapper and props', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+
+      const wrapper = mount(<Component />, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps: { foo: 'bar' },
+      });
+
+      const output = normalizeDebugMessage(wrapper.debug());
+      assert.equal(
+        output,
+        '<WrappingComponent foo="bar"><div foo="bar"><Component><span>test</span></Component></div></WrappingComponent>'
+      );
+    });
+
+    it('passes context to mounted component wrapped with provider', () => {
+      function Component() {
+        const { myTestString } = useContext(TestContext);
+        return <span>{myTestString}</span>;
+      }
+
+      const wrapper = mount(<Component />, {
+        wrappingComponent: TestContext.Provider,
+        wrappingComponentProps: { value: { myTestString: 'override' } },
+      });
+
+      const output = normalizeDebugMessage(wrapper.debug());
+      assert.equal(
+        output,
+        '<Provider value={{...}}><Component><span>override</span></Component></Provider>'
+      );
+    });
   });
 
   describe('"shallow" rendering', () => {
@@ -469,8 +527,98 @@ describe('integration tests', () => {
           <Component />
         </div>
       );
-      const output = wrapper.debug().replace(/\s+/g, '');
-      assert.equal(output, '<div><Component/></div>');
+      const output = normalizeDebugMessage(wrapper.debug());
+      assert.equal(output, '<div><Component /></div>');
+    });
+
+    it('renders wrapped component with wrapper and props', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps: { foo: 'bar' },
+      });
+
+      const output = debugWrappedShallowComponent(wrapper);
+      assert.equal(
+        output,
+        '<div foo="bar"><RootFinder><Component /></RootFinder></div>'
+      );
+    });
+
+    it('passes wrappingComponentProps to wrappingComponent', () => {
+      function Component() {
+        return <span>test</span>;
+      }
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponent,
+        wrappingComponentProps: {
+          foo: 'bar',
+          context: { test: 'abc' },
+        },
+      });
+
+      const output = debugWrappedShallowComponent(wrapper);
+      assert.equal(
+        output,
+        '<div foo="bar" context={{...}}><RootFinder><Component /></RootFinder></div>'
+      );
+    });
+
+    it('passes context to shallow component with function returning TestContext.Provider', () => {
+      function WrappingComponentWithContextProvider({
+        children,
+        value,
+      }: {
+        children: preact.ComponentChildren;
+        value: TestContextValue;
+      }) {
+        return (
+          <TestContext.Provider value={value}>{children}</TestContext.Provider>
+        );
+      }
+
+      function Component() {
+        const { myTestString } = useContext(TestContext);
+        return <span>{myTestString}</span>;
+      }
+
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: WrappingComponentWithContextProvider,
+        wrappingComponentProps: { value: { myTestString: 'override' } },
+      });
+
+      const output = debugWrappedShallowComponent(wrapper);
+      assert.equal(
+        output,
+        '<Provider value={{...}}><RootFinder><Component /></RootFinder></Provider>'
+      );
+
+      const outputHtml = wrapper.getWrappingComponent().html();
+      assert.equal(outputHtml, '<span>override</span>');
+    });
+
+    it('passes context to shallow component with TestContext.Provider as wrappingComponent', () => {
+      function Component() {
+        const { myTestString } = useContext(TestContext);
+        return <span>{myTestString}</span>;
+      }
+
+      const wrapper = shallow(<Component />, {
+        wrappingComponent: TestContext.Provider,
+        wrappingComponentProps: { value: { myTestString: 'override' } },
+      });
+
+      const output = debugWrappedShallowComponent(wrapper);
+      assert.equal(output, '<RootFinder><Component /></RootFinder>');
+
+      const outputHtml = wrapper.getWrappingComponent().html();
+      // NOTE:
+      // Ideally the value of `outputHtml` would be `<span>override</span>` but Enzyme and this library
+      // currently don't forwarding context values set via wrappingComponentProps, see also:
+      // https://github.com/enzymejs/enzyme/issues/2176
+      assert.equal(outputHtml, '<span>default</span>');
     });
 
     describe('rendering children of non-rendered components', () => {
@@ -487,7 +635,7 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithHTMLElement.debug().replace(/\s+/g, '');
+        const output = normalizeDebugMessage(wrapperWithHTMLElement.debug());
         assert.equal(output, '<div><Component><p>foo</p></Component></div>');
       });
 
@@ -501,9 +649,9 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithMultipleHTMLElements
-          .debug()
-          .replace(/\s+/g, '');
+        const output = normalizeDebugMessage(
+          wrapperWithMultipleHTMLElements.debug()
+        );
         assert.equal(
           output,
           '<div><Component><p>foo</p><span>bar</span></Component></div>'
@@ -517,7 +665,7 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithString.debug().replace(/\s+/g, '');
+        const output = normalizeDebugMessage(wrapperWithString.debug());
         assert.equal(output, '<div><Component>Foobar</Component></div>');
       });
 
@@ -529,7 +677,7 @@ describe('integration tests', () => {
           </div>
         );
 
-        const output = wrapperWithNumber.debug().replace(/\s+/g, '');
+        const output = normalizeDebugMessage(wrapperWithNumber.debug());
         assert.equal(output, '<div><Component>1234</Component></div>');
       });
     });
@@ -549,7 +697,7 @@ describe('integration tests', () => {
           )}
         </div>
       );
-      const output = wrapper.debug().replace(/\s+/g, '');
+      const output = normalizeDebugMessage(wrapper.debug());
       assert.equal(
         output,
         '<div><Component><p>foo</p><p>bar</p></Component></div>'
