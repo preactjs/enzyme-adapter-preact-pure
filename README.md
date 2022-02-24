@@ -184,7 +184,7 @@ See the TypeScript example in `examples/typescript` for a runnable example.
 
 After cloning the repository, you can build it and run tests as follows:
 
-```
+```sh
 # Install dependencies.
 yarn install
 
@@ -197,6 +197,16 @@ yarn test
 # Run tests against a custom build of Preact.
 yarn test --preact-lib <path to Preact bundle>
 ```
+
+### Release process
+
+New releases of this package are created using [np](https://github.com/sindresorhus/np).
+
+1. Check out the latest `master` branch
+2. Edit CHANGELOG.md to add notes for the version you are about to release.
+3. Commit the changes to CHANGELOG.md and push back to GitHub
+4. Run `np <semver-type>` to create the release, where `<semver-type>` is the
+   category of release according to Semantic Versioning, typically `minor`.
 
 ## FAQ
 
