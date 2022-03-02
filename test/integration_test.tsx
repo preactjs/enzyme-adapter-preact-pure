@@ -547,25 +547,6 @@ describe('integration tests', () => {
       );
     });
 
-    it('passes wrappingComponentProps to wrappingComponent', () => {
-      function Component() {
-        return <span>test</span>;
-      }
-      const wrapper = shallow(<Component />, {
-        wrappingComponent: WrappingComponent,
-        wrappingComponentProps: {
-          foo: 'bar',
-          context: { test: 'abc' },
-        },
-      });
-
-      const output = debugWrappedShallowComponent(wrapper);
-      assert.equal(
-        output,
-        '<div foo="bar" context={{...}}><RootFinder><Component /></RootFinder></div>'
-      );
-    });
-
     it('passes context to shallow component with function returning TestContext.Provider', () => {
       function WrappingComponentWithContextProvider({
         children,
