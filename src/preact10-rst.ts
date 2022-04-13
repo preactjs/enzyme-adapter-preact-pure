@@ -10,7 +10,6 @@
 
 import type { NodeType, RSTNode } from 'enzyme';
 import { Component, Fragment, VNode } from 'preact';
-import flatMap from 'array.prototype.flatmap';
 
 import { childElements } from './compat.js';
 import {
@@ -47,7 +46,7 @@ function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
   if (!nodes) {
     return [];
   }
-  return flatMap(nodes, (node: VNode | null) => {
+  return nodes.flatMap(node => {
     if (node === null) {
       // The array of rendered children may have `null` entries as a result of
       // eg. conditionally rendered children where the condition was false.
