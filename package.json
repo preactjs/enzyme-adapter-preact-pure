@@ -10,7 +10,8 @@
   "devDependencies": {
     "@types/array.prototype.flatmap": "^1.2.0",
     "@types/chai": "^4.1.7",
-    "@types/enzyme": "^3.10.3",
+    "@types/cheerio": "^0.22.31",
+    "@types/enzyme": "^3.10.12",
     "@types/jsdom": "^16.2.14",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^9.0.0",
