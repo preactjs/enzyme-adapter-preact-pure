@@ -16,7 +16,7 @@ function Parent({ label }: any) {
 }
 
 function Section({ children }: any) {
-  return <section>{...children}</section>;
+  return <section>{children}</section>;
 }
 
 class ClassComponent extends Component<{ label: string }> {
