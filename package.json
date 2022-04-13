@@ -44,9 +44,7 @@
     "test-cjs": "yarn build-cjs && nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js",
     "test:compat": "yarn test --preact-compat-lib preact/compat"
   },
-  "dependencies": {
-    "array.prototype.flatmap": "^1.2.1"
-  },
+  "dependencies": {},
   "files": [
     "build/src/**/*",
     "build-cjs/src/**/*",
