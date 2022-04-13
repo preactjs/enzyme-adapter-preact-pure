@@ -3,7 +3,7 @@
  * Preact.
  */
 
-import { Component, Fragment, VNode, render as preactRender } from 'preact';
+import { Component, Fragment, VNode } from 'preact';
 
 import {
   getDOMNode,
@@ -13,6 +13,8 @@ import {
 } from './preact10-internals.js';
 
 import { toArray } from './util.js';
+
+export { render } from 'preact';
 
 /**
  * Search a tree of Preact v10 VNodes for the one that produced a given DOM element.
@@ -65,10 +67,6 @@ export function componentForDOMNode(el: Node): Component | null {
   }
 
   return null;
-}
-
-export function render(el: VNode, container: HTMLElement) {
-  preactRender(el, container);
 }
 
 /**
