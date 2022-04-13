@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2022-04-13
+
+- The CommonJS build of this package now targets ES 2020, which is the same
+  target as the ESM build
+  [#166](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/166).
+
+  If running tests against a pre-2020 browser or version of Node, you may need
+  to add a polyfill for Array.prototype.flatMap in your own project.
+
 ## [3.4.0] - 2022-02-24
 
 - Support `wrappingComponent` and `wrappingComponentProps` options for full
