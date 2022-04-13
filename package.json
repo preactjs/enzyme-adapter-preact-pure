@@ -8,7 +8,6 @@
   "author": "Robert Knight",
   "license": "MIT",
   "devDependencies": {
-    "@types/array.prototype.flatmap": "^1.2.0",
     "@types/chai": "^4.1.7",
     "@types/cheerio": "^0.22.31",
     "@types/enzyme": "^3.10.12",
