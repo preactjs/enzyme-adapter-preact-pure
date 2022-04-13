@@ -4,7 +4,6 @@ import type {
   RSTNode,
 } from 'enzyme';
 import { VNode, h, createElement } from 'preact';
-import type { ReactElement } from 'react';
 import { act } from 'preact/test-utils';
 
 import { render } from './compat.js';
@@ -59,7 +58,7 @@ export default class MountRenderer implements AbstractMountRenderer {
       // `this._options.wrappingComponent` is only available during mount-rendering,
       // even though ShallowRenderer uses an instance of MountRenderer under the hood.
       // For shallow-rendered components, we need to utilize `wrapWithWrappingComponent`.
-      const wrappedComponent: ReactElement = createElement(
+      const wrappedComponent = createElement(
         this._options.wrappingComponent,
         this._options.wrappingComponentProps || null,
         el

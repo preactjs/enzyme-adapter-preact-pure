@@ -7,13 +7,13 @@ import type {
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
 import type { VNode } from 'preact';
-import { h } from 'preact';
+import { cloneElement, h } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import ShallowRenderer from './ShallowRenderer.js';
 import StringRenderer from './StringRenderer.js';
+import { childElements } from './compat.js';
 import { rstNodeFromElement } from './preact10-rst.js';
-import wrapWithWrappingComponent from './wrapWithWrappingComponent.js';
 import RootFinder from './RootFinder.js';
 
 export const { EnzymeAdapter } = enzyme;
@@ -111,7 +111,7 @@ export default class Adapter extends EnzymeAdapter {
 
   // This function is only called during shallow rendering
   wrapWithWrappingComponent = (
-    node: ReactElement,
+    el: ReactElement,
     /**
      * Tip:
      * The use of `wrappingComponent` and `wrappingComponentProps` is discouraged.
@@ -121,11 +121,35 @@ export default class Adapter extends EnzymeAdapter {
      * shallow(<Wrapper><Component/></Wrapper>).dive()
      * ```
      */
-    options?: ShallowRendererProps
+    options: ShallowRendererProps = {}
   ) => {
+    const { wrappingComponent, wrappingComponentProps = {} } = options;
+
+    if (!wrappingComponent) {
+      return { RootFinder, node: el };
+    }
+
+    let elementWithValidChildren;
+    if (typeof el.props.children === 'string') {
+      // This prevents an error when `.dive()` is used:
+      // `TypeError: ShallowWrapper::dive() can only be called on components`.
+      // ---------------------------------------------------------------------
+      // VNode before: `{ type: Widget, props: { children: 'test' }, ... }`
+      // VNode after:  `{ type: Widget, props: { children: ['test'] }, ... }`
+      elementWithValidChildren = cloneElement(el, el.props, childElements(el));
+    } else {
+      elementWithValidChildren = el;
+    }
+
+    const wrappedElement = h(
+      wrappingComponent,
+      wrappingComponentProps,
+      h(RootFinder, null, elementWithValidChildren)
+    );
+
     return {
-      RootFinder: RootFinder,
-      node: wrapWithWrappingComponent(this.createElement, node, options),
+      RootFinder,
+      node: wrappedElement as ReactElement,
     };
   };
 }
