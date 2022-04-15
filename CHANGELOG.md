@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.1] - 2022-04-15
+
+- Added a partial fix for an incompatibility between Preact's JSX element type
+  and the JSX element type from `@types/react` v18.
+  [#177](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/177).
+
 ## [4.0.0] - 2022-04-13
 
 - The CommonJS build of this package now targets ES 2020, which is the same
