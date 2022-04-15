@@ -382,7 +382,7 @@ function addInteractiveTests(render: typeof mount) {
     const err = new Error('Boom');
     child.simulateError(err);
     assert.equal(wrapper.text(), 'Something went wrong: $Boom');
-    // This assert fails because Preact 10 does not call `componentDidCatch`
+    // This assert fails because Preact does not call `componentDidCatch`
     // if `getDerivedStateFromError` is defined.
     // assert.equal(lastError, err);
 

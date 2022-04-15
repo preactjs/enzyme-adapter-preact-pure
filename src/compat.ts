@@ -49,9 +49,9 @@ function findVNodeForDOM(
  * Find the `Component` instance that produced a given DOM node.
  */
 export function componentForDOMNode(el: Node): Component | null {
-  // In Preact 10 we have to search up the tree until we find the container
-  // that the root vnode was rendered into, then traverse the vnode tree to
-  // find the component vnode that produced the DOM element.
+  // Search up the tree until we find the container that the root vnode was
+  // rendered into, then traverse the vnode tree to find the component vnode
+  // that produced the DOM element.
   let parentEl = el.parentNode;
   let rootVNode = null;
   while (parentEl && !rootVNode) {

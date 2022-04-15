@@ -1,9 +1,8 @@
 /**
- * Functions for rendering components using Preact "X" (v10 and later) and
- * converting the result to a React Standard Tree (RST) format defined by
- * Enzyme.
+ * Functions for rendering components using Preact v10 and converting the result
+ * to a React Standard Tree (RST) format defined by Enzyme.
  *
- * Preact 10+ stores details of the rendered elements on internal fields of
+ * Preact 10 stores details of the rendered elements on internal fields of
  * the VNodes. A reference to the vnode is stored in the root DOM element.
  * The rendered result is converted to RST by traversing these vnode references.
  */

@@ -117,12 +117,11 @@ wrapper.update();
 // Test that parent component updated as expected.
 ```
 
-When using the [Hooks](https://reactjs.org/docs/hooks-intro.html) API which is
-available in React 16.8+ and Preact 10, you also need to wrap any code which
-triggers effects in an [act](https://reactjs.org/docs/test-utils.html#act) call
-in order to flush effects and trigger a re-render. The initial render and calls
-to APIs such as `setProps` or `simulate` are automatically wrapped in `act`
-for you.
+When using the [Hooks](https://reactjs.org/docs/hooks-intro.html) API you also
+need to wrap any code which triggers effects in an
+[act](https://reactjs.org/docs/test-utils.html#act) call in order to flush
+effects and trigger a re-render. The initial render and calls to APIs such as
+`setProps` or `simulate` are automatically wrapped in `act` for you.
 
 In Preact the `act` function is available in the "preact/test-utils" package.
 
