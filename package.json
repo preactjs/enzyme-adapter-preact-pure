@@ -1,6 +1,6 @@
 {
   "name": "enzyme-adapter-preact-pure",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Enzyme adapter for Preact",
   "main": "build-cjs/src/index.js",
   "module": "build/src/index.js",
