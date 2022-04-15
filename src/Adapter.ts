@@ -60,7 +60,7 @@ export default class Adapter extends EnzymeAdapter {
       return node;
     }
     const childElements = node.rendered.map(n => this.nodeToElement(n as any));
-    return h(node.type as any, node.props, ...childElements);
+    return h(node.type as any, node.props, ...childElements) as ReactElement;
   }
 
   nodeToHostNode(node: RSTNode | string): Node | null {
@@ -101,8 +101,8 @@ export default class Adapter extends EnzymeAdapter {
     type: string | Function,
     props: Object | null,
     ...children: ReactElement[]
-  ) {
-    return h(type as any, props, ...children);
+  ): ReactElement {
+    return h(type as any, props, ...children) as ReactElement;
   }
 
   elementToNode(el: ReactElement): RSTNode {
