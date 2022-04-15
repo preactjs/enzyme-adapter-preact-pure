@@ -3,7 +3,7 @@ import minimist from 'minimist';
 
 // Setup DOM globals required by Preact rendering.
 function setupJSDOM() {
-  // Enable `requestAnimationFrame` which Preact 10 uses for scheduling hooks.
+  // Enable `requestAnimationFrame` which Preact uses for scheduling hooks.
   const dom = new JSDOM('', { pretendToBeVisual: true });
   const g = global as any;
   g.Event = dom.window.Event;

@@ -71,7 +71,7 @@ function makeShallowRenderComponent(
   type: ComponentFactory<any>
 ): ShallowRenderFunction {
   function ShallowRenderStub({ children }: { children?: any }) {
-    // Preact 10 can render fragments, so we can return the children directly.
+    // Preact can render fragments, so we can return the children directly.
     //
     // There is an exception for `children` values which are not directly
     // renderable but need to be processed by the component being stubbed.
