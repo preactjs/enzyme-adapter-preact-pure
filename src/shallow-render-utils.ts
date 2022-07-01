@@ -132,7 +132,7 @@ export function isShallowRendered(vnode: VNode) {
   if (vnode.type == null || typeof vnode.type === 'string') {
     return false;
   }
-  const type = (vnode.type as unknown) as ShallowRenderFunction;
+  const type = vnode.type as unknown as ShallowRenderFunction;
   return typeof type.originalType === 'function';
 }
 

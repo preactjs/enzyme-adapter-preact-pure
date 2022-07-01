@@ -109,7 +109,7 @@ describe('Adapter', () => {
     }
 
     function TextComponent() {
-      return ('test' as unknown) as VNode<any>;
+      return 'test' as unknown as VNode<any>;
     }
 
     function Child() {
