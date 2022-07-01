@@ -1,3 +1,4 @@
+// @ts-expect-error - JSDOM types are missing
 import { JSDOM } from 'jsdom';
 import minimist from 'minimist';
 
