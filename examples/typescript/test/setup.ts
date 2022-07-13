@@ -3,7 +3,9 @@
 
 /// <reference types="enzyme-adapter-preact-pure"/>
 
+// @ts-ignore - JSDOM types are missing
 import { JSDOM } from 'jsdom';
+
 import { configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-preact-pure';
 
