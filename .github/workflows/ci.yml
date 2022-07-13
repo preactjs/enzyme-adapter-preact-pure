@@ -21,3 +21,5 @@ jobs:
       run: yarn test
     - name: Test (CommonJS)
       run: yarn test-cjs
+    - name: Build and run examples
+      run: node examples/run-all.js
