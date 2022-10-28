@@ -3,7 +3,8 @@
  * Preact.
  */
 
-import { Component, Fragment, VNode } from 'preact';
+import type { Component, VNode } from 'preact';
+import { Fragment } from 'preact';
 
 import {
   getDOMNode,

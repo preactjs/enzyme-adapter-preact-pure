@@ -3,7 +3,8 @@ import type {
   MountRendererProps,
   RSTNode,
 } from 'enzyme';
-import { VNode, h, createElement } from 'preact';
+import type { VNode } from 'preact';
+import { h, createElement } from 'preact';
 import { act } from 'preact/test-utils';
 
 import { render } from './compat.js';

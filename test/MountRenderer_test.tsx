@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { RSTNode } from 'enzyme';
+import type { RSTNode } from 'enzyme';
 import { Component } from 'preact';
 import * as preact from 'preact';
 import { useEffect, useLayoutEffect, useState } from 'preact/hooks';

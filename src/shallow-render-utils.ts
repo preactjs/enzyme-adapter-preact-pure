@@ -1,4 +1,5 @@
-import { ComponentFactory, Component, Fragment, VNode, options } from 'preact';
+import type { ComponentFactory, Component, VNode } from 'preact';
+import { Fragment, options } from 'preact';
 
 import { childElements } from './compat.js';
 
