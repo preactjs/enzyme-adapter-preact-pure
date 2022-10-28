@@ -1,4 +1,5 @@
-import { Fragment, VNode, cloneElement } from 'preact';
+import type { VNode } from 'preact';
+import { Fragment, cloneElement } from 'preact';
 import { assert } from 'chai';
 import * as preact from 'preact';
 

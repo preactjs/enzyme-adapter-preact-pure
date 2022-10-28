@@ -1,4 +1,4 @@
-import { Component, VNode } from 'preact';
+import type { Component, VNode } from 'preact';
 
 /**
  * This module provides access to internal properties of Preact 10 VNodes,

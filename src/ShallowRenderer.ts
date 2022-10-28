@@ -1,9 +1,9 @@
-import {
+import type {
   ShallowRenderer as AbstractShallowRenderer,
   RSTNode,
   ShallowRenderOptions,
 } from 'enzyme';
-import { VNode } from 'preact';
+import type { VNode } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import {

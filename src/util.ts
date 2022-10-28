@@ -1,5 +1,5 @@
 import type { RSTNode } from 'enzyme';
-import { VNode } from 'preact';
+import type { VNode } from 'preact';
 
 export function getType(obj: Object) {
   if (obj == null) {

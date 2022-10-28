@@ -1,7 +1,7 @@
-import { VNode } from 'preact';
+import type { VNode } from 'preact';
 import * as preact from 'preact';
 import { assert } from 'chai';
-import { RSTNode } from 'enzyme';
+import type { RSTNode } from 'enzyme';
 
 import Adapter from '../src/Adapter.js';
 import MountRenderer from '../src/MountRenderer.js';

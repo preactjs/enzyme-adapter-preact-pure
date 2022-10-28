@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { NodeType } from 'enzyme';
+import type { NodeType } from 'enzyme';
 
 import { getDisplayName } from '../src/util.js';
 
