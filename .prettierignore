@@ -1,0 +1,4 @@
+build
+build-cjs
+coverage
+.nyc_output

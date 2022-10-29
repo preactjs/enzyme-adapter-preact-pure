@@ -16,7 +16,9 @@
     "@types/sinon": "^10.0.6",
     "chai": "^4.3.4",
     "enzyme": "^3.11.0",
+    "husky": "^8.0.1",
     "jsdom": "^20.0.0",
+    "lint-staged": "^13.0.3",
     "minimist": "^1.2.0",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
@@ -35,14 +37,14 @@
     "build": "tsc --build tsconfig.json",
     "build-cjs": "tsc --build tsconfig-cjs.json",
     "clean": "rm -rf build build-cjs",
-    "checkformatting": "prettier --check src/**/*.ts test/**/*.{ts,tsx}",
-    "format": "prettier --list-different --write src/**/*.ts test/**/*.{ts,tsx}",
+    "checkformatting": "prettier --check \"**/*.{js,jsx,ts,tsx,yml}\"",
+    "format": "prettier --list-different --write \"**/*.{js,jsx,ts,tsx,yml}\"",
     "prepublish": "rm -rf build && yarn build && yarn build-cjs",
     "test": "yarn build && echo '{\"type\":\"module\"}' > build/package.json && nyc mocha -r build/test/init.js build/test/*.js && rm build/package.json",
     "test-cjs": "yarn build-cjs && nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js",
-    "test:compat": "yarn test --preact-compat-lib preact/compat"
+    "test:compat": "yarn test --preact-compat-lib preact/compat",
+    "prepare": "husky install"
   },
-  "dependencies": {},
   "files": [
     "build/src/**/*",
     "build-cjs/src/**/*",
@@ -62,5 +64,10 @@
     ],
     "reporter": "html",
     "all": true
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,yml}": [
+      "prettier --write"
+    ]
   }
 }
