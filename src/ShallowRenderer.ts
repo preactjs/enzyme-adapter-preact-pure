@@ -11,6 +11,7 @@ import {
   shallowRenderVNodeTree,
 } from './shallow-render-utils.js';
 import { childElements } from './compat.js';
+import { propFromEvent } from './util.js';
 
 export default class ShallowRenderer implements AbstractShallowRenderer {
   private _mountRenderer: MountRenderer;
@@ -63,9 +64,12 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
     });
   }
 
-  simulateEvent(node: RSTNode, eventName: string, args: Object) {
+  simulateEvent(node: RSTNode, eventName: string, ...args: any[]) {
     withShallowRendering(() => {
-      this._mountRenderer.simulateEvent(node, eventName, args);
+      const handler = node.props[propFromEvent(eventName)];
+      if (handler) {
+        handler(...args);
+      }
     });
   }
 

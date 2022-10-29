@@ -15,7 +15,7 @@ import {
 import { eventMap } from './event-map.js';
 import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
 import { getNode } from './preact10-rst.js';
-import { getDisplayName, withReplacedMethod } from './util.js';
+import { getDisplayName, nodeToHostNode, withReplacedMethod } from './util.js';
 
 type EventDetails = { [prop: string]: any };
 
@@ -111,12 +111,20 @@ export default class MountRenderer implements AbstractMountRenderer {
   }
 
   simulateEvent(node: RSTNode, eventName: string, args: EventDetails = {}) {
-    if (node.nodeType !== 'host') {
-      const name = getDisplayName(node);
-      throw new Error(
-        `Cannot simulate event on "${name}" which is not a DOM element. ` +
-          'Find a DOM element in the output and simulate an event on that.'
-      );
+    let hostNode: Node;
+    if (node.nodeType == 'host') {
+      hostNode = node.instance;
+    } else {
+      let possibleHostNode = nodeToHostNode(node);
+      if (possibleHostNode == null) {
+        const name = getDisplayName(node);
+        throw new Error(
+          `Cannot simulate event on "${name}" which is not a DOM element or contains no DOM element children. ` +
+            'Find a DOM element or Component that contains a DOM element in the output and simulate an event on that.'
+        );
+      }
+
+      hostNode = possibleHostNode;
     }
 
     // To be more faithful to a real browser, this should use the appropriate
@@ -137,7 +145,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     Object.assign(event, extra);
 
     act(() => {
-      node.instance.dispatchEvent(event);
+      hostNode.dispatchEvent(event);
     });
   }
 

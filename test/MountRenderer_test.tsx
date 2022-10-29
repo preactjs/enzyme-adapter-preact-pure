@@ -237,7 +237,7 @@ describe('MountRenderer', () => {
       });
     });
 
-    it('throws if target is not a DOM node', () => {
+    it('fires an event on a Component', () => {
       function Button({ onClick }: any) {
         return <button type="button" onClick={onClick} />;
       }
@@ -245,9 +245,9 @@ describe('MountRenderer', () => {
       const callback = sinon.stub();
       renderer.render(<Button onClick={callback} />);
 
-      assert.throws(() => {
-        renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
-      });
+      renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
+
+      sinon.assert.called(callback);
     });
   });
 

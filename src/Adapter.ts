@@ -15,6 +15,7 @@ import StringRenderer from './StringRenderer.js';
 import { childElements } from './compat.js';
 import { rstNodeFromElement } from './preact10-rst.js';
 import RootFinder from './RootFinder.js';
+import { nodeToHostNode } from './util.js';
 
 export const { EnzymeAdapter } = enzyme;
 
@@ -64,20 +65,7 @@ export default class Adapter extends EnzymeAdapter {
   }
 
   nodeToHostNode(node: RSTNode | string): Node | null {
-    if (typeof node === 'string') {
-      // Returning `null` here causes `wrapper.text()` to return nothing for a
-      // wrapper around a `Text` node. That's not intuitive perhaps, but it
-      // matches the React adapters' behaviour.
-      return null;
-    }
-
-    if (node.nodeType === 'host') {
-      return node.instance;
-    } else if (node.rendered.length > 0) {
-      return this.nodeToHostNode(node.rendered[0] as RSTNode);
-    } else {
-      return null;
-    }
+    return nodeToHostNode(node);
   }
 
   isValidElement(el: any) {
