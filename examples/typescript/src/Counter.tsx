@@ -1,7 +1,7 @@
 import * as preact from 'preact';
 import { useState } from 'preact/hooks';
 
-export default function Counter({ initialCount } : { initialCount: number }) {
+export default function Counter({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
   const increment = () => setCount(count + 1);
 
