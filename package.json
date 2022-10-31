@@ -69,5 +69,8 @@
     "**/*.{js,jsx,ts,tsx,yml}": [
       "prettier --write"
     ]
+  },
+  "volta": {
+    "node": "18.12.0"
   }
 }
