@@ -115,7 +115,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     if (node.nodeType == 'host') {
       hostNode = node.instance;
     } else {
-      let possibleHostNode = nodeToHostNode(node);
+      const possibleHostNode = nodeToHostNode(node);
       if (possibleHostNode == null) {
         const name = getDisplayName(node);
         throw new Error(

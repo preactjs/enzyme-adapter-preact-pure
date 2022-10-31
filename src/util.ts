@@ -92,7 +92,7 @@ const nativeToReactEventMap: Record<string, string> = {
   keypress: 'keyPress',
   contextmenu: 'contextMenu',
   dblclick: 'doubleClick',
-  doubleclick: 'doubleClick', // kept for legacy. TODO: remove with next major.
+  doubleclick: 'doubleClick',
   dragend: 'dragEnd',
   dragenter: 'dragEnter',
   dragexist: 'dragExit',
