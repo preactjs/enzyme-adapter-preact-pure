@@ -4,22 +4,22 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Cache the node_modules dir
-      uses: actions/cache@v2
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node_modules-${{ hashFiles('yarn.lock') }}
-    - name: Install
-      run: yarn install --frozen-lockfile
-    - name: Build
-      run: yarn build
-    - name: Format
-      run: yarn checkformatting
-    - name: Test (ESM)
-      run: yarn test
-    - name: Test (CommonJS)
-      run: yarn test-cjs
-    - name: Build and run examples
-      run: node examples/run-all.js
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cache the node_modules dir
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('yarn.lock') }}
+      - name: Install
+        run: yarn install --frozen-lockfile
+      - name: Build
+        run: yarn build
+      - name: Format
+        run: yarn checkformatting
+      - name: Test (ESM)
+        run: yarn test
+      - name: Test (CommonJS)
+        run: yarn test-cjs
+      - name: Build and run examples
+        run: node examples/run-all.js
