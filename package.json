@@ -39,6 +39,7 @@
     "clean": "rm -rf build build-cjs",
     "checkformatting": "prettier --check \"**/*.{js,jsx,ts,tsx,yml}\"",
     "format": "prettier --list-different --write \"**/*.{js,jsx,ts,tsx,yml}\"",
+    "lint-staged": "lint-staged",
     "prepublish": "rm -rf build && yarn build && yarn build-cjs",
     "test": "yarn build && echo '{\"type\":\"module\"}' > build/package.json && nyc mocha -r build/test/init.js build/test/*.js && rm build/package.json",
     "test-cjs": "yarn build-cjs && nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js",
