@@ -19,6 +19,7 @@
     "chai": "^4.3.4",
     "enzyme": "^3.11.0",
     "eslint": "^8.26.0",
+    "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",
     "jsdom": "^20.0.0",
     "lint-staged": "^13.0.3",
@@ -40,8 +41,8 @@
     "build": "tsc --build tsconfig.json",
     "build-cjs": "tsc --build tsconfig-cjs.json",
     "clean": "rm -rf build build-cjs",
-    "checkformatting": "prettier --check \"**/*.{js,jsx,ts,tsx,yml}\"",
-    "format": "prettier --list-different --write \"**/*.{js,jsx,ts,tsx,yml}\"",
+    "checkformatting": "prettier --check \"**/*.{js,jsx,ts,tsx,mjs,cjs,yml}\"",
+    "format": "prettier --list-different --write \"**/*.{js,jsx,ts,tsx,mjs,cjs,yml}\"",
     "lint": "eslint src/** test/**",
     "lint:fix": "eslint src/** test/** --fix",
     "lint-staged": "lint-staged",
@@ -72,7 +73,10 @@
     "all": true
   },
   "lint-staged": {
-    "**/*.{js,jsx,ts,tsx,yml}": [
+    "**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ],
+    "**/*.{js,jsx,ts,tsx,mjs,cjs,yml}": [
       "prettier --write"
     ]
   },
