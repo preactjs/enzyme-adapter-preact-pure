@@ -6,14 +6,14 @@ import * as preact from 'preact';
 
 export { VNode } from 'preact';
 
-export let Component = preact.Component;
-export let Fragment = preact.Fragment;
-export let cloneElement = preact.cloneElement;
-export let h = preact.h;
-export let options = preact.options;
-export let render = preact.render;
+export const Component = preact.Component;
+export const Fragment = preact.Fragment;
+export const cloneElement = preact.cloneElement;
+export const h = preact.h;
+export const options = preact.options;
+export const render = preact.render;
 
 /**
  * Flag indicating whether 'preact/compat' or 'preact-compat' is being used.
  */
-export let isCompat = false;
+export const isCompat = false;

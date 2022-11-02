@@ -18,7 +18,7 @@ export interface VNodeExtensions extends VNode {
  * Map of component function to replacement stub function used when shallow
  * rendering.
  */
-let shallowRenderComponents = new Map<Function, Function>();
+const shallowRenderComponents = new Map<Function, Function>();
 
 /**
  * Global flag indicating whether shallow rendering is active.
