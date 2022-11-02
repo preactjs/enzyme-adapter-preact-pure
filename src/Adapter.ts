@@ -19,10 +19,24 @@ import { nodeToHostNode } from './util.js';
 
 export const { EnzymeAdapter } = enzyme;
 
+export interface PreactAdapterOptions {
+  /**
+   * Turn on behavior that enables calling `.simulateEvent` directly on
+   * Components. For shallow rendering, this directly calls the component's
+   * corresponding prop. For mount rendering, it finds the first DOM node in the
+   * Component, and dispatches the event from it. This behavior matches the
+   * behavior of the React 16 enzyme adapter.
+   */
+  simulateEventsOnComponents?: boolean;
+}
+
 export default class Adapter extends EnzymeAdapter {
-  constructor() {
+  private preactAdapterOptions: PreactAdapterOptions;
+
+  constructor(preactAdapterOptions: PreactAdapterOptions = {}) {
     super();
 
+    this.preactAdapterOptions = preactAdapterOptions;
     this.options = {
       // Prevent Enzyme's shallow renderer from manually invoking lifecycle
       // methods after a render. This manual invocation is needed for React
@@ -46,9 +60,13 @@ export default class Adapter extends EnzymeAdapter {
         // The `attachTo` option is only supported for DOM rendering, for
         // consistency with React, even though the Preact adapter could easily
         // support it for shallow rendering.
-        return new MountRenderer({ ...options, container: options.attachTo });
+        return new MountRenderer({
+          ...options,
+          ...this.preactAdapterOptions,
+          container: options.attachTo,
+        });
       case 'shallow':
-        return new ShallowRenderer();
+        return new ShallowRenderer({ ...this.preactAdapterOptions });
       case 'string':
         return new StringRenderer();
       default:

@@ -6,6 +6,7 @@ import type {
 import type { VNode } from 'preact';
 import { h, createElement } from 'preact';
 import { act } from 'preact/test-utils';
+import type { PreactAdapterOptions } from './Adapter.js';
 
 import { render } from './compat.js';
 import {
@@ -19,7 +20,7 @@ import { getDisplayName, nodeToHostNode, withReplacedMethod } from './util.js';
 
 type EventDetails = { [prop: string]: any };
 
-export interface Options extends MountRendererProps {
+export interface Options extends MountRendererProps, PreactAdapterOptions {
   /**
    * The container element to render into.
    * If not specified, a detached element (not connected to the body) is used.
@@ -114,7 +115,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     let hostNode: Node;
     if (node.nodeType == 'host') {
       hostNode = node.instance;
-    } else {
+    } else if (this._options.simulateEventsOnComponents) {
       const possibleHostNode = nodeToHostNode(node);
       if (possibleHostNode == null) {
         const name = getDisplayName(node);
@@ -125,6 +126,13 @@ export default class MountRenderer implements AbstractMountRenderer {
       }
 
       hostNode = possibleHostNode;
+    } else {
+      const name = getDisplayName(node);
+      throw new Error(
+        `Cannot simulate event on "${name}" which is not a DOM element. ` +
+          'Find a DOM element in the output and simulate an event on that. ' +
+          'Or, enable the simulateEventsOnComponents option to enable this feature.'
+      );
     }
 
     // To be more faithful to a real browser, this should use the appropriate

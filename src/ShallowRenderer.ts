@@ -5,6 +5,7 @@ import type {
 } from 'enzyme';
 import type { VNode } from 'preact';
 
+import type { PreactAdapterOptions } from './Adapter.js';
 import MountRenderer from './MountRenderer.js';
 import {
   withShallowRendering,
@@ -13,11 +14,15 @@ import {
 import { childElements } from './compat.js';
 import { propFromEvent } from './util.js';
 
+export interface Options extends PreactAdapterOptions {}
+
 export default class ShallowRenderer implements AbstractShallowRenderer {
   private _mountRenderer: MountRenderer;
+  private _options: Options;
 
-  constructor() {
-    this._mountRenderer = new MountRenderer();
+  constructor(options: Options = {}) {
+    this._mountRenderer = new MountRenderer(options);
+    this._options = options;
   }
 
   render(el: VNode, context?: any, options?: ShallowRenderOptions) {
@@ -64,11 +69,15 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
     });
   }
 
-  simulateEvent(node: RSTNode, eventName: string, ...args: any[]) {
+  simulateEvent(node: RSTNode, eventName: string, args: Object) {
     withShallowRendering(() => {
-      const handler = node.props[propFromEvent(eventName)];
-      if (handler) {
-        handler(...args);
+      if (this._options.simulateEventsOnComponents) {
+        const handler = node.props[propFromEvent(eventName)];
+        if (handler) {
+          handler(args);
+        }
+      } else {
+        this._mountRenderer.simulateEvent(node, eventName, args);
       }
     });
   }
