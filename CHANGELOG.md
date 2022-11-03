@@ -10,12 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a feature flag (`simulateEventsOnComponents`) for supporting simulating
   events on Components
   [#211](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/211)
-  
-  This new feature flag turns on behavior that enables calling `.simulateEvent`
+
+  This new feature flag turns on behavior that enables calling `.simulate`
   directly on Components. For shallow rendering, this directly calls the
   component's corresponding prop. For mount rendering, it finds the first DOM
-  node in the Component, and dispatches the event from it. The behavior enabled
-  by this flag matches the behavior of the React 16 enzyme adapter.
+  node in the Component, and dispatches the event from it.
+
+  NOTE: This flag changes the behavior of calling `simulate` on shallow rendered
+  host (a.k.a DOM) nodes. When this flag is off, `simulate` dispatches a native
+  DOM event on the host node. When this flag is turned on, `simulate` directly
+  calls the prop of the event handler with arguments passed to `simulate`.
+
+  The behavior turned on by this flag matches the behavior of the React 16
+  enzyme adapter.
 
 ## [4.0.1] - 2022-04-15
 
