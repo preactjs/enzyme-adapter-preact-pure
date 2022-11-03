@@ -3,3 +3,4 @@ build/
 build-cjs/
 coverage/
 node_modules/
+*.tgz

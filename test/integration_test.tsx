@@ -393,6 +393,27 @@ function addInteractiveTests(render: typeof mount) {
       done!();
     });
   });
+
+  it('supports simulating events on DOM elements', () => {
+    function App() {
+      const [count, setCount] = useState(0);
+
+      return (
+        <div>
+          <div id="count">Count: {count}</div>
+          <button type="button" onClick={() => setCount(count + 1)}>
+            Increment
+          </button>
+        </div>
+      );
+    }
+
+    const wrapper = render(<App />);
+    assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+    wrapper.find('button').simulate('click');
+    assert.equal(wrapper.find('#count').text(), 'Count: 1');
+  });
 }
 
 describe('integration tests', () => {
@@ -403,6 +424,45 @@ describe('integration tests', () => {
   describe('"mount" rendering', () => {
     addStaticTests(mount);
     addInteractiveTests(mount);
+
+    it('supports simulating events on deep Components and elements', () => {
+      function FancyButton({ onClick, children }: any) {
+        return (
+          <button type="button" onClick={onClick}>
+            {children}
+          </button>
+        );
+      }
+
+      function FancierButton({ onClick, children }: any) {
+        return <FancyButton onClick={onClick}>{children}</FancyButton>;
+      }
+
+      function App() {
+        const [count, setCount] = useState(0);
+
+        return (
+          <div>
+            <div id="count">Count: {count}</div>
+            <FancierButton onClick={() => setCount(count + 1)}>
+              Increment
+            </FancierButton>
+          </div>
+        );
+      }
+
+      const wrapper = mount(<App />, {
+        // @ts-ignore This works but types don't say so
+        adapter: new Adapter({ simulateEventsOnComponents: true }),
+      });
+      assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+      wrapper.find(FancyButton).simulate('click');
+      assert.equal(wrapper.find('#count').text(), 'Count: 1');
+
+      wrapper.find('button').simulate('click');
+      assert.equal(wrapper.find('#count').text(), 'Count: 2');
+    });
 
     it('supports retrieving elements', () => {
       // Test workaround for bug where `Adapter.nodeToElement` is called
@@ -699,6 +759,37 @@ describe('integration tests', () => {
       wrapper = shallow(childrenFunc());
 
       assert.equal(wrapper.text(), 'Example');
+    });
+
+    it('supports simulating events on Components (simulateEventsOnComponents: true)', () => {
+      function FancyButton({ onClick, children }: any) {
+        return (
+          <button type="button" onClick={onClick}>
+            {children}
+          </button>
+        );
+      }
+
+      function App() {
+        const [count, setCount] = useState(0);
+
+        return (
+          <div>
+            <div id="count">Count: {count}</div>
+            <FancyButton onClick={() => setCount(count + 1)}>
+              Increment
+            </FancyButton>
+          </div>
+        );
+      }
+
+      const wrapper = shallow(<App />, {
+        adapter: new Adapter({ simulateEventsOnComponents: true }),
+      });
+      assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+      wrapper.find(FancyButton).simulate('click');
+      assert.equal(wrapper.find('#count').text(), 'Count: 1');
     });
   });
 

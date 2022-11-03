@@ -6,6 +6,7 @@ import type {
 import type { VNode } from 'preact';
 import { h, createElement } from 'preact';
 import { act } from 'preact/test-utils';
+import type { PreactAdapterOptions } from './Adapter.js';
 
 import { render } from './compat.js';
 import {
@@ -15,11 +16,11 @@ import {
 import { eventMap } from './event-map.js';
 import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
 import { getNode } from './preact10-rst.js';
-import { getDisplayName, withReplacedMethod } from './util.js';
+import { getDisplayName, nodeToHostNode, withReplacedMethod } from './util.js';
 
 type EventDetails = { [prop: string]: any };
 
-export interface Options extends MountRendererProps {
+export interface Options extends MountRendererProps, PreactAdapterOptions {
   /**
    * The container element to render into.
    * If not specified, a detached element (not connected to the body) is used.
@@ -111,11 +112,26 @@ export default class MountRenderer implements AbstractMountRenderer {
   }
 
   simulateEvent(node: RSTNode, eventName: string, args: EventDetails = {}) {
-    if (node.nodeType !== 'host') {
+    let hostNode: Node;
+    if (node.nodeType == 'host') {
+      hostNode = node.instance;
+    } else if (this._options.simulateEventsOnComponents) {
+      const possibleHostNode = nodeToHostNode(node);
+      if (possibleHostNode == null) {
+        const name = getDisplayName(node);
+        throw new Error(
+          `Cannot simulate event on "${name}" which is not a DOM element or contains no DOM element children. ` +
+            'Find a DOM element or Component that contains a DOM element in the output and simulate an event on that.'
+        );
+      }
+
+      hostNode = possibleHostNode;
+    } else {
       const name = getDisplayName(node);
       throw new Error(
         `Cannot simulate event on "${name}" which is not a DOM element. ` +
-          'Find a DOM element in the output and simulate an event on that.'
+          'Find a DOM element in the output and simulate an event on that. ' +
+          'Or, enable the simulateEventsOnComponents option to enable this feature.'
       );
     }
 
@@ -137,7 +153,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     Object.assign(event, extra);
 
     act(() => {
-      node.instance.dispatchEvent(event);
+      hostNode.dispatchEvent(event);
     });
   }
 

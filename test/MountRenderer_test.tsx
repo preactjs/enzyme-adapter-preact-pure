@@ -237,17 +237,30 @@ describe('MountRenderer', () => {
       });
     });
 
-    it('throws if target is not a DOM node', () => {
+    it('throws if target is not a DOM node (simulateEventsOnComponents: false)', () => {
       function Button({ onClick }: any) {
         return <button type="button" onClick={onClick} />;
       }
-      const renderer = new MountRenderer();
+      const renderer = new MountRenderer({ simulateEventsOnComponents: false });
       const callback = sinon.stub();
       renderer.render(<Button onClick={callback} />);
 
       assert.throws(() => {
         renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
       });
+    });
+
+    it('fires an event on a Component (simulateEventsOnComponents: true)', () => {
+      function Button({ onClick }: any) {
+        return <button type="button" onClick={onClick} />;
+      }
+      const renderer = new MountRenderer({ simulateEventsOnComponents: true });
+      const callback = sinon.stub();
+      renderer.render(<Button onClick={callback} />);
+
+      renderer.simulateEvent(renderer.getNode() as RSTNode, 'click', {});
+
+      sinon.assert.called(callback);
     });
   });
 
