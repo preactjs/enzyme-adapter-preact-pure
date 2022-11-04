@@ -44,7 +44,7 @@ function convertDOMProps(props: Props) {
  */
 function rstNodesFromChildren(
   nodes: (VNode | null)[] | null,
-  isShallow: boolean
+  preserveFragments: boolean
 ): RSTNodeTypes[] {
   if (!nodes) {
     return [];
@@ -57,14 +57,14 @@ function rstNodesFromChildren(
       // These are omitted from the rendered tree that Enzyme works with.
       return [];
     }
-    const rst = rstNodeFromVNode(node, isShallow);
+    const rst = rstNodeFromVNode(node, preserveFragments);
     return Array.isArray(rst) ? rst : [rst];
   });
 }
 
 function rstNodeFromVNode(
   node: VNode | null,
-  isShallow: boolean
+  preserveFragments: boolean
 ): RSTNodeTypes | RSTNodeTypes[] {
   if (node == null) {
     return null;
@@ -76,13 +76,13 @@ function rstNodeFromVNode(
     return String(node.props);
   }
 
-  if (!isShallow && node.type === Fragment) {
-    return rstNodesFromChildren(getChildren(node), isShallow);
+  if (!preserveFragments && node.type === Fragment) {
+    return rstNodesFromChildren(getChildren(node), preserveFragments);
   }
 
   const component = getComponent(node);
   if (component) {
-    return rstNodeFromComponent(node, component, isShallow);
+    return rstNodeFromComponent(node, component, preserveFragments);
   }
 
   if (!getDOMNode(node)) {
@@ -98,7 +98,7 @@ function rstNodeFromVNode(
     key: node.key || null,
     ref: node.ref || null,
     instance: getDOMNode(node),
-    rendered: rstNodesFromChildren(getChildren(node), isShallow),
+    rendered: rstNodesFromChildren(getChildren(node), preserveFragments),
   };
 }
 
@@ -152,13 +152,13 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
 function rstNodeFromComponent(
   vnode: VNode,
   component: Component,
-  isShallow: boolean
+  preserveFragments: boolean
 ): RSTNode {
   const nodeType = nodeTypeFromType(component.constructor);
 
   const rendered = rstNodesFromChildren(
     getLastRenderOutput(component),
-    isShallow
+    preserveFragments
   );
 
   // If this was a shallow-rendered component, set the RST node's type to the
