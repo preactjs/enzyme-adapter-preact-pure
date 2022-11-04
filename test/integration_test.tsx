@@ -827,15 +827,17 @@ describe('integration tests', () => {
       addStaticTests(shallow);
       addInteractiveTests(shallow as any);
 
-      it('supports update and setState on Components that return Fragments with multiple children', () => {
+      it('supports update, setState, and setProps on Components that return Fragments with multiple children', () => {
         function Modal({ isOpen }: { isOpen: boolean }) {
           return <div>{isOpen ? 'open' : 'closed'}</div>;
         }
 
         class App extends preact.Component<
-          {},
+          { text?: string },
           { open: boolean; count: number }
         > {
+          static defaultProps = { text: 'Toggle' };
+
           constructor() {
             super();
             this.state = { open: false, count: 0 };
@@ -853,7 +855,7 @@ describe('integration tests', () => {
                   onClick={this.toggle}
                   data-count={this.state.count}
                 >
-                  Toggle
+                  {this.props.text}
                 </button>
                 <Modal isOpen={this.state.open} />
               </>
@@ -864,6 +866,7 @@ describe('integration tests', () => {
         const wrapper = shallow(<App />);
         const getInstance = () => wrapper.instance() as App;
 
+        assert.equal(wrapper.find('button').text(), 'Toggle');
         assert.equal(wrapper.find(Modal).props().isOpen, false);
 
         getInstance().toggle();
@@ -877,6 +880,9 @@ describe('integration tests', () => {
         wrapper.setState({ count: 10 });
         const buttonProps = wrapper.find('button').props() as any;
         assert.equal(buttonProps['data-count'], 10);
+
+        wrapper.setProps({ text: 'Open' });
+        assert.equal(wrapper.find('button').text(), 'Open');
       });
 
       it("matches React adapter's shallow render behavior for first(), children() and debug() with Fragments", () => {
