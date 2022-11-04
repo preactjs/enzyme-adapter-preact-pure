@@ -165,7 +165,13 @@ export function patchShallowRoot(root: VNode) {
     } else {
       root.type = EnzymePatchedRender;
       (root.type as any).originalType = rootType;
+      // Give the wrapper a default display name
       root.type.displayName = getDisplayName(rootType);
+
+      // Copy over static properties like defaultProps and displayName
+      Object.keys(rootType).forEach(key => {
+        (root.type as any)[key] = (rootType as any)[key];
+      });
     }
 
     patchCache.add(root.type);

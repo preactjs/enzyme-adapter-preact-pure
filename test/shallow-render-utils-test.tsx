@@ -1,5 +1,5 @@
 import type { VNode } from 'preact';
-import { Fragment, cloneElement } from 'preact';
+import { Component as PreactComponent, Fragment, cloneElement } from 'preact';
 import { assert } from 'chai';
 import * as preact from 'preact';
 
@@ -8,6 +8,7 @@ import {
   withShallowRendering,
   isShallowRendered,
   shallowRenderVNodeTree,
+  patchShallowRoot,
 } from '../src/shallow-render-utils.js';
 import { componentForDOMNode, render, childElements } from '../src/compat.js';
 import {
@@ -132,6 +133,119 @@ describe('shallow-render-utils', () => {
 
       assert.isTrue(isShallowRendered(el));
       assert.isTrue(isShallowRendered(childEl));
+    });
+  });
+
+  describe('patchShallowRoot', () => {
+    it('class component static are preserved', () => {
+      class C extends PreactComponent<{ name?: string }> {
+        static defaultProps = { name: 'World' };
+        render() {
+          return <div>Hello {this.props.name}!</div>;
+        }
+      }
+
+      const element = <C />;
+      const initialType = element.type as unknown as typeof C;
+      const initialRender = C.prototype.render;
+      assert.equal(initialType.defaultProps?.name, 'World');
+
+      patchShallowRoot(element);
+
+      const elementType = element.type as unknown as typeof C;
+      assert.notEqual(elementType.prototype.render, initialRender);
+      assert.equal(elementType.defaultProps.name, 'World');
+    });
+
+    it('function component static properties are preserved', () => {
+      function C(props: { name?: string }) {
+        return <div>Hello {props.name}!</div>;
+      }
+      C.displayName = 'CC';
+      C.defaultProps = { name: 'World' };
+
+      const element = <C />;
+      const initialType = element.type as typeof C;
+      assert.equal(initialType.displayName, 'CC');
+      assert.equal(initialType.defaultProps.name, 'World');
+
+      patchShallowRoot(element);
+
+      const newType = element.type as typeof C;
+      assert.notEqual(newType, C);
+      assert.equal(newType.displayName, 'CC');
+      assert.equal(newType.defaultProps.name, 'World');
+    });
+
+    it('defaults function wrapper display name to the name of the wrapped component', () => {
+      function C1() {
+        return <div>Hello</div>;
+      }
+
+      const element = <C1 />;
+      const initialType = element.type as any;
+      assert.notExists(initialType.displayName);
+
+      patchShallowRoot(element);
+
+      const newType = element.type as any;
+      assert.equal(newType.displayName, 'C1');
+    });
+
+    it('only patches a VNode once', () => {
+      function C() {
+        return <div>Hello</div>;
+      }
+
+      const element = <C />;
+      const initialType = element.type as any;
+
+      patchShallowRoot(element);
+
+      const newType1 = element.type as any;
+      assert.notEqual(newType1, initialType);
+
+      patchShallowRoot(element);
+
+      const newType2 = element.type as any;
+      assert.equal(newType2, newType1);
+    });
+
+    it('patches class component to call original render and wraps output in a Fragment', () => {
+      class C extends PreactComponent<{ msg: string }> {
+        render() {
+          return <Fragment>{this.props.msg}</Fragment>;
+        }
+      }
+
+      const element = <C msg="Hello" />;
+      patchShallowRoot(element);
+
+      const newType = element.type as any;
+      const instance = new newType(element.props);
+      const output = instance.render(element.props);
+
+      assert.equal(output.type, Fragment); // Extra fragment
+      assert.equal(output.props.children.type, Fragment);
+      assert.equal(output.props.children.props.children, 'Hello');
+    });
+
+    it('patches function component to call original render and wraps output in a Fragment', () => {
+      const fakeThisContext = {};
+      function C(this: any, { msg }: { msg: string }) {
+        assert.equal(this, fakeThisContext);
+        return <Fragment>{msg}</Fragment>;
+      }
+
+      const element = <C msg="Hello" />;
+      patchShallowRoot(element);
+
+      const newType = element.type as any;
+      const output = newType.call(fakeThisContext, { msg: 'Hello' });
+
+      assert.equal(output.type, Fragment); // Extra fragment
+      assert.equal(output.props.children.type, Fragment);
+      assert.equal(output.props.children.props.children, 'Hello');
     });
   });
 });
