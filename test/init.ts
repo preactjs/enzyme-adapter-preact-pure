@@ -2,6 +2,8 @@
 import { JSDOM } from 'jsdom';
 import minimist from 'minimist';
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 // Setup DOM globals required by Preact rendering.
 function setupJSDOM() {
   // Enable `requestAnimationFrame` which Preact uses for scheduling hooks.

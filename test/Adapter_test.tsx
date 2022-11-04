@@ -18,7 +18,7 @@ import StringRenderer from '../src/StringRenderer.js';
  */
 function stripInternalVNodeFields(obj: object) {
   const result = {} as Record<string, any>;
-  for (let [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj)) {
     if (!key.startsWith('__')) {
       if (typeof value === 'object' && value !== null) {
         result[key] = stripInternalVNodeFields(value);

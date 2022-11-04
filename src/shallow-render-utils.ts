@@ -18,7 +18,7 @@ export interface VNodeExtensions extends VNode {
  * Map of component function to replacement stub function used when shallow
  * rendering.
  */
-let shallowRenderComponents = new Map<Function, Function>();
+const shallowRenderComponents = new Map<Function, Function>();
 
 /**
  * Global flag indicating whether shallow rendering is active.
@@ -36,9 +36,8 @@ function getDisplayName(type: ComponentFactory<any>) {
  * shallow rendering.
  */
 export function getRealType(component: Component) {
-  let ctor: any;
   const c = component as Component;
-  ctor = c.constructor;
+  const ctor = c.constructor as ShallowRenderFunction;
 
   if (ctor.originalType) {
     return ctor.originalType;

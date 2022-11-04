@@ -43,7 +43,7 @@ describe('shallow-render-utils', () => {
   describe('withShallowRendering', () => {
     it('replaces child components with placeholders', () => {
       const fullOutput = 'Hello<span>world</span>';
-      let shallowOutput = 'Hello';
+      const shallowOutput = 'Hello';
 
       // Normal render should return full output.
       const el = <Component />;

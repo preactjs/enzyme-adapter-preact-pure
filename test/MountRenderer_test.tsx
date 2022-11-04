@@ -157,7 +157,7 @@ describe('MountRenderer', () => {
 
       // Perform an initial render.
       renderer.render(<Counter />);
-      let container = renderer.getNode()!.instance.base!;
+      const container = renderer.getNode()!.instance.base!;
       assert.equal(container.innerHTML, '0');
 
       // Trigger a state change. This will not update the DOM immediately

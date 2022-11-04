@@ -146,7 +146,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
 function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
   const nodeType = nodeTypeFromType(component.constructor);
 
-  let rendered = rstNodesFromChildren(getLastRenderOutput(component));
+  const rendered = rstNodesFromChildren(getLastRenderOutput(component));
 
   // If this was a shallow-rendered component, set the RST node's type to the
   // real component function/class.

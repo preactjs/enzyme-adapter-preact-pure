@@ -6,6 +6,7 @@ import type {
 import type { VNode } from 'preact';
 
 import type { PreactAdapterOptions } from './Adapter.js';
+import type { EventDetails } from './MountRenderer.js';
 import MountRenderer from './MountRenderer.js';
 import {
   withShallowRendering,
@@ -14,7 +15,7 @@ import {
 import { childElements } from './compat.js';
 import { propFromEvent } from './util.js';
 
-export interface Options extends PreactAdapterOptions {}
+export type Options = PreactAdapterOptions;
 
 export default class ShallowRenderer implements AbstractShallowRenderer {
   private _mountRenderer: MountRenderer;
@@ -69,7 +70,7 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
     });
   }
 
-  simulateEvent(node: RSTNode, eventName: string, args: Object) {
+  simulateEvent(node: RSTNode, eventName: string, args: EventDetails) {
     withShallowRendering(() => {
       if (this._options.simulateEventsOnComponents) {
         const handler = node.props[propFromEvent(eventName)];
@@ -90,7 +91,7 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
     return this._mountRenderer.getNode();
   }
 
-  batchedUpdates(fn: () => {}) {
+  batchedUpdates(fn: () => any) {
     fn();
   }
 }

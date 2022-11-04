@@ -2,6 +2,8 @@ import type { Renderer, RSTNode } from 'enzyme';
 import type { ReactElement } from 'react';
 import { h, render } from 'preact';
 
+import type { EventDetails } from './MountRenderer';
+
 export default class StringRenderer implements Renderer {
   render(el: ReactElement, context?: any) {
     const tempContainer = document.createElement('div');
@@ -15,7 +17,7 @@ export default class StringRenderer implements Renderer {
     throw new Error('Static rendering does not support simulating errors');
   }
 
-  simulateEvent(node: RSTNode, eventName: string, args: Object) {
+  simulateEvent(node: RSTNode, eventName: string, args: EventDetails) {
     throw new Error('Static rendering does not support simulating events');
   }
 
@@ -27,7 +29,7 @@ export default class StringRenderer implements Renderer {
     return null;
   }
 
-  batchedUpdates(fn: () => {}) {
+  batchedUpdates(fn: () => any) {
     fn();
   }
 }

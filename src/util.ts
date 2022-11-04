@@ -36,7 +36,7 @@ export function withReplacedMethod(
   methodImpl: Function,
   fn: Function
 ) {
-  const hadOwnMethod = obj.hasOwnProperty(method);
+  const hadOwnMethod = Object.prototype.hasOwnProperty.call(obj, method);
   const origMethod = obj[method] as Function;
   if (typeof origMethod !== 'function') {
     throw new Error(`Expected '${method}' property to be a function`);
@@ -71,8 +71,8 @@ export function nodeToHostNode(node: RSTNode | string | null): Node | null {
   } else if (node.nodeType === 'host') {
     return node.instance;
   } else if (node.rendered.length > 0) {
-    for (let child of node.rendered) {
-      let childHostNode = nodeToHostNode(child);
+    for (const child of node.rendered) {
+      const childHostNode = nodeToHostNode(child);
       if (childHostNode) {
         return childHostNode;
       }

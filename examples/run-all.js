@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable */
+
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');

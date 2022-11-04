@@ -22,6 +22,8 @@ jobs:
         run: yarn build
       - name: Format
         run: yarn checkformatting
+      - name: Lint
+        run: yarn lint
       - name: Test (ESM)
         run: yarn test
       - name: Test (CommonJS)
