@@ -31,7 +31,7 @@ export interface PreactAdapterOptions {
 
   /**
    * The handling of fragments differs between full and shallow rendering in the
-   * React adapters. In "mount"/full renders fragments do not appear in the RST
+   * React adapters. In "mount"/full renders, fragments do not appear in the RST
    * tree. In shallow renders they do.
    *
    * In preactjs/enzyme-adapter-preact-pure#2, the decision was made to have

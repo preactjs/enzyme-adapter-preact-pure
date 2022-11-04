@@ -24,6 +24,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The behavior turned on by this flag matches the behavior of the React 16
   enzyme adapter.
 
+- Add feature flag `preserveFragmentsInShallowRender` to more closely match
+  React 16 adapter's behavior of shallow rendering Fragments.
+
+  The handling of fragments differs between full and shallow rendering in the
+  React adapters. In "mount"/full renders, fragments do not appear in the RST
+  tree. In shallow renders they do.
+
+  In preactjs/enzyme-adapter-preact-pure#2, the decision was made to have this
+  adapter's shallow and mount renderers omit and skip over Fragments. Turning on
+  this option changes that behavior to match the React adapter's behavior and
+  preserve Fragments in shallow rendering.
+
+  It also implements the `isFragment` method on the Adapter, which gives control
+  of when to include Fragments in the output to Enzyme. In other words, this
+  flag preserves Fragments in the tree given to enzyme, which may then choose to
+  expose them or hide them in various APIs.
+
+  The behavior turned on by this flag is intended to more closely match the
+  behavior of the React 16 enzyme adapter.
+
 ## [4.0.1] - 2022-04-15
 
 - Added a partial fix for an incompatibility between Preact's JSX element type
