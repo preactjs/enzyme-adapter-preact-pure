@@ -137,7 +137,7 @@ describe('shallow-render-utils', () => {
   });
 
   describe('patchShallowRoot', () => {
-    it('class component static are preserved', () => {
+    it('class component static properties are preserved', () => {
       class C extends PreactComponent<{ name?: string }> {
         static defaultProps = { name: 'World' };
         render() {
