@@ -7,7 +7,7 @@ import type {
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
 import type { VNode } from 'preact';
-import { cloneElement, h } from 'preact';
+import { Fragment, cloneElement, h } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import ShallowRenderer from './ShallowRenderer.js';
@@ -64,6 +64,18 @@ export default class Adapter extends EnzymeAdapter {
     // Work around a bug in Enzyme where `ShallowWrapper.getElements` calls
     // the `nodeToElement` method with undefined `this`.
     this.nodeToElement = this.nodeToElement.bind(this);
+
+    if (preactAdapterOptions.preserveFragmentsInShallowRender) {
+      // Implement isFragment when flag is on to better match React 16 adapter.
+      // The isFragment method is used by enzyme to skip over Fragments in some
+      // methods such as `children()` and `debug()`.
+      this.isFragment = (node: RSTNode): boolean => {
+        return (
+          (node?.type as any)?.originalType === Fragment ||
+          node?.type === Fragment
+        );
+      };
+    }
   }
 
   createRenderer(options: AdapterOptions & MountRendererProps) {

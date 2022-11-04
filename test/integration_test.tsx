@@ -116,7 +116,9 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
 /**
  * Register tests for interactive rendering modes (full + shallow rendering).
  */
-function addInteractiveTests(render: typeof mount, isShallow = false) {
+function addInteractiveTests(render: typeof mount) {
+  const isShallow = (render as any) === shallow;
+
   it('supports finding child components', () => {
     function ListItem() {
       return <li>Test</li>;
@@ -397,9 +399,11 @@ function addInteractiveTests(render: typeof mount, isShallow = false) {
   });
 }
 
+const createDefaultAdapter = () => new Adapter();
+
 describe('integration tests', () => {
   before(() => {
-    configure({ adapter: new Adapter() });
+    configure({ adapter: createDefaultAdapter() });
   });
 
   describe('"mount" rendering', () => {
@@ -540,7 +544,7 @@ describe('integration tests', () => {
 
   describe('"shallow" rendering', () => {
     addStaticTests(shallow);
-    addInteractiveTests(shallow as any, true);
+    addInteractiveTests(shallow as any);
 
     it('returns contents of fragments', () => {
       const el = (
@@ -806,37 +810,18 @@ describe('integration tests', () => {
     });
 
     describe('preserveFragmentsInShallowRender: true', () => {
-      const fragmentShallow = (
-        el: JSX.Element,
-        options?: enzyme.ShallowRendererProps
-      ) =>
-        shallow(el, {
-          ...options,
+      beforeEach(() => {
+        configure({
           adapter: new Adapter({ preserveFragmentsInShallowRender: true }),
         });
-
-      addStaticTests(fragmentShallow);
-      addInteractiveTests(fragmentShallow as any, true);
-
-      it('preserves contents of fragments', () => {
-        const el = (
-          <div>
-            <Fragment>
-              <span>one</span>
-              <span>two</span>
-              <Fragment>
-                <span>three</span>
-              </Fragment>
-            </Fragment>
-          </div>
-        );
-        const wrapper = fragmentShallow(el).find('div').children();
-        assert.equal(wrapper.length, 1);
-        assert.equal(
-          normalizeDebugMessage(wrapper.debug()),
-          '<Fragment><span>one</span><span>two</span><Fragment><span>three</span></Fragment></Fragment>'
-        );
       });
+
+      afterEach(() => {
+        configure({ adapter: createDefaultAdapter() });
+      });
+
+      addStaticTests(shallow);
+      addInteractiveTests(shallow as any);
 
       it('supports update and setState on Components that return Fragments with multiple children', () => {
         function Modal({ isOpen }: { isOpen: boolean }) {
@@ -872,7 +857,7 @@ describe('integration tests', () => {
           }
         }
 
-        const wrapper = fragmentShallow(<App />);
+        const wrapper = shallow(<App />);
         const getInstance = () => wrapper.instance() as App;
 
         assert.equal(wrapper.find(Modal).props().isOpen, false);
@@ -888,6 +873,51 @@ describe('integration tests', () => {
         wrapper.setState({ count: 10 });
         const buttonProps = wrapper.find('button').props() as any;
         assert.equal(buttonProps['data-count'], 10);
+      });
+
+      it("matches React adapter's shallow render behavior for first(), children() and debug() with Fragments", () => {
+        function App() {
+          return (
+            <Fragment>
+              <span>one</span>
+              <span>two</span>
+              <Fragment>
+                <span>three</span>
+              </Fragment>
+            </Fragment>
+          );
+        }
+
+        const wrapper = shallow(<App />);
+        // Note: children helper always ignores fragments when `.isFragment` is
+        // defined on the adapter
+        const children = wrapper.children();
+
+        assert.equal(wrapper.length, 1, 'wrapper.length');
+        assert.equal(children.length, 3, 'children.length');
+
+        assert.equal(wrapper.type(), Fragment, `wrapper.type()`);
+        assert.equal(
+          wrapper.first().type(),
+          Fragment,
+          'wrapper.first().type()'
+        );
+        assert.equal(
+          children.first().type(),
+          'span',
+          'children.first().type()'
+        );
+
+        assert.equal(
+          normalizeDebugMessage(wrapper.debug()),
+          '<Fragment><span>one</span><span>two</span><span>three</span></Fragment>',
+          'wrapper.debug()'
+        );
+        assert.equal(
+          normalizeDebugMessage(children.debug()),
+          '<span>one</span><span>two</span><span>three</span>',
+          'children.debug()'
+        );
       });
 
       it('passes context to shallow component with function returning TestContext.Provider', () => {
@@ -910,7 +940,7 @@ describe('integration tests', () => {
           return <span>{myTestString}</span>;
         }
 
-        const wrapper = fragmentShallow(<Component />, {
+        const wrapper = shallow(<Component />, {
           wrappingComponent: WrappingComponentWithContextProvider,
           wrappingComponentProps: { value: { myTestString: 'override' } },
         });
@@ -931,7 +961,7 @@ describe('integration tests', () => {
           return <span>{myTestString}</span>;
         }
 
-        const wrapper = fragmentShallow(<Component />, {
+        const wrapper = shallow(<Component />, {
           wrappingComponent: TestContext.Provider,
           wrappingComponentProps: { value: { myTestString: 'override' } },
         });
@@ -965,7 +995,7 @@ describe('integration tests', () => {
         );
 
         // TODO: Rewrite tests to call functions that would fail if Fragment wasn't present.
-        const wrapper = fragmentShallow(<App />);
+        const wrapper = shallow(<App />);
         assert.equal(
           normalizeDebugMessage(wrapper.debug()),
           '<Fragment><ListItems items={{...}} /></Fragment>'

@@ -164,6 +164,7 @@ export function patchShallowRoot(root: VNode) {
       rootType.prototype.render = EnzymePatchedRender;
     } else {
       root.type = EnzymePatchedRender;
+      (root.type as any).originalType = rootType;
       root.type.displayName = getDisplayName(rootType);
     }
 
