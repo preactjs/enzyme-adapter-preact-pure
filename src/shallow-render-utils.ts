@@ -139,7 +139,7 @@ const patchCache: WeakSet<Function> = new WeakSet();
  * 2. Calls to the component's render method are wrapped in the
  *    `withShallowRendering` helper to ensure they continue to shallow render
  */
-export function patchShallowRoot(root: VNode) {
+function patchShallowRoot(root: VNode) {
   if (typeof root.type === 'function') {
     if (patchCache.has(root.type)) {
       return;
@@ -160,11 +160,12 @@ export function patchShallowRoot(root: VNode) {
       return createElement(Fragment, null, result);
     }
 
+    EnzymePatchedRender.originalType = originalRender;
+
     if (rootType.prototype?.render) {
       rootType.prototype.render = EnzymePatchedRender;
     } else {
       root.type = EnzymePatchedRender;
-      (root.type as any).originalType = rootType;
       // Give the wrapper a default display name
       root.type.displayName = getDisplayName(rootType);
 
@@ -176,6 +177,39 @@ export function patchShallowRoot(root: VNode) {
 
     patchCache.add(root.type);
   }
+}
+
+function resetPatchedShallowRoot(root: VNode) {
+  if (typeof root.type === 'function') {
+    const patchedType = root.type as any;
+    if (patchedType.prototype?.render) {
+      patchedType.prototype.render = patchedType.prototype.render.originalType;
+    } else {
+      root.type = patchedType.originalType;
+    }
+
+    patchCache.delete(patchedType);
+  }
+}
+
+export function withPatchedShallowRoot<
+  TVNode extends VNode<any> | null | undefined,
+  TReturn
+>(vnode: TVNode, fn: (vnode: TVNode) => TReturn): TReturn {
+  if (!vnode) {
+    return fn(vnode);
+  }
+
+  patchShallowRoot(vnode);
+
+  let result: TReturn;
+  try {
+    result = fn(vnode);
+  } finally {
+    resetPatchedShallowRoot(vnode);
+  }
+
+  return result;
 }
 
 /**

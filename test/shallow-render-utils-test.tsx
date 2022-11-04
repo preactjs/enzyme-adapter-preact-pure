@@ -8,7 +8,7 @@ import {
   withShallowRendering,
   isShallowRendered,
   shallowRenderVNodeTree,
-  patchShallowRoot,
+  withPatchedShallowRoot,
 } from '../src/shallow-render-utils.js';
 import { componentForDOMNode, render, childElements } from '../src/compat.js';
 import {
@@ -136,7 +136,66 @@ describe('shallow-render-utils', () => {
     });
   });
 
-  describe('patchShallowRoot', () => {
+  describe('withPatchedShallowRoot', () => {
+    it("patches and then restores class component's render method", () => {
+      class C extends PreactComponent<{ msg: string }> {
+        render() {
+          return <Fragment>{this.props.msg}</Fragment>;
+        }
+      }
+
+      const element = <C msg="Hello" />;
+      const initialType = element.type as any;
+      const initialRender = initialType.prototype.render;
+
+      withPatchedShallowRoot(element, vnode => {
+        const newType = vnode.type as any;
+        const instance = new newType(element.props);
+        const output = instance.render(element.props);
+
+        assert.notEqual(newType.prototype.render, initialRender);
+        assert.equal(output.type, Fragment); // Extra fragment
+        assert.equal(output.props.children.type, Fragment);
+        assert.equal(output.props.children.props.children, 'Hello');
+      });
+
+      const restoredType = element.type as any;
+      const instance = new restoredType(element.props);
+      const output = instance.render(element.props);
+
+      assert.equal(restoredType.prototype.render, initialRender);
+      assert.equal(output.type, Fragment);
+      assert.equal(output.props.children, 'Hello');
+    });
+
+    it("patches and then restores function component's render method", () => {
+      const fakeThisContext = {};
+      function C(this: any, { msg }: { msg: string }) {
+        assert.equal(this, fakeThisContext);
+        return <Fragment>{msg}</Fragment>;
+      }
+
+      const element = <C msg="Hello" />;
+      const initialType = element.type as any;
+
+      withPatchedShallowRoot(element, vnode => {
+        const newType = vnode.type as any;
+        const output = newType.call(fakeThisContext, { msg: 'Hello' });
+
+        assert.notEqual(newType, initialType);
+        assert.equal(output.type, Fragment); // Extra fragment
+        assert.equal(output.props.children.type, Fragment);
+        assert.equal(output.props.children.props.children, 'Hello');
+      });
+
+      const restoredType = element.type as any;
+      const output = restoredType.call(fakeThisContext, { msg: 'Hello' });
+
+      assert.equal(restoredType, initialType);
+      assert.equal(output.type, Fragment);
+      assert.equal(output.props.children, 'Hello');
+    });
+
     it('class component static properties are preserved', () => {
       class C extends PreactComponent<{ name?: string }> {
         static defaultProps = { name: 'World' };
@@ -150,11 +209,11 @@ describe('shallow-render-utils', () => {
       const initialRender = C.prototype.render;
       assert.equal(initialType.defaultProps?.name, 'World');
 
-      patchShallowRoot(element);
-
-      const elementType = element.type as unknown as typeof C;
-      assert.notEqual(elementType.prototype.render, initialRender);
-      assert.equal(elementType.defaultProps.name, 'World');
+      withPatchedShallowRoot(element, newElement => {
+        const elementType = newElement.type as unknown as typeof C;
+        assert.notEqual(elementType.prototype.render, initialRender);
+        assert.equal(elementType.defaultProps.name, 'World');
+      });
     });
 
     it('function component static properties are preserved', () => {
@@ -169,12 +228,12 @@ describe('shallow-render-utils', () => {
       assert.equal(initialType.displayName, 'CC');
       assert.equal(initialType.defaultProps.name, 'World');
 
-      patchShallowRoot(element);
-
-      const newType = element.type as typeof C;
-      assert.notEqual(newType, C);
-      assert.equal(newType.displayName, 'CC');
-      assert.equal(newType.defaultProps.name, 'World');
+      withPatchedShallowRoot(element, newElement => {
+        const newType = newElement.type as typeof C;
+        assert.notEqual(newType, C);
+        assert.equal(newType.displayName, 'CC');
+        assert.equal(newType.defaultProps.name, 'World');
+      });
     });
 
     it('defaults function wrapper display name to the name of the wrapped component', () => {
@@ -186,10 +245,10 @@ describe('shallow-render-utils', () => {
       const initialType = element.type as any;
       assert.notExists(initialType.displayName);
 
-      patchShallowRoot(element);
-
-      const newType = element.type as any;
-      assert.equal(newType.displayName, 'C1');
+      withPatchedShallowRoot(element, newElement => {
+        const newType = newElement.type as any;
+        assert.equal(newType.displayName, 'C1');
+      });
     });
 
     it('only patches a VNode once', () => {
@@ -200,15 +259,15 @@ describe('shallow-render-utils', () => {
       const element = <C />;
       const initialType = element.type as any;
 
-      patchShallowRoot(element);
+      withPatchedShallowRoot(element, newElement1 => {
+        const newType1 = newElement1.type as any;
+        assert.notEqual(newType1, initialType);
 
-      const newType1 = element.type as any;
-      assert.notEqual(newType1, initialType);
-
-      patchShallowRoot(element);
-
-      const newType2 = element.type as any;
-      assert.equal(newType2, newType1);
+        withPatchedShallowRoot(newElement1, newElement2 => {
+          const newType2 = newElement2.type as any;
+          assert.equal(newType2, newType1);
+        });
+      });
     });
 
     it('patches class component to call original render and wraps output in a Fragment', () => {
@@ -219,15 +278,15 @@ describe('shallow-render-utils', () => {
       }
 
       const element = <C msg="Hello" />;
-      patchShallowRoot(element);
+      withPatchedShallowRoot(element, newElement => {
+        const newType = newElement.type as any;
+        const instance = new newType(newElement.props);
+        const output = instance.render(newElement.props);
 
-      const newType = element.type as any;
-      const instance = new newType(element.props);
-      const output = instance.render(element.props);
-
-      assert.equal(output.type, Fragment); // Extra fragment
-      assert.equal(output.props.children.type, Fragment);
-      assert.equal(output.props.children.props.children, 'Hello');
+        assert.equal(output.type, Fragment); // Extra fragment
+        assert.equal(output.props.children.type, Fragment);
+        assert.equal(output.props.children.props.children, 'Hello');
+      });
     });
 
     it('patches function component to call original render and wraps output in a Fragment', () => {
@@ -238,14 +297,14 @@ describe('shallow-render-utils', () => {
       }
 
       const element = <C msg="Hello" />;
-      patchShallowRoot(element);
+      withPatchedShallowRoot(element, newElement => {
+        const newType = newElement.type as any;
+        const output = newType.call(fakeThisContext, { msg: 'Hello' });
 
-      const newType = element.type as any;
-      const output = newType.call(fakeThisContext, { msg: 'Hello' });
-
-      assert.equal(output.type, Fragment); // Extra fragment
-      assert.equal(output.props.children.type, Fragment);
-      assert.equal(output.props.children.props.children, 'Hello');
+        assert.equal(output.type, Fragment); // Extra fragment
+        assert.equal(output.props.children.type, Fragment);
+        assert.equal(output.props.children.props.children, 'Hello');
+      });
     });
   });
 });
