@@ -1,4 +1,5 @@
 import type { ComponentFactory, Component, VNode } from 'preact';
+import { createElement } from 'preact';
 import { Fragment, options } from 'preact';
 
 import { childElements } from './compat.js';
@@ -123,6 +124,51 @@ function installShallowRenderHook() {
 
 function isVNode(obj: any) {
   return Object(obj) === obj && typeof obj.type !== 'undefined';
+}
+
+/**
+ * Prevent double patching root VNodes which happens on rerender in some enzyme
+ * methods. It contains which components have already been patched.
+ */
+const patchCache: WeakSet<Function> = new WeakSet();
+
+/**
+ * Patch the root node of a render such that if it is a component:
+ * 1. We preserve its raw rendered output. So if it returns a Fragment, that
+ *    fragment shows up as an RSTNode
+ * 2. Calls to the component's render method are wrapped in the
+ *    `withShallowRendering` helper to ensure they continue to shallow render
+ */
+export function patchShallowRoot(root: VNode) {
+  if (typeof root.type === 'function') {
+    if (patchCache.has(root.type)) {
+      return;
+    }
+
+    const rootType = root.type;
+    const originalRender = rootType.prototype?.render ?? rootType;
+    function EnzymePatchedRender(this: any, ...args: any[]) {
+      let result;
+      withShallowRendering(() => {
+        result = originalRender.call(this, ...args);
+      });
+
+      // Wrap result in a Fragment that Preact will immediately remove. Preact
+      // skips over un-keyed Fragments returned from components. But for Enzyme
+      // shallow rendering, it is important we preserve them so methods like
+      // `wrapper.setState` and `wrapper.update` work when shallow rendered.
+      return createElement(Fragment, null, result);
+    }
+
+    if (rootType.prototype?.render) {
+      rootType.prototype.render = EnzymePatchedRender;
+    } else {
+      root.type = EnzymePatchedRender;
+      root.type.displayName = getDisplayName(rootType);
+    }
+
+    patchCache.add(root.type);
+  }
 }
 
 /**

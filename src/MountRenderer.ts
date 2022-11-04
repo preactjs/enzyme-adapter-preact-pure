@@ -26,6 +26,12 @@ export interface Options extends MountRendererProps, PreactAdapterOptions {
    * If not specified, a detached element (not connected to the body) is used.
    */
   container?: HTMLElement;
+
+  /**
+   * The implementation of getNode to use for this renderer. Is customized by
+   * the shallow renderer
+   */
+  getNode?: typeof getNode;
 }
 
 function constructEvent(type: string, init: EventInit) {
@@ -46,7 +52,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     installDebounceHook();
 
     this._container = options.container || document.createElement('div');
-    this._getNode = getNode;
+    this._getNode = options.getNode ?? getNode;
     this._options = options;
   }
 

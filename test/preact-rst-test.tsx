@@ -4,7 +4,11 @@ import { Component, Fragment } from 'preact';
 import * as preact from 'preact';
 import type { NodeType, RSTNode } from 'enzyme';
 
-import { getNode, rstNodeFromElement } from '../src/preact10-rst.js';
+import {
+  getNode,
+  getShallowNode,
+  rstNodeFromElement,
+} from '../src/preact10-rst.js';
 import { getType } from '../src/util.js';
 import { render } from '../src/compat.js';
 
@@ -73,6 +77,24 @@ function classNode({
     key,
     ref,
     instance: type.name,
+  };
+}
+
+function fragmentNode({
+  rendered = [],
+  key = null,
+}: {
+  rendered?: any[];
+  key?: string | null;
+}): RSTNode {
+  return {
+    nodeType: 'function' as NodeType,
+    type: Fragment,
+    rendered,
+    props: {},
+    key,
+    ref: null,
+    instance: Fragment.name,
   };
 }
 
@@ -290,6 +312,18 @@ function renderToRST(el: VNode, container?: HTMLElement): RSTNode | null {
   return filterNode(rootNode);
 }
 
+function renderToShallowRST(
+  el: VNode,
+  container?: HTMLElement
+): RSTNode | null {
+  if (!container) {
+    container = document.createElement('div');
+  }
+  render(el, container);
+  const rootNode = getShallowNode(container);
+  return filterNode(rootNode);
+}
+
 describe('preact10-rst', () => {
   let container: HTMLElement;
 
@@ -427,6 +461,80 @@ describe('preact10-rst', () => {
       assert.deepEqual((rstNode.rendered[0] as RSTNode).props, {
         className: 'widget',
       });
+    });
+  });
+
+  describe('getShallowNode', () => {
+    treeCases.forEach(({ description, element, expectedTree }) => {
+      it(`returns expected RST node (${description})`, () => {
+        assert.deepEqual(renderToShallowRST(element), expectedTree);
+      });
+    });
+
+    it('preserves fragments in result', () => {
+      const el = (
+        <ul>
+          <Fragment>
+            <li>1</li>
+            <li>2</li>
+          </Fragment>
+          <Fragment>
+            <li>3</li>
+            <li>4</li>
+          </Fragment>
+        </ul>
+      );
+      const expectedTree = hostNode({
+        type: 'ul',
+        rendered: [
+          fragmentNode({
+            rendered: [
+              hostNode({ type: 'li', rendered: ['1'] }),
+              hostNode({ type: 'li', rendered: ['2'] }),
+            ],
+          }),
+          fragmentNode({
+            rendered: [
+              hostNode({ type: 'li', rendered: ['3'] }),
+              hostNode({ type: 'li', rendered: ['4'] }),
+            ],
+          }),
+        ],
+      });
+      assert.deepEqual(renderToShallowRST(el), expectedTree);
+    });
+
+    it('preserves nested fragments', () => {
+      const el = (
+        <ul>
+          <Fragment>
+            <li>1</li>
+            <Fragment>
+              <li>2</li>
+              <li>3</li>
+            </Fragment>
+            <li>4</li>
+          </Fragment>
+        </ul>
+      );
+      const expectedTree = hostNode({
+        type: 'ul',
+        rendered: [
+          fragmentNode({
+            rendered: [
+              hostNode({ type: 'li', rendered: ['1'] }),
+              fragmentNode({
+                rendered: [
+                  hostNode({ type: 'li', rendered: ['2'] }),
+                  hostNode({ type: 'li', rendered: ['3'] }),
+                ],
+              }),
+              hostNode({ type: 'li', rendered: ['4'] }),
+            ],
+          }),
+        ],
+      });
+      assert.deepEqual(renderToShallowRST(el), expectedTree);
     });
   });
 

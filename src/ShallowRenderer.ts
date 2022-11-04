@@ -11,9 +11,11 @@ import MountRenderer from './MountRenderer.js';
 import {
   withShallowRendering,
   shallowRenderVNodeTree,
+  patchShallowRoot,
 } from './shallow-render-utils.js';
 import { childElements } from './compat.js';
 import { propFromEvent } from './util.js';
+import { getShallowNode } from './preact10-rst.js';
 
 export type Options = PreactAdapterOptions;
 
@@ -22,11 +24,20 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
   private _options: Options;
 
   constructor(options: Options = {}) {
-    this._mountRenderer = new MountRenderer(options);
+    this._mountRenderer = new MountRenderer({
+      getNode: options.preserveFragmentsInShallowRender
+        ? getShallowNode
+        : undefined,
+      ...options,
+    });
     this._options = options;
   }
 
   render(el: VNode, context?: any, options?: ShallowRenderOptions) {
+    if (this._options.preserveFragmentsInShallowRender) {
+      patchShallowRoot(el);
+    }
+
     // Make all elements in the input tree, except for the root element, render
     // to a stub.
     childElements(el).forEach(el => {
@@ -44,23 +55,12 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
         return;
       }
 
-      // Monkey-patch the component's `render` to make it shallow-render.
-      const instance = rootNode.instance;
-      const originalRender = instance.render;
-      instance.render = function (...args: any[]) {
-        let result;
-        withShallowRendering(() => {
-          result = originalRender.call(this, ...args);
-        });
-        return result;
-      };
-
       // Monkey-patch `componentDidMount` to prevent it being called a second
       // time after `render` returns. React's shallow renderer does not
       // invoke lifecycle methods so Enzyme tries to invoke them manually. This
       // is not necessary for the Preact adapter because shallow rendering
       // works the same as normal rendering.
-      instance.componentDidMount = () => {};
+      rootNode.instance.componentDidMount = () => {};
     });
   }
 

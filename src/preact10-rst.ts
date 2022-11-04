@@ -42,7 +42,10 @@ function convertDOMProps(props: Props) {
 /**
  * Convert the rendered output of a vnode to RST nodes.
  */
-function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
+function rstNodesFromChildren(
+  nodes: (VNode | null)[] | null,
+  isShallow: boolean
+): RSTNodeTypes[] {
   if (!nodes) {
     return [];
   }
@@ -54,12 +57,15 @@ function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
       // These are omitted from the rendered tree that Enzyme works with.
       return [];
     }
-    const rst = rstNodeFromVNode(node);
+    const rst = rstNodeFromVNode(node, isShallow);
     return Array.isArray(rst) ? rst : [rst];
   });
 }
 
-function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
+function rstNodeFromVNode(
+  node: VNode | null,
+  isShallow: boolean
+): RSTNodeTypes | RSTNodeTypes[] {
   if (node == null) {
     return null;
   }
@@ -70,13 +76,13 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
     return String(node.props);
   }
 
-  if (node.type === Fragment) {
-    return rstNodesFromChildren(getChildren(node));
+  if (!isShallow && node.type === Fragment) {
+    return rstNodesFromChildren(getChildren(node), isShallow);
   }
 
   const component = getComponent(node);
   if (component) {
-    return rstNodeFromComponent(node, component);
+    return rstNodeFromComponent(node, component, isShallow);
   }
 
   if (!getDOMNode(node)) {
@@ -92,7 +98,7 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
     key: node.key || null,
     ref: node.ref || null,
     instance: getDOMNode(node),
-    rendered: rstNodesFromChildren(getChildren(node)),
+    rendered: rstNodesFromChildren(getChildren(node), isShallow),
   };
 }
 
@@ -143,10 +149,17 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
 /**
  * Return a React Standard Tree (RST) node from a Preact `Component` instance.
  */
-function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
+function rstNodeFromComponent(
+  vnode: VNode,
+  component: Component,
+  isShallow: boolean
+): RSTNode {
   const nodeType = nodeTypeFromType(component.constructor);
 
-  const rendered = rstNodesFromChildren(getLastRenderOutput(component));
+  const rendered = rstNodesFromChildren(
+    getLastRenderOutput(component),
+    isShallow
+  );
 
   // If this was a shallow-rendered component, set the RST node's type to the
   // real component function/class.
@@ -171,7 +184,7 @@ function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
  */
 export function getNode(container: HTMLElement): RSTNode {
   const rendered = getLastVNodeRenderedIntoContainer(container);
-  const rstNode = rstNodeFromVNode(rendered);
+  const rstNode = rstNodeFromVNode(rendered, false);
 
   // There is currently a requirement that the root element produces a single
   // RST node. Fragments do not appear in the RST tree, so it is fine if the
@@ -187,5 +200,33 @@ export function getNode(container: HTMLElement): RSTNode {
     }
   } else {
     return rstNode as RSTNode;
+  }
+}
+
+/**
+ * Convert the Preact components rendered into `container` into an RST node,
+ * following the behavior of the React adapter's shallow renderer, which
+ * preserves any rendered Fragments in the tree.
+ */
+export function getShallowNode(container: HTMLElement): RSTNode {
+  const rootFragment = getLastVNodeRenderedIntoContainer(container);
+
+  // Skip the hidden root Fragment Preact adds to the top of the VNode tree
+  const rstNodes = rstNodesFromChildren(getChildren(rootFragment), true);
+
+  // There is currently a requirement that the root element produces a single
+  // RST node. Fragments do not appear in the RST tree, so it is fine if the
+  // root node is a fragment, provided that it renders only a single child. In
+  // fact Preact itself wraps the root element in a single-child fragment.
+  if (Array.isArray(rstNodes)) {
+    if (rstNodes.length === 1) {
+      return rstNodes[0] as RSTNode;
+    } else {
+      throw new Error(
+        'Root element must not be a fragment with multiple children'
+      );
+    }
+  } else {
+    return rstNodes as RSTNode;
   }
 }

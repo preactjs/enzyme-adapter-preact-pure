@@ -19,7 +19,7 @@ const TestContext = preact.createContext<TestContextValue>({
 const { configure, shallow, mount, render: renderToString } = enzyme;
 
 function normalizeDebugMessage(message: string) {
-  return message.replace(/\s{2,}/g, '').replace(/>\s/g, '>');
+  return message.replace(/\s{2,}/g, '').replace(/\n/g, '');
 }
 
 function debugWrappedShallowComponent(wrapper: enzyme.ShallowWrapper) {
@@ -111,30 +111,12 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
       );
     });
   }
-
-  if ((render as any) !== renderToString) {
-    it('returns contents of fragments', () => {
-      const el = (
-        <div>
-          <Fragment>
-            <span>one</span>
-            <span>two</span>
-            <Fragment>
-              <span>three</span>
-            </Fragment>
-          </Fragment>
-        </div>
-      );
-      const wrapper = (render(el) as any).find('div').children();
-      assert.equal(wrapper.length, 3);
-    });
-  }
 }
 
 /**
  * Register tests for interactive rendering modes (full + shallow rendering).
  */
-function addInteractiveTests(render: typeof mount) {
+function addInteractiveTests(render: typeof mount, isShallow = false) {
   it('supports finding child components', () => {
     function ListItem() {
       return <li>Test</li>;
@@ -187,7 +169,7 @@ function addInteractiveTests(render: typeof mount) {
     let expected: Array<string | preact.AnyComponent | undefined>;
     if (render === mount) {
       expected = [Widget, 'div', 'span', undefined];
-    } else if ((render as any) === shallow) {
+    } else if (isShallow) {
       // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
@@ -371,8 +353,7 @@ function addInteractiveTests(render: typeof mount) {
     }
 
     const wrapper = render(<Parent />);
-    const expectedText =
-      (render as any) === shallow ? '<Child />' : 'Everything is working';
+    const expectedText = isShallow ? '<Child />' : 'Everything is working';
 
     // Initial render, we should see the original content.
     assert.equal(wrapper.text(), expectedText);
@@ -424,6 +405,22 @@ describe('integration tests', () => {
   describe('"mount" rendering', () => {
     addStaticTests(mount);
     addInteractiveTests(mount);
+
+    it('returns contents of fragments', () => {
+      const el = (
+        <div>
+          <Fragment>
+            <span>one</span>
+            <span>two</span>
+            <Fragment>
+              <span>three</span>
+            </Fragment>
+          </Fragment>
+        </div>
+      );
+      const wrapper = (mount(el) as any).find('div').children();
+      assert.equal(wrapper.length, 3);
+    });
 
     it('supports simulating events on deep Components and elements', () => {
       function FancyButton({ onClick, children }: any) {
@@ -543,7 +540,23 @@ describe('integration tests', () => {
 
   describe('"shallow" rendering', () => {
     addStaticTests(shallow);
-    addInteractiveTests(shallow as any);
+    addInteractiveTests(shallow as any, true);
+
+    it('returns contents of fragments', () => {
+      const el = (
+        <div>
+          <Fragment>
+            <span>one</span>
+            <span>two</span>
+            <Fragment>
+              <span>three</span>
+            </Fragment>
+          </Fragment>
+        </div>
+      );
+      const wrapper = shallow(el).find('div').children();
+      assert.equal(wrapper.length, 3);
+    });
 
     it('does not render child components', () => {
       function Child() {
@@ -790,6 +803,182 @@ describe('integration tests', () => {
 
       wrapper.find(FancyButton).simulate('click');
       assert.equal(wrapper.find('#count').text(), 'Count: 1');
+    });
+
+    describe('preserveFragmentsInShallowRender: true', () => {
+      const fragmentShallow = (
+        el: JSX.Element,
+        options?: enzyme.ShallowRendererProps
+      ) =>
+        shallow(el, {
+          ...options,
+          adapter: new Adapter({ preserveFragmentsInShallowRender: true }),
+        });
+
+      addStaticTests(fragmentShallow);
+      addInteractiveTests(fragmentShallow as any, true);
+
+      it('preserves contents of fragments', () => {
+        const el = (
+          <div>
+            <Fragment>
+              <span>one</span>
+              <span>two</span>
+              <Fragment>
+                <span>three</span>
+              </Fragment>
+            </Fragment>
+          </div>
+        );
+        const wrapper = fragmentShallow(el).find('div').children();
+        assert.equal(wrapper.length, 1);
+        assert.equal(
+          normalizeDebugMessage(wrapper.debug()),
+          '<Fragment><span>one</span><span>two</span><Fragment><span>three</span></Fragment></Fragment>'
+        );
+      });
+
+      it('supports update and setState on Components that return Fragments with multiple children', () => {
+        function Modal({ isOpen }: { isOpen: boolean }) {
+          return <div>{isOpen ? 'open' : 'closed'}</div>;
+        }
+
+        class App extends preact.Component<
+          {},
+          { open: boolean; count: number }
+        > {
+          constructor() {
+            super();
+            this.state = { open: false, count: 0 };
+          }
+
+          toggle = () => {
+            this.setState(s => ({ open: !s.open }));
+          };
+
+          render() {
+            return (
+              <>
+                <button
+                  type="button"
+                  onClick={this.toggle}
+                  data-count={this.state.count}
+                >
+                  Toggle
+                </button>
+                <Modal isOpen={this.state.open} />
+              </>
+            );
+          }
+        }
+
+        const wrapper = fragmentShallow(<App />);
+        const getInstance = () => wrapper.instance() as App;
+
+        assert.equal(wrapper.find(Modal).props().isOpen, false);
+
+        getInstance().toggle();
+        wrapper.update();
+        assert.equal(wrapper.find(Modal).props().isOpen, true);
+
+        getInstance().toggle();
+        wrapper.update();
+        assert.equal(wrapper.find(Modal).props().isOpen, false);
+
+        wrapper.setState({ count: 10 });
+        const buttonProps = wrapper.find('button').props() as any;
+        assert.equal(buttonProps['data-count'], 10);
+      });
+
+      it('passes context to shallow component with function returning TestContext.Provider', () => {
+        function WrappingComponentWithContextProvider({
+          children,
+          value,
+        }: {
+          children: preact.ComponentChildren;
+          value: TestContextValue;
+        }) {
+          return (
+            <TestContext.Provider value={value}>
+              {children}
+            </TestContext.Provider>
+          );
+        }
+
+        function Component() {
+          const { myTestString } = useContext(TestContext);
+          return <span>{myTestString}</span>;
+        }
+
+        const wrapper = fragmentShallow(<Component />, {
+          wrappingComponent: WrappingComponentWithContextProvider,
+          wrappingComponentProps: { value: { myTestString: 'override' } },
+        });
+
+        const output = debugWrappedShallowComponent(wrapper);
+        assert.equal(
+          output,
+          '<Provider value={{...}}><RootFinder><Component /></RootFinder></Provider>'
+        );
+
+        const outputHtml = wrapper.getWrappingComponent().html();
+        assert.equal(outputHtml, '<span>override</span>');
+      });
+
+      it('passes context to shallow component with TestContext.Provider as wrappingComponent', () => {
+        function Component() {
+          const { myTestString } = useContext(TestContext);
+          return <span>{myTestString}</span>;
+        }
+
+        const wrapper = fragmentShallow(<Component />, {
+          wrappingComponent: TestContext.Provider,
+          wrappingComponentProps: { value: { myTestString: 'override' } },
+        });
+
+        const output = debugWrappedShallowComponent(wrapper);
+        assert.equal(output, '<RootFinder><Component /></RootFinder>');
+
+        const outputHtml = wrapper.getWrappingComponent().html();
+        // NOTE:
+        // Ideally the value of `outputHtml` would be `<span>override</span>` but Enzyme and this library
+        // currently don't forwarding context values set via wrappingComponentProps, see also:
+        // https://github.com/enzymejs/enzyme/issues/2176
+        assert.equal(outputHtml, '<span>default</span>');
+      });
+
+      it('supports diving through components that return Fragments', () => {
+        function ListItems({ items }: { items: number[] }) {
+          return (
+            <Fragment>
+              {items.map(item => (
+                <li key={item}>{item}</li>
+              ))}
+            </Fragment>
+          );
+        }
+
+        const App = () => (
+          <Fragment>
+            <ListItems items={[1, 2]} />
+          </Fragment>
+        );
+
+        // TODO: Rewrite tests to call functions that would fail if Fragment wasn't present.
+        const wrapper = fragmentShallow(<App />);
+        assert.equal(
+          normalizeDebugMessage(wrapper.debug()),
+          '<Fragment><ListItems items={{...}} /></Fragment>'
+        );
+        assert.equal(
+          normalizeDebugMessage(wrapper.find(ListItems).debug()),
+          '<ListItems items={{...}} />'
+        );
+        assert.equal(
+          normalizeDebugMessage(wrapper.find(ListItems).dive().debug()),
+          '<Fragment><li>1</li><li>2</li></Fragment>'
+        );
+      });
     });
   });
 

@@ -28,6 +28,18 @@ export interface PreactAdapterOptions {
    * behavior of the React 16 enzyme adapter.
    */
   simulateEventsOnComponents?: boolean;
+
+  /**
+   * The handling of fragments differs between full and shallow rendering in the
+   * React adapters. In "mount"/full renders fragments do not appear in the RST
+   * tree. In shallow renders they do.
+   *
+   * In preactjs/enzyme-adapter-preact-pure#2, the decision was made to have
+   * this adapter's shallow and mount renderers omit and skip over Fragments.
+   * This option changes that behavior to match the React adapter's behavior and
+   * preserve Fragments in shallow rendering.
+   */
+  preserveFragmentsInShallowRender?: boolean;
 }
 
 export default class Adapter extends EnzymeAdapter {

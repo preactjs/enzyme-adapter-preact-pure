@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "jsx": "react",
     "jsxFactory": "preact.h",
+    "jsxFragmentFactory": "preact.Fragment",
     "module": "es2020",
     "moduleResolution": "node",
     "noUnusedLocals": true,

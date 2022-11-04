@@ -8,6 +8,7 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   root: true,
   rules: {
+    'no-inner-declarations': 'off',
     '@typescript-eslint/consistent-type-imports': 'error',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
