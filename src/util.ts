@@ -36,7 +36,7 @@ export function withReplacedMethod(
   methodImpl: Function,
   fn: Function
 ) {
-  const hadOwnMethod = obj.hasOwnProperty(method);
+  const hadOwnMethod = Object.prototype.hasOwnProperty.call(obj, method);
   const origMethod = obj[method] as Function;
   if (typeof origMethod !== 'function') {
     throw new Error(`Expected '${method}' property to be a function`);

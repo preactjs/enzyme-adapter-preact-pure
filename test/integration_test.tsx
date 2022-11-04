@@ -184,7 +184,7 @@ function addInteractiveTests(render: typeof mount) {
       .map((n: any) => n.type());
 
     // nb. The node with `undefined` type is the Text node itself.
-    let expected: Array<string | Function | undefined>;
+    let expected: Array<string | preact.AnyComponent | undefined>;
     if (render === mount) {
       expected = [Widget, 'div', 'span', undefined];
     } else if ((render as any) === shallow) {

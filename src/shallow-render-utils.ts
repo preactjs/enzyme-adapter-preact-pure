@@ -36,9 +36,8 @@ function getDisplayName(type: ComponentFactory<any>) {
  * shallow rendering.
  */
 export function getRealType(component: Component) {
-  let ctor: any;
   const c = component as Component;
-  ctor = c.constructor;
+  const ctor = c.constructor as ShallowRenderFunction;
 
   if (ctor.originalType) {
     return ctor.originalType;

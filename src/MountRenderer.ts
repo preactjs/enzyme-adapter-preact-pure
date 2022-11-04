@@ -18,7 +18,7 @@ import { getLastVNodeRenderedIntoContainer } from './preact10-internals.js';
 import { getNode } from './preact10-rst.js';
 import { getDisplayName, nodeToHostNode, withReplacedMethod } from './util.js';
 
-type EventDetails = { [prop: string]: any };
+export type EventDetails = { [prop: string]: any };
 
 export interface Options extends MountRendererProps, PreactAdapterOptions {
   /**
@@ -157,7 +157,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     });
   }
 
-  batchedUpdates(fn: () => {}) {
+  batchedUpdates(fn: () => any) {
     fn();
   }
 
