@@ -76,12 +76,12 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
     });
   }
 
-  simulateEvent(node: RSTNode, eventName: string, args: EventDetails) {
+  simulateEvent(node: RSTNode, eventName: string, ...args: any[]) {
     withShallowRendering(() => {
       if (this._options.simulateEventsOnComponents) {
         const handler = node.props[propFromEvent(eventName)];
         if (handler) {
-          handler(args);
+          handler(...args);
         }
       } else {
         this._mountRenderer.simulateEvent(node, eventName, args);
