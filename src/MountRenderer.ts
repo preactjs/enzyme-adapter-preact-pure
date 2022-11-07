@@ -7,6 +7,7 @@ import type { VNode } from 'preact';
 import { h, createElement } from 'preact';
 import { act } from 'preact/test-utils';
 import type { PreactAdapterOptions } from './Adapter.js';
+import { defaultPreactAdapterOptions } from './Adapter.js';
 
 import { render } from './compat.js';
 import {
@@ -28,13 +29,24 @@ export interface Options extends MountRendererProps, PreactAdapterOptions {
   container?: HTMLElement;
 }
 
-function constructEvent(type: string, init: EventInit) {
+function constructEvent(
+  EventConstructor: typeof Event,
+  type: string,
+  init: EventInit
+) {
   const meta = eventMap[type];
   const defaultInit = meta?.defaultInit ?? {};
-  return new Event(type, {
+  return new EventConstructor(type, {
     ...defaultInit,
     ...init,
   });
+}
+
+function defaultMountRendererOptions(options: Partial<Options>): Options {
+  return {
+    ...options,
+    ...defaultPreactAdapterOptions(options),
+  };
 }
 
 export default class MountRenderer implements AbstractMountRenderer {
@@ -42,12 +54,14 @@ export default class MountRenderer implements AbstractMountRenderer {
   private _getNode: typeof getNode;
   private _options: Options;
 
-  constructor(options: Options = {}) {
+  constructor(options: Partial<Options> = {}) {
     installDebounceHook();
 
-    this._container = options.container || document.createElement('div');
+    this._options = defaultMountRendererOptions(options);
+    this._container =
+      this._options.container ||
+      this._options.dom.document.createElement('div');
     this._getNode = getNode;
-    this._options = options;
   }
 
   render(el: VNode, context?: any, callback?: () => any) {
@@ -149,7 +163,7 @@ export default class MountRenderer implements AbstractMountRenderer {
     if (typeof cancelable === 'boolean') {
       init.cancelable = cancelable;
     }
-    const event = constructEvent(eventName, init);
+    const event = constructEvent(this._options.dom.Event, eventName, init);
     Object.assign(event, extra);
 
     act(() => {

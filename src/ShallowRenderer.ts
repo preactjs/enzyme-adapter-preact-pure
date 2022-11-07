@@ -21,7 +21,7 @@ export default class ShallowRenderer implements AbstractShallowRenderer {
   private _mountRenderer: MountRenderer;
   private _options: Options;
 
-  constructor(options: Options = {}) {
+  constructor(options: Options) {
     this._mountRenderer = new MountRenderer(options);
     this._options = options;
   }

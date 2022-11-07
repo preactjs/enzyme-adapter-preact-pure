@@ -27,16 +27,38 @@ export interface PreactAdapterOptions {
    * Component, and dispatches the event from it. This behavior matches the
    * behavior of the React 16 enzyme adapter.
    */
-  simulateEventsOnComponents?: boolean;
+  simulateEventsOnComponents: boolean;
+
+  dom: {
+    Event: typeof Event;
+    document: {
+      createElement: Document['createElement'];
+    };
+  };
+}
+
+/** Provide default values for all options */
+export function defaultPreactAdapterOptions(
+  options: Partial<PreactAdapterOptions>
+): PreactAdapterOptions {
+  return {
+    ...options,
+    simulateEventsOnComponents: options.simulateEventsOnComponents ?? false,
+    dom: options.dom ?? {
+      Event,
+      document,
+    },
+  };
 }
 
 export default class Adapter extends EnzymeAdapter {
   private preactAdapterOptions: PreactAdapterOptions;
 
-  constructor(preactAdapterOptions: PreactAdapterOptions = {}) {
+  constructor(preactAdapterOptions: Partial<PreactAdapterOptions> = {}) {
     super();
 
-    this.preactAdapterOptions = preactAdapterOptions;
+    this.preactAdapterOptions =
+      defaultPreactAdapterOptions(preactAdapterOptions);
     this.options = {
       // Prevent Enzyme's shallow renderer from manually invoking lifecycle
       // methods after a render. This manual invocation is needed for React
