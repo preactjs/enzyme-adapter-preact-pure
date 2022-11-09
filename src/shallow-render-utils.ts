@@ -148,6 +148,10 @@ function patchShallowRoot(root: VNode) {
     const rootType = root.type;
     const originalRender = rootType.prototype?.render ?? rootType;
     function EnzymePatchedRender(this: any, ...args: any[]) {
+      // TODO: It appears this needs to persist so external timers that fire
+      // outside of tests don't trigger deep rendering? This isn't a problem for
+      // the React shallow renderer cuz it doesn't invoke lifecycles that tend
+      // to trigger these problems
       let result;
       withShallowRendering(() => {
         result = originalRender.call(this, ...args);
