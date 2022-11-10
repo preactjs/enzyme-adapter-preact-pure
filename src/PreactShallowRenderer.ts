@@ -11,7 +11,7 @@ import type {
   Options,
   Component as InternalComponentType,
 } from 'preact/src/internal';
-import type { JSX } from 'preact';
+import type { ComponentChild, JSX } from 'preact';
 import { Component, options as rawOptions, isValidElement } from 'preact';
 
 const options = rawOptions as Options;
@@ -70,7 +70,7 @@ export default class PreactShallowRenderer {
   // @ts-ignore
   private _componentInstance: ShallowRendererComponentClass | null;
   // @ts-ignore
-  private _rendered: JSX.Element | null;
+  private _rendered: ComponentChild;
   // @ts-ignore
   private _rendering: boolean;
   private _commitQueue: any[] = [];
@@ -79,15 +79,15 @@ export default class PreactShallowRenderer {
     this._reset();
   }
 
-  public getMountedInstance() {
+  public getMountedInstance(): Component<any, any> | null {
     return this._componentInstance;
   }
 
-  public getRenderOutput() {
+  public getRenderOutput(): ComponentChild {
     return this._rendered;
   }
 
-  public render(element: JSX.Element, context: any = {}) {
+  public render(element: JSX.Element, context: any = {}): ComponentChild {
     assertIsComponentVNode(element);
 
     if (this._rendering) {
@@ -147,7 +147,6 @@ export default class PreactShallowRenderer {
   }
 
   private _diffComponent(newVNode: ComponentVNode, globalContext: any) {
-    console.log('diff');
     /* eslint-disable */
     //========= INIT ==============
     const oldVNode = this._oldVNode ?? ({} as ComponentVNode);
@@ -232,7 +231,6 @@ export default class PreactShallowRenderer {
       //   c._renderCallbacks.push(c.componentDidMount);
       // }
     } else {
-      console.log('update lifecycles');
       if (
         newType.getDerivedStateFromProps == null &&
         newProps !== oldProps &&
@@ -246,12 +244,14 @@ export default class PreactShallowRenderer {
           c.shouldComponentUpdate != null &&
           c.shouldComponentUpdate(newProps, c._nextState, componentContext) ===
             false) ||
-        newVNode._original === oldVNode._original
+        //@ts-ignore TODO: Investigate how to automatically rename this property?
+        newVNode.__v === oldVNode.__v
       ) {
         c.props = newProps;
         c.state = c._nextState;
         // More info about this here: https://gist.github.com/JoviDeCroock/bec5f2ce93544d2e6070ef8e0036e4e8
-        if (newVNode._original !== oldVNode._original) c._dirty = false;
+        //@ts-ignore
+        if (newVNode.__v !== oldVNode.__v) c._dirty = false;
         c._vnode = newVNode;
         newVNode._dom = oldVNode._dom;
         newVNode._children = oldVNode._children;
@@ -268,7 +268,6 @@ export default class PreactShallowRenderer {
           commitQueue.push(c);
         }
 
-        console.log('Whoooops');
         // break outer;
         return; // === SHALLOW RENDERER DIFF: return instead of break
       }
@@ -398,7 +397,7 @@ function doRender(this: any, props: any, state: any, context: any) {
  * which have callbacks to invoke in commitRoot
  * @param {import('../internal').VNode} root
  */
-export function commitRoot(commitQueue: any[], root: ComponentVNode) {
+function commitRoot(commitQueue: any[], root: ComponentVNode) {
   if (options._commit) options._commit(root, commitQueue);
 
   commitQueue.some(c => {
@@ -460,11 +459,10 @@ Component.prototype.forceUpdate = function (
 };
 
 function enqueueRender(component: ShallowRendererComponentClass) {
-  console.log('rerendering');
-
   let newVNode: VNode = assign({}, component._vnode);
-  newVNode._original = newVNode._original + 1;
 
+  // @ts-ignore Update __v to avoid early bailout
+  newVNode.__v = newVNode._original = NaN;
   component._renderer.render(newVNode, component._globalContext);
 }
 
@@ -473,9 +471,9 @@ function assertIsComponentVNode(
 ): asserts element is ComponentVNode {
   if (!isValidElement(element)) {
     throw new Error(
-      `PreactShallowRenderer render(): Invalid component. ${
+      `PreactShallowRenderer render(): Invalid component element. ${
         typeof element === 'function'
-          ? " Instead of passing a compnoent class, make sure to instantiate it by passing it to Preact's createElement."
+          ? 'Instead of passing a component class, make sure to instantiate it by passing it to Preact.createElement.'
           : ''
       }`
     );
