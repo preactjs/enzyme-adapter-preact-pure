@@ -4,11 +4,26 @@
  * https://github.com/enzymejs/react-shallow-renderer/blob/802c735ee53bf2d965797760698cacbd46088f66/LICENSE
  */
 
+import type { VNode } from 'preact';
 import * as preact from 'preact/compat';
+import type { StateUpdater } from 'preact/compat';
 import PreactShallowRenderer from '../../src/PreactShallowRenderer.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
-const { useState } = preact;
+const {
+  useState,
+  useReducer,
+  useEffect,
+  useLayoutEffect,
+  useInsertionEffect,
+  useMemo,
+  useId,
+  useContext,
+  useRef,
+  useSyncExternalStore,
+  createContext,
+  forwardRef,
+} = preact;
 const createRenderer = PreactShallowRenderer.createRenderer;
 
 describe.only('ReactShallowRenderer with hooks', () => {
@@ -84,14 +99,13 @@ describe.only('ReactShallowRenderer with hooks', () => {
     );
   });
 
-  /*
   it('should work with updating a derived value from useState', () => {
-    let _updateName;
+    let _updateName: StateUpdater<string> = null as any;
 
-    function SomeComponent({defaultName}) {
-      const [name, updateName] = React.useState(defaultName);
-      const [prevName, updatePrevName] = React.useState(defaultName);
-      const [letter, updateLetter] = React.useState(name[0]);
+    function SomeComponent({ defaultName }: { defaultName: string }) {
+      const [name, updateName] = useState(defaultName);
+      const [prevName, updatePrevName] = useState(defaultName);
+      const [letter, updateLetter] = useState(name[0]);
 
       _updateName = updateName;
 
@@ -111,14 +125,14 @@ describe.only('ReactShallowRenderer with hooks', () => {
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(
-      <SomeComponent defaultName={'Sophie'} />,
+      <SomeComponent defaultName={'Sophie'} />
     );
     expect(result).toEqual(
       <div>
         <p>
           Your name is: <span>Sophie (S)</span>
         </p>
-      </div>,
+      </div>
     );
 
     result = shallowRenderer.render(<SomeComponent defaultName={'Dan'} />);
@@ -127,7 +141,7 @@ describe.only('ReactShallowRenderer with hooks', () => {
         <p>
           Your name is: <span>Sophie (S)</span>
         </p>
-      </div>,
+      </div>
     );
 
     _updateName('Dan');
@@ -136,22 +150,25 @@ describe.only('ReactShallowRenderer with hooks', () => {
         <p>
           Your name is: <span>Dan (D)</span>
         </p>
-      </div>,
+      </div>
     );
   });
 
   it('should work with useReducer', () => {
-    function reducer(state, action) {
+    function reducer(
+      state: { count: number },
+      action: { type: 'increment' | 'decrement' }
+    ) {
       switch (action.type) {
         case 'increment':
-          return {count: state.count + 1};
+          return { count: state.count + 1 };
         case 'decrement':
-          return {count: state.count - 1};
+          return { count: state.count - 1 };
       }
     }
 
-    function SomeComponent(props) {
-      const [state] = React.useReducer(reducer, props, p => ({
+    function SomeComponent(props: { initialCount: number }) {
+      const [state] = useReducer(reducer, props, p => ({
         count: p.initialCount,
       }));
 
@@ -172,7 +189,7 @@ describe.only('ReactShallowRenderer with hooks', () => {
         <p>
           The counter is at: <span>0</span>
         </p>
-      </div>,
+      </div>
     );
 
     result = shallowRenderer.render(<SomeComponent initialCount={10} />);
@@ -182,27 +199,30 @@ describe.only('ReactShallowRenderer with hooks', () => {
         <p>
           The counter is at: <span>0</span>
         </p>
-      </div>,
+      </div>
     );
   });
 
   it('should work with a dispatched state change for a useReducer', () => {
-    function reducer(state, action) {
+    function reducer(
+      state: { count: number },
+      action: { type: 'increment' | 'decrement' }
+    ) {
       switch (action.type) {
         case 'increment':
-          return {count: state.count + 1};
+          return { count: state.count + 1 };
         case 'decrement':
-          return {count: state.count - 1};
+          return { count: state.count - 1 };
       }
     }
 
-    function SomeComponent(props) {
-      const [state, dispatch] = React.useReducer(reducer, props, p => ({
+    function SomeComponent(props: { initialCount: number }) {
+      const [state, dispatch] = useReducer(reducer, props, p => ({
         count: p.initialCount,
       }));
 
       if (state.count === 0) {
-        dispatch({type: 'increment'});
+        dispatch({ type: 'increment' });
       }
 
       return (
@@ -215,30 +235,30 @@ describe.only('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let result = shallowRenderer.render(<SomeComponent initialCount={0} />);
+    const result = shallowRenderer.render(<SomeComponent initialCount={0} />);
 
     expect(result).toEqual(
       <div>
         <p>
           The counter is at: <span>1</span>
         </p>
-      </div>,
+      </div>
     );
   });
 
   it('should not trigger effects', () => {
-    let effectsCalled = [];
+    const effectsCalled: string[] = [];
 
-    function SomeComponent({defaultName}) {
-      React.useEffect(() => {
+    function SomeComponent({ defaultName }: { defaultName?: string }) {
+      useEffect(() => {
         effectsCalled.push('useEffect');
       });
 
-      React.useInsertionEffect(() => {
+      useInsertionEffect(() => {
         effectsCalled.push('useInsertionEffect');
       });
 
-      React.useLayoutEffect(() => {
+      useLayoutEffect(() => {
         effectsCalled.push('useLayoutEffect');
       });
 
@@ -253,7 +273,7 @@ describe.only('ReactShallowRenderer with hooks', () => {
 
   it('should work with useRef', () => {
     function SomeComponent() {
-      const randomNumberRef = React.useRef({number: Math.random()});
+      const randomNumberRef = useRef({ number: Math.random() });
 
       return (
         <div>
@@ -263,16 +283,16 @@ describe.only('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let firstResult = shallowRenderer.render(<SomeComponent />);
-    let secondResult = shallowRenderer.render(<SomeComponent />);
+    const firstResult = shallowRenderer.render(<SomeComponent />);
+    const secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
   });
 
   it('should work with useMemo', () => {
     function SomeComponent() {
-      const randomNumber = React.useMemo(() => {
-        return {number: Math.random()};
+      const randomNumber = useMemo(() => {
+        return { number: Math.random() };
       }, []);
 
       return (
@@ -283,17 +303,17 @@ describe.only('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let firstResult = shallowRenderer.render(<SomeComponent />);
-    let secondResult = shallowRenderer.render(<SomeComponent />);
+    const firstResult = shallowRenderer.render(<SomeComponent />);
+    const secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
   });
 
   it('should work with useContext', () => {
-    const SomeContext = React.createContext('default');
+    const SomeContext = createContext('default');
 
     function SomeComponent() {
-      const value = React.useContext(SomeContext);
+      const value = useContext(SomeContext);
 
       return (
         <div>
@@ -303,18 +323,18 @@ describe.only('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let result = shallowRenderer.render(<SomeComponent />);
+    const result = shallowRenderer.render(<SomeComponent />);
 
     expect(result).toEqual(
       <div>
         <p>default</p>
-      </div>,
+      </div>
     );
   });
 
   it('should not leak state when component type changes', () => {
-    function SomeComponent({defaultName}) {
-      const [name] = React.useState(defaultName);
+    function SomeComponent({ defaultName }: { defaultName: string }) {
+      const [name] = useState(defaultName);
 
       return (
         <div>
@@ -325,8 +345,8 @@ describe.only('ReactShallowRenderer with hooks', () => {
       );
     }
 
-    function SomeOtherComponent({defaultName}) {
-      const [name] = React.useState(defaultName);
+    function SomeOtherComponent({ defaultName }: { defaultName: string }) {
+      const [name] = useState(defaultName);
 
       return (
         <div>
@@ -339,14 +359,14 @@ describe.only('ReactShallowRenderer with hooks', () => {
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(
-      <SomeComponent defaultName={'Dominic'} />,
+      <SomeComponent defaultName={'Dominic'} />
     );
     expect(result).toEqual(
       <div>
         <p>
           Your name is: <span>Dominic</span>
         </p>
-      </div>,
+      </div>
     );
 
     result = shallowRenderer.render(<SomeOtherComponent defaultName={'Dan'} />);
@@ -355,13 +375,13 @@ describe.only('ReactShallowRenderer with hooks', () => {
         <p>
           Your name is: <span>Dan</span>
         </p>
-      </div>,
+      </div>
     );
   });
 
   it('should work with with forwardRef + any hook', () => {
-    const SomeComponent = React.forwardRef((props, ref) => {
-      const randomNumberRef = React.useRef({number: Math.random()});
+    const SomeComponent = forwardRef((props: any, ref: any) => {
+      const randomNumberRef = useRef({ number: Math.random() });
 
       return (
         <div ref={ref}>
@@ -371,21 +391,21 @@ describe.only('ReactShallowRenderer with hooks', () => {
     });
 
     const shallowRenderer = createRenderer();
-    let firstResult = shallowRenderer.render(<SomeComponent />);
-    let secondResult = shallowRenderer.render(<SomeComponent />);
+    const firstResult = shallowRenderer.render(<SomeComponent />);
+    const secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
   });
 
   it('should update a value from useState outside the render', () => {
-    let _dispatch;
+    let _dispatch: (...args: any[]) => void = null as any;
 
-    function SomeComponent({defaultName}) {
-      const [count, dispatch] = React.useReducer(
-        (s, a) => (a === 'inc' ? s + 1 : s),
-        0,
+    function SomeComponent({ defaultName }: { defaultName: string }) {
+      const [count, dispatch] = useReducer(
+        (s: number, a: string) => (a === 'inc' ? s + 1 : s),
+        0
       );
-      const [name, updateName] = React.useState(defaultName);
+      const [name, updateName] = useState(defaultName);
       _dispatch = () => dispatch('inc');
 
       return (
@@ -399,47 +419,47 @@ describe.only('ReactShallowRenderer with hooks', () => {
 
     const shallowRenderer = createRenderer();
     const element = <SomeComponent defaultName={'Dominic'} />;
-    const result = shallowRenderer.render(element);
+    const result = shallowRenderer.render(element) as VNode<any>;
     expect(result.props.children).toEqual(
       <p>
         Your name is: <span>Dominic</span> ({0})
-      </p>,
+      </p>
     );
 
     result.props.onClick();
-    let updated = shallowRenderer.render(element);
+    let updated = shallowRenderer.render(element) as VNode<any>;
     expect(updated.props.children).toEqual(
       <p>
         Your name is: <span>Dan</span> ({0})
-      </p>,
+      </p>
     );
 
     _dispatch('foo');
-    updated = shallowRenderer.render(element);
+    updated = shallowRenderer.render(element) as VNode<any>;
     expect(updated.props.children).toEqual(
       <p>
         Your name is: <span>Dan</span> ({1})
-      </p>,
+      </p>
     );
 
     _dispatch('inc');
-    updated = shallowRenderer.render(element);
+    updated = shallowRenderer.render(element) as VNode<any>;
     expect(updated.props.children).toEqual(
       <p>
         Your name is: <span>Dan</span> ({2})
-      </p>,
+      </p>
     );
   });
 
   it('should ignore a foreign update outside the render', () => {
-    let _updateCountForFirstRender;
+    let _updateCountForFirstRender: StateUpdater<number> = null as any;
 
     function SomeComponent() {
-      const [count, updateCount] = React.useState(0);
+      const [count, updateCount] = useState(0);
       if (!_updateCountForFirstRender) {
         _updateCountForFirstRender = updateCount;
       }
-      return count;
+      return count as any;
     }
 
     const shallowRenderer = createRenderer();
@@ -459,15 +479,15 @@ describe.only('ReactShallowRenderer with hooks', () => {
   });
 
   it('should not forget render phase updates', () => {
-    let _updateCount;
+    let _updateCount: StateUpdater<number> = null as any;
 
     function SomeComponent() {
-      const [count, updateCount] = React.useState(0);
+      const [count, updateCount] = useState(0);
       _updateCount = updateCount;
       if (count < 5) {
         updateCount(x => x + 1);
       }
-      return count;
+      return count as any;
     }
 
     const shallowRenderer = createRenderer();
@@ -489,9 +509,9 @@ describe.only('ReactShallowRenderer with hooks', () => {
   });
 
   it('should work with useId', () => {
-    function SomeComponent({defaultName}) {
-      const id = React.useId();
-      const id2 = React.useId();
+    function SomeComponent({ defaultName }: { defaultName?: string }) {
+      const id = useId();
+      const id2 = useId();
 
       return (
         <div>
@@ -506,31 +526,31 @@ describe.only('ReactShallowRenderer with hooks', () => {
 
     expect(result).toEqual(
       <div>
-        <div id=":r1:" />
-        <div id=":r2:" />
-      </div>,
+        <div id="P01" />
+        <div id="P02" />
+      </div>
     );
 
     result = shallowRenderer.render(<SomeComponent />);
 
     expect(result).toEqual(
       <div>
-        <div id=":r1:" />
-        <div id=":r2:" />
-      </div>,
+        <div id="P01" />
+        <div id="P02" />
+      </div>
     );
   });
 
   it('should work with useSyncExternalStore', () => {
-    function createExternalStore(initialState) {
-      const listeners = new Set();
+    function createExternalStore(initialState: string) {
+      const listeners: Set<() => void> = new Set();
       let currentState = initialState;
       return {
-        set(text) {
+        set(text: string) {
           currentState = text;
           listeners.forEach(listener => listener());
         },
-        subscribe(listener) {
+        subscribe(listener: () => void) {
           listeners.add(listener);
           return () => listeners.delete(listener);
         },
@@ -546,7 +566,7 @@ describe.only('ReactShallowRenderer with hooks', () => {
     const store = createExternalStore('hello');
 
     function SomeComponent() {
-      const value = React.useSyncExternalStore(store.subscribe, store.getState);
+      const value = useSyncExternalStore(store.subscribe, store.getState);
       return <div>{value}</div>;
     }
 
@@ -557,5 +577,4 @@ describe.only('ReactShallowRenderer with hooks', () => {
     result = shallowRenderer.render(<SomeComponent />);
     expect(result).toEqual(<div>goodbye</div>);
   });
-  */
 });

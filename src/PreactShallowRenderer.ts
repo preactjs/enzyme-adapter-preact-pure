@@ -1,5 +1,5 @@
 import type { Component, ComponentChild, JSX } from 'preact';
-import { isValidElement } from 'preact';
+import { options, isValidElement } from 'preact';
 import type { ComponentVNode } from './preact10-internals';
 import {
   commitRoot,
@@ -7,11 +7,27 @@ import {
   getComponent,
   isMemo,
   unmount,
+  removeEffectCallbacks,
 } from './preact10-internals.js';
 
 export interface PreactComponent<P = any> extends Component<P> {
   // Custom property for the Shallow renderer
   _renderer: PreactShallowRenderer;
+}
+
+let diffedInstalled = false;
+function installDiffedOption() {
+  if (diffedInstalled) {
+    return;
+  }
+
+  const prevDiffed = options.diffed;
+  options.diffed = vnode => {
+    removeEffectCallbacks(vnode as any);
+    prevDiffed?.(vnode);
+  };
+
+  diffedInstalled = true;
 }
 
 export default class PreactShallowRenderer {
@@ -27,6 +43,7 @@ export default class PreactShallowRenderer {
   private _memoResultStack: any[] = [];
 
   constructor() {
+    installDiffedOption();
     this._reset();
   }
 

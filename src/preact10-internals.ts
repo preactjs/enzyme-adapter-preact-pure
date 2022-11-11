@@ -401,6 +401,22 @@ export function unmount(vnode: InternalVNode) {
   vnode._parent = vnode._dom = vnode._nextDom = undefined as any;
 }
 
+export function removeEffectCallbacks(vnode: InternalVNode) {
+  if (vnode._component) {
+    const c = vnode._component;
+    // Filter out useLayoutEffects and useInsertionEffect so they aren't invoked
+    c._renderCallbacks = c._renderCallbacks.filter(cb =>
+      (cb as any)._value ? false : true
+    );
+
+    // Clear out the list of useEffects so they aren't invoked
+    const hooks = (c as any).__hooks;
+    if (hooks) {
+      hooks._pendingEffects = [];
+    }
+  }
+}
+
 // TODO: Only run modified code if in shallow rendering
 Component.prototype.setState = function (
   this: InternalComponentType,
