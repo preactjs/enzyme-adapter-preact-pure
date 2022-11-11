@@ -9,7 +9,7 @@ import type {
 } from 'preact/src/internal';
 import { Component, options as rawOptions } from 'preact';
 
-import type PreactShallowRenderer from './PreactShallowRenderer';
+import type { PreactComponent as ShallowRenderComponent } from './PreactShallowRenderer';
 
 const options = rawOptions as Options;
 
@@ -24,11 +24,6 @@ const options = rawOptions as Options;
  * automatically transform the friendly names to their mangled names in the
  * transform-internal-fields script
  */
-
-interface PreactComponent<P = any> extends InternalComponentType<P> {
-  // Custom property for the Shallow renderer
-  _renderer: PreactShallowRenderer;
-}
 
 interface ClassComponentVNode<P = any> extends InternalVNode<P> {
   type: ComponentClass<P>;
@@ -55,7 +50,7 @@ export function getLastVNodeRenderedIntoContainer(container: Node) {
  * Return the VNode returned when `component` was last rendered.
  */
 export function getLastRenderOutput(component: Component) {
-  const preactComponent = component as PreactComponent;
+  const preactComponent = component as InternalComponentType;
   return getChildren(preactComponent._vnode as VNode);
 }
 
@@ -396,7 +391,7 @@ export function unmount(vnode: InternalVNode) {
 
 // TODO: Only run modified code if in shallow rendering
 Component.prototype.setState = function (
-  this: PreactComponent,
+  this: InternalComponentType,
   update: any,
   callback: () => void
 ) {
@@ -431,7 +426,7 @@ Component.prototype.setState = function (
 
 // TODO: Only run modified code if running in shallow render
 Component.prototype.forceUpdate = function (
-  this: PreactComponent,
+  this: InternalComponentType,
   callback: () => void
 ) {
   this._force = true;
@@ -439,9 +434,12 @@ Component.prototype.forceUpdate = function (
   enqueueRender(this);
 };
 
-function enqueueRender(component: PreactComponent) {
+function enqueueRender(component: InternalComponentType) {
   let newVNode: InternalVNode = assign({}, component._vnode);
   newVNode._original = NaN;
 
-  component._renderer.render(newVNode, component._globalContext);
+  component._dirty = true;
+
+  let renderer = (component as unknown as ShallowRenderComponent)._renderer;
+  renderer?.render(newVNode, component._globalContext);
 }

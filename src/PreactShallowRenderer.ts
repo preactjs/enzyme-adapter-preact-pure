@@ -1,9 +1,3 @@
-/**
- * Largely taken and adapted from react-shallow-renderer, which is copyrighted
- * to Facebook and licensed under the MIT License, found a the link below:
- * https://github.com/enzymejs/react-shallow-renderer/blob/802c735ee53bf2d965797760698cacbd46088f66/LICENSE
- */
-
 import type { Component, ComponentChild, JSX } from 'preact';
 import { isValidElement } from 'preact';
 import type { ComponentVNode } from './preact10-internals';
@@ -14,19 +8,20 @@ import {
   unmount,
 } from './preact10-internals.js';
 
+export interface PreactComponent<P = any> extends Component<P> {
+  // Custom property for the Shallow renderer
+  _renderer: PreactShallowRenderer;
+}
+
 export default class PreactShallowRenderer {
   static createRenderer = function () {
     return new PreactShallowRenderer();
   };
 
-  // @ts-ignore
-  private _oldVNode: ComponentVNode | null;
-  // @ts-ignore
-  private _componentInstance: ShallowRendererComponentClass | null;
-  // @ts-ignore
-  private _rendered: ComponentChild;
-  // @ts-ignore
-  private _rendering: boolean;
+  private _oldVNode: ComponentVNode | null = null;
+  private _componentInstance: PreactComponent | null = null;
+  private _rendered: ComponentChild = null;
+  private _rendering = false;
   private _commitQueue: any[] = [];
 
   constructor() {
@@ -53,11 +48,14 @@ export default class PreactShallowRenderer {
 
     this._rendering = true;
 
-    this._diffComponent(element, context);
-    this._commitRoot(element);
+    try {
+      this._diffComponent(element, context);
+      this._commitRoot(element);
 
-    this._oldVNode = element;
-    this._rendering = false;
+      this._oldVNode = element;
+    } finally {
+      this._rendering = false;
+    }
 
     return this.getRenderOutput();
   }
@@ -90,8 +88,8 @@ export default class PreactShallowRenderer {
       this._rendered
     );
 
-    this._componentInstance = getComponent(newVNode)!;
-    this._componentInstance!._renderer = this;
+    this._componentInstance = getComponent(newVNode) as PreactComponent;
+    this._componentInstance._renderer = this;
     this._rendered = renderResult;
   }
 
