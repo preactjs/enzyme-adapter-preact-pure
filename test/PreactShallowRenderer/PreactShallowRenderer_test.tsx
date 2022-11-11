@@ -11,7 +11,7 @@ import { options } from 'preact';
 import * as PropTypes from 'prop-types';
 import sinon from 'sinon';
 
-import PreactShallowRenderer from '../src/PreactShallowRenderer.js';
+import PreactShallowRenderer from '../../src/PreactShallowRenderer.js';
 
 const { Component, PureComponent, createElement } = preact;
 const createRenderer = PreactShallowRenderer.createRenderer;
