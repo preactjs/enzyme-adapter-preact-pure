@@ -8,6 +8,7 @@
   "author": "Robert Knight",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.20.2",
     "@types/chai": "^4.1.7",
     "@types/cheerio": "^0.22.31",
     "@types/enzyme": "^3.10.12",
@@ -16,6 +17,7 @@
     "@types/sinon": "^10.0.6",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
+    "babel-plugin-transform-rename-properties": "^0.1.0",
     "chai": "^4.3.4",
     "enzyme": "^3.11.0",
     "eslint": "^8.26.0",
@@ -42,6 +44,8 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "build-cjs": "tsc --build tsconfig-cjs.json",
+    "postbuild": "node ./scripts/transform-internal-fields.mjs",
+    "postbuild-cjs": "node ./scripts/transform-internal-fields.mjs",
     "clean": "rm -rf build build-cjs",
     "checkformatting": "prettier --check \"**/*.{js,jsx,ts,tsx,mjs,cjs,yml}\"",
     "format": "prettier --list-different --write \"**/*.{js,jsx,ts,tsx,mjs,cjs,yml}\"",

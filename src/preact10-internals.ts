@@ -5,6 +5,7 @@ import type {
   Component as InternalComponentType,
   ComponentClass,
   FunctionComponent,
+  PreactElement,
 } from 'preact/src/internal';
 import { Component, options as rawOptions } from 'preact';
 
@@ -14,49 +15,26 @@ const options = rawOptions as Options;
 
 /**
  * This module provides access to internal properties of Preact 10 VNodes,
- * components and DOM nodes rendered by Preact.
+ * components and DOM nodes rendered by Preact, as well as internal diffing
+ * algorithms
  *
  * The original property names (in the Preact source) are replaced with shorter
  * ones (they are "mangled") during the build. The mapping from original name to
- * short name is fixed, see `mangle.json` in the Preact source tree.
+ * short name is fixed, see `mangle.json` in the Preact source tree. We
+ * automatically transform the friendly names to their mangled names in the
+ * transform-internal-fields script
  */
 
-/**
- * An instance of Preact's `Component` class or a subclass created by
- * rendering.
- */
 interface PreactComponent<P = any> extends InternalComponentType<P> {
-  // Original name: `_vnode`.
-  __v: VNode<P>;
-
   // Custom property for the Shallow renderer
   _renderer: PreactShallowRenderer;
 }
 
-/**
- * A DOM element or text node created by Preact as a result of rendering.
- */
-interface PreactNode extends ChildNode {
-  // Original name: `_children`.
-  __k: PreactVNode;
-}
-
-interface PreactVNode<P = any> extends InternalVNode<P> {
-  // Original name: `_dom`.
-  __e: Node | null;
-
-  // Original name: `_component`.
-  __c: Component | null;
-
-  // Original name: `_children`.
-  __k: VNode[] | null;
-}
-
-interface ClassComponentVNode<P = any> extends PreactVNode<P> {
+interface ClassComponentVNode<P = any> extends InternalVNode<P> {
   type: ComponentClass<P>;
 }
 
-interface FunctionComponentVNode<P = any> extends PreactVNode<P> {
+interface FunctionComponentVNode<P = any> extends InternalVNode<P> {
   type: FunctionComponent<P>;
 }
 
@@ -69,8 +47,8 @@ export type ComponentVNode<P = any> =
  * `render` function.
  */
 export function getLastVNodeRenderedIntoContainer(container: Node) {
-  const preactContainer = container as PreactNode;
-  return preactContainer.__k;
+  const preactContainer = container as PreactElement;
+  return preactContainer._children ?? null;
 }
 
 /**
@@ -78,7 +56,7 @@ export function getLastVNodeRenderedIntoContainer(container: Node) {
  */
 export function getLastRenderOutput(component: Component) {
   const preactComponent = component as PreactComponent;
-  return getChildren(preactComponent.__v);
+  return getChildren(preactComponent._vnode as VNode);
 }
 
 /**
@@ -89,21 +67,21 @@ export function getLastRenderOutput(component: Component) {
  * child vnode for component vnodes.
  */
 export function getDOMNode(node: VNode): Node | null {
-  return (node as PreactVNode).__e;
+  return (node as InternalVNode)._dom;
 }
 
 /**
  * Return the `Component` instance associated with a rendered VNode.
  */
 export function getComponent(node: VNode): Component | null {
-  return (node as PreactVNode).__c;
+  return (node as InternalVNode)._component;
 }
 
 /**
  * Return the child VNodes associated with a rendered VNode.
  */
-export function getChildren(node: VNode) {
-  return (node as PreactVNode).__k!;
+export function getChildren(node: VNode | null) {
+  return (node as InternalVNode)._children!;
 }
 
 export function diffComponent(
@@ -161,10 +139,6 @@ export function diffComponent(
     c._stateCallbacks = [];
   }
 
-  // TODO
-  // @ts-ignore
-  newVNode.__c = c;
-
   // Invoke getDerivedStateFromProps
   if (c._nextState == null) {
     c._nextState = c.state;
@@ -211,14 +185,12 @@ export function diffComponent(
         c.shouldComponentUpdate != null &&
         c.shouldComponentUpdate(newProps, c._nextState, componentContext) ===
           false) ||
-      //@ts-ignore TODO: Investigate how to automatically rename this property?
-      newVNode.__v === oldVNode.__v
+      newVNode._original === oldVNode._original
     ) {
       c.props = newProps;
       c.state = c._nextState;
       // More info about this here: https://gist.github.com/JoviDeCroock/bec5f2ce93544d2e6070ef8e0036e4e8
-      //@ts-ignore
-      if (newVNode.__v !== oldVNode.__v) c._dirty = false;
+      if (newVNode._original !== oldVNode._original) c._dirty = false;
       c._vnode = newVNode;
       newVNode._dom = oldVNode._dom;
       newVNode._children = oldVNode._children;
@@ -468,9 +440,8 @@ Component.prototype.forceUpdate = function (
 };
 
 function enqueueRender(component: PreactComponent) {
-  let newVNode: VNode = assign({}, component._vnode);
+  let newVNode: InternalVNode = assign({}, component._vnode);
+  newVNode._original = NaN;
 
-  // @ts-ignore Update __v to avoid early bailout
-  newVNode.__v = newVNode._original = NaN;
   component._renderer.render(newVNode, component._globalContext);
 }
