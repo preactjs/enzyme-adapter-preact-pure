@@ -6,80 +6,27 @@
 
 /* eslint-disable @typescript-eslint/no-this-alias */
 
-import { assert } from 'chai';
 import * as preact from 'preact/compat';
 import type { VNode } from 'preact';
-import { options } from 'preact';
 import PropTypes from 'prop-types';
 import sinon from 'sinon';
 
 import PreactShallowRenderer from '../../src/PreactShallowRenderer.js';
+import { expect, installVNodeTestHook } from './utils.js';
 
-const { Component, PureComponent, createElement } = preact;
+const {
+  Component,
+  PureComponent,
+  createElement,
+  cloneElement,
+  memo,
+  forwardRef,
+  createRef,
+} = preact;
 const createRenderer = PreactShallowRenderer.createRenderer;
 
-// These tests are from react-shallow-renderer which uses Jest for testing, so
-// here is a lightweight adapter around `chai` to give it the same API as Jest's
-// `expect` so we don't have to rewrite all the `expect` statements to `assert`
-function expect<T>(actual: T) {
-  return {
-    toBe(expected: T) {
-      assert.equal(actual, expected);
-    },
-    toEqual(expected: T) {
-      assert.deepEqual(actual, expected);
-    },
-    toThrowError(expected: string) {
-      assert.throws(actual as any, expected);
-    },
-    toBeCalled() {
-      sinon.assert.called(actual as any);
-    },
-    toHaveBeenCalled() {
-      sinon.assert.called(actual as any);
-    },
-    toErrorDev(expected: any, options?: any) {
-      assert.throws(actual as any, expected);
-    },
-  };
-}
-
 describe.only('PreactShallowRenderer', () => {
-  let prevVNodeHook: ((vnode: VNode) => void) | undefined;
-
-  before(() => {
-    prevVNodeHook = options.vnode;
-    options.vnode = vnode => {
-      if (prevVNodeHook) {
-        prevVNodeHook(vnode);
-      }
-
-      // Override the vnodeId (`__v`) to NaN so that we can compare VNodes in
-      // tests and verify expected VNode output. We choose NaN here because it
-      // successfully threads the desired behavior we want for these tests.
-      //
-      // The Preact diff uses `__v` to shortcut diffing VNodes that haven't
-      // changed since creation (it treats VNodes as immutable). So when Preact
-      // checks if `oldVNode.__v == newVNode.__v`, setting `__v` to NaN will
-      // always return false, per the rules of JavaScript (NaN !== NaN in JS).
-      //
-      // However, assert.deepEqual specially handles NaN such that two NaNs are
-      // treated as equal, allowing us to do things like `assert.equal(<div />,
-      // <div />)`. In this case both `<div/>` elements will have a `__v` of NaN
-      // so `assert.deepEqual` will see those properties as the same.
-      //
-      // In summary, using `NaN`, Preact will see the VNodes as different and
-      // diff them normally (it won't shortcut it), but assert.deepEqual will
-      // treat them as the same.
-      //
-      // @ts-ignore
-      vnode.__v = NaN;
-    };
-  });
-
-  after(() => {
-    options.vnode = prevVNodeHook;
-  });
+  installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {
     const logs: string[] = [];
@@ -332,12 +279,12 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
-    type SimpleState = { update: boolean };
+    type State = { update: boolean };
 
     let renderCounter = 0;
-    class SimpleComponent extends Component<{}, SimpleState> {
+    class SimpleComponent extends Component<{}, State> {
       state = { update: false };
-      shouldComponentUpdate(nextProps: SimpleState, nextState: SimpleState) {
+      shouldComponentUpdate(nextProps: State, nextState: State) {
         return this.state.update !== nextState.update;
       }
       render() {
@@ -381,10 +328,10 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('should not run shouldComponentUpdate during forced update', () => {
-    type SimpleState = { count: number };
+    type State = { count: number };
 
     let scuCounter = 0;
-    class SimpleComponent extends Component<{}, SimpleState> {
+    class SimpleComponent extends Component<{}, State> {
       state = { count: 1 };
       shouldComponentUpdate() {
         scuCounter++;
@@ -505,7 +452,7 @@ describe.only('PreactShallowRenderer', () => {
     ]);
   });
 
-  it('should shallow render a React.fragment', () => {
+  it('should shallow render a fragment', () => {
     class SomeComponent extends Component {
       render() {
         return <div />;
@@ -963,12 +910,12 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('can setState in componentWillReceiveProps when shallow rendering', () => {
-    type SimpleProps = { updateState: boolean };
-    type SimpleState = { count: number };
-    class SimpleComponent extends Component<SimpleProps, SimpleState> {
+    type Props = { updateState: boolean };
+    type State = { count: number };
+    class SimpleComponent extends Component<Props, State> {
       state = { count: 0 };
 
-      UNSAFE_componentWillReceiveProps(nextProps: SimpleProps) {
+      UNSAFE_componentWillReceiveProps(nextProps: Props) {
         if (nextProps.updateState) {
           this.setState({ count: 1 });
         }
@@ -1353,10 +1300,11 @@ describe.only('PreactShallowRenderer', () => {
     );
   });
 
-  /*
   it('should enable rendering of cloned element', () => {
-    class SimpleComponent extends React.Component {
-      constructor(props) {
+    type Props = { foo: string };
+    type State = { bar: string };
+    class SimpleComponent extends Component<Props, State> {
+      constructor(props: Props) {
         super(props);
 
         this.state = {
@@ -1374,16 +1322,19 @@ describe.only('PreactShallowRenderer', () => {
     let result = shallowRenderer.render(el);
     expect(result).toEqual(<div>foo:bar</div>);
 
-    const cloned = React.cloneElement(el, { foo: 'baz' });
+    const cloned = cloneElement(el, { foo: 'baz' });
     result = shallowRenderer.render(cloned);
     expect(result).toEqual(<div>baz:bar</div>);
   });
 
-  it('this.state should be updated on setState callback inside componentWillMount', () => {
+  // TODO: Preact doesn't call the callback in this case. Should we?
+  it.skip('this.state should be updated on setState callback inside componentWillMount', () => {
     let stateSuccessfullyUpdated = false;
 
-    class Component extends React.Component {
-      constructor(props, context) {
+    type Props = {};
+    type State = { hasUpdatedState: boolean };
+    class SimpleComponent extends Component<Props, State> {
+      constructor(props: Props, context: any) {
         super(props, context);
         this.state = {
           hasUpdatedState: false,
@@ -1403,16 +1354,17 @@ describe.only('PreactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<Component />);
+    shallowRenderer.render(<SimpleComponent />);
     expect(stateSuccessfullyUpdated).toBe(true);
   });
 
-  it('should handle multiple callbacks', () => {
-    const mockFn = jest.fn();
+  // TODO: Revisit. Should we support setState in cWM? Does React?
+  it.skip('should handle multiple callbacks', () => {
+    const mockFn = sinon.spy();
     const shallowRenderer = createRenderer();
 
-    class Component extends React.Component {
-      constructor(props, context) {
+    class SimpleComponent extends Component<{}, { foo: string }> {
+      constructor(props: {}, context: any) {
         super(props, context);
         this.state = {
           foo: 'foo',
@@ -1429,21 +1381,22 @@ describe.only('PreactShallowRenderer', () => {
       }
     }
 
-    shallowRenderer.render(<Component />);
+    shallowRenderer.render(<SimpleComponent />);
 
     expect(mockFn).toHaveBeenCalledTimes(2);
 
     // Ensure the callback queue is cleared after the callbacks are invoked
-    const mountedInstance = shallowRenderer.getMountedInstance();
+    const mountedInstance =
+      shallowRenderer.getMountedInstance() as SimpleComponent;
     mountedInstance.setState({ foo: 'bar' }, () => mockFn());
     expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
-    const mockFn = jest.fn().mockReturnValue(false);
+    const mockFn = sinon.spy(() => false);
 
-    class Component extends React.Component {
-      constructor(props, context) {
+    class SimpleComponent extends Component<{}, { hasUpdatedState: boolean }> {
+      constructor(props: {}, context: any) {
         super(props, context);
         this.state = {
           hasUpdatedState: false,
@@ -1460,9 +1413,10 @@ describe.only('PreactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<Component />);
+    shallowRenderer.render(<SimpleComponent />);
 
-    const mountedInstance = shallowRenderer.getMountedInstance();
+    const mountedInstance =
+      shallowRenderer.getMountedInstance() as SimpleComponent;
     mountedInstance.setState({ hasUpdatedState: true }, () => {
       expect(mockFn).toBeCalled();
       expect(mountedInstance.state.hasUpdatedState).toBe(true);
@@ -1473,15 +1427,20 @@ describe.only('PreactShallowRenderer', () => {
   it('throws usefully when rendering badly-typed elements', () => {
     const shallowRenderer = createRenderer();
 
-    const renderAndVerifyWarningAndError = (Component, typeString) => {
+    const renderAndVerifyWarningAndError = (
+      SomeComponent: any,
+      typeString: string
+    ) => {
       expect(() => {
-        expect(() => shallowRenderer.render(<Component />)).toErrorDev(
-          'React.createElement: type is invalid -- expected a string ' +
-            '(for built-in components) or a class/function (for composite components) ' +
-            `but got: ${typeString}.`
-        );
+        shallowRenderer.render(<SomeComponent />);
+        // Preact doesn't support dev time only errors outside of preact/debug
+        // expect(() => shallowRenderer.render(<Component />)).toErrorDev(
+        //   'Preact.createElement: type is invalid -- expected a string ' +
+        //     '(for built-in components) or a class/function (for composite components) ' +
+        //     `but got: ${typeString}.`
+        // );
       }).toThrowError(
-        'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'PreactShallowRenderer render(): Shallow rendering works only with custom ' +
           `components, but the provided element type was \`${typeString}\`.`
       );
     };
@@ -1492,8 +1451,9 @@ describe.only('PreactShallowRenderer', () => {
     renderAndVerifyWarningAndError({}, 'object');
   });
 
-  it('should have initial state of null if not defined', () => {
-    class SomeComponent extends React.Component {
+  // TODO: Make a note that Preact always initializes state to empty obj
+  it.skip('should have initial state of null if not defined', () => {
+    class SomeComponent extends Component {
       render() {
         return <span />;
       }
@@ -1502,13 +1462,15 @@ describe.only('PreactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent />);
 
-    expect(shallowRenderer.getMountedInstance().state).toBeNull();
+    const instance = shallowRenderer.getMountedInstance() as SomeComponent;
+    expect(instance.state).toBeNull();
   });
 
-  it('should invoke both deprecated and new lifecycles if both are present', () => {
-    const log = [];
+  // TODO: Make a note Preact does not support this
+  it.skip('should invoke both deprecated and new lifecycles if both are present', () => {
+    const log: string[] = [];
 
-    class Component extends React.Component {
+    class SomeComponent extends Component<{ foo: string }> {
       componentWillMount() {
         log.push('componentWillMount');
       }
@@ -1533,12 +1495,12 @@ describe.only('PreactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<Component foo="bar" />);
+    shallowRenderer.render(<SomeComponent foo="bar" />);
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
 
     log.length = 0;
 
-    shallowRenderer.render(<Component foo="baz" />);
+    shallowRenderer.render(<SomeComponent foo="baz" />);
     expect(log).toEqual([
       'componentWillReceiveProps',
       'UNSAFE_componentWillReceiveProps',
@@ -1548,10 +1510,10 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('should stop the update when setState returns null or undefined', () => {
-    const log = [];
-    let instance;
-    class Component extends React.Component {
-      constructor(props) {
+    const log: string[] = [];
+    let instance: SomeComponent = null as any;
+    class SomeComponent extends Component<{}, { count: number }> {
+      constructor(props: {}) {
         super(props);
         this.state = {
           count: 0,
@@ -1564,20 +1526,21 @@ describe.only('PreactShallowRenderer', () => {
       }
     }
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<Component />);
+    shallowRenderer.render(<SomeComponent />);
     log.length = 0;
     instance.setState(() => null);
     instance.setState(() => undefined);
     instance.setState(null);
-    instance.setState(undefined);
+    instance.setState(undefined as any);
     expect(log).toEqual([]);
     instance.setState(state => ({ count: state.count + 1 }));
     expect(log).toEqual(['render']);
   });
 
-  it('should not get this in a function component', () => {
-    const logs = [];
-    function Foo() {
+  // TODO: Make a note Preact does not support this
+  it.skip('should not get this in a function component', () => {
+    const logs: any[] = [];
+    function Foo(this: any, props: any) {
       logs.push(this);
       return <div>foo</div>;
     }
@@ -1590,18 +1553,19 @@ describe.only('PreactShallowRenderer', () => {
     function Foo() {
       return <div>foo</div>;
     }
-    const MemoFoo = React.memo(Foo);
+    const MemoFoo = memo(Foo);
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<MemoFoo />);
   });
 
-  it('should enable React.memo to prevent a re-render', () => {
-    const logs = [];
-    const Foo = React.memo(({ count }) => {
+  it('should enable memo to prevent a re-render', () => {
+    type Props = { count: number };
+    const logs: any[] = [];
+    const Foo = memo(({ count }: Props) => {
       logs.push(`Foo: ${count}`);
       return <div>{count}</div>;
     });
-    const Bar = React.memo(({ count }) => {
+    const Bar = memo(({ count }: Props) => {
       logs.push(`Bar: ${count}`);
       return <div>{count}</div>;
     });
@@ -1617,12 +1581,12 @@ describe.only('PreactShallowRenderer', () => {
     expect(logs).toEqual(['Bar: 1']);
   });
 
-  it('should respect a custom comparison function with React.memo', () => {
+  it('should respect a custom comparison function with memo', () => {
     let renderCount = 0;
-    function areEqual(props, nextProps) {
+    function areEqual(props: any, nextProps: any) {
       return props.foo === nextProps.foo;
     }
-    const Foo = React.memo(({ foo, bar }) => {
+    const Foo = memo(({ foo, bar }) => {
       renderCount++;
       return (
         <div>
@@ -1641,9 +1605,9 @@ describe.only('PreactShallowRenderer', () => {
     expect(renderCount).toBe(2);
   });
 
-  it('should not call the comparison function with React.memo on the initial render', () => {
-    const areEqual = jest.fn(() => false);
-    const SomeComponent = React.memo(({ foo }) => {
+  it('should not call the comparison function with memo on the initial render', () => {
+    const areEqual = sinon.spy(() => false);
+    const SomeComponent = memo(({ foo }: { foo: number }) => {
       return <div>{foo}</div>;
     }, areEqual);
     const shallowRenderer = createRenderer();
@@ -1653,8 +1617,8 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('should handle memo(forwardRef())', () => {
-    const testRef = React.createRef();
-    const SomeComponent = React.forwardRef((props, ref) => {
+    const testRef = createRef();
+    const SomeComponent = forwardRef((props, ref) => {
       expect(ref).toEqual(testRef);
       return (
         <div>
@@ -1664,10 +1628,12 @@ describe.only('PreactShallowRenderer', () => {
       );
     });
 
-    const SomeMemoComponent = React.memo(SomeComponent);
+    const SomeMemoComponent = memo(SomeComponent);
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SomeMemoComponent ref={testRef} />);
+    const result = shallowRenderer.render(
+      <SomeMemoComponent ref={testRef} />
+    ) as VNode;
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -1676,15 +1642,16 @@ describe.only('PreactShallowRenderer', () => {
     ]);
   });
 
-  it('should warn for forwardRef(memo())', () => {
-    const testRef = React.createRef();
-    const SomeMemoComponent = React.memo(({ foo }) => {
+  // TODO: Make note that preact doesn't have this
+  it.skip('should warn for forwardRef(memo())', () => {
+    const testRef = createRef();
+    const SomeMemoComponent = memo(({ foo }: { foo?: string }) => {
       return <div>{foo}</div>;
     });
     const shallowRenderer = createRenderer();
     expect(() => {
       expect(() => {
-        const SomeComponent = React.forwardRef(SomeMemoComponent);
+        const SomeComponent = forwardRef(SomeMemoComponent);
         shallowRenderer.render(<SomeComponent ref={testRef} />);
       }).toErrorDev(
         'Warning: forwardRef requires a render function but received ' +
@@ -1698,10 +1665,10 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('should let you change type', () => {
-    function Foo({ prop }) {
+    function Foo({ prop }: { prop: string }) {
       return <div>Foo {prop}</div>;
     }
-    function Bar({ prop }) {
+    function Bar({ prop }: { prop: string }) {
       return <div>Bar {prop}</div>;
     }
 
@@ -1717,12 +1684,12 @@ describe.only('PreactShallowRenderer', () => {
   });
 
   it('should let you change class type', () => {
-    class Foo extends React.Component {
+    class Foo extends Component<{ prop: string }> {
       render() {
         return <div>Foo {this.props.prop}</div>;
       }
     }
-    class Bar extends React.Component {
+    class Bar extends Component<{ prop: string }> {
       render() {
         return <div>Bar {this.props.prop}</div>;
       }
@@ -1738,5 +1705,4 @@ describe.only('PreactShallowRenderer', () => {
     shallowRenderer.render(<Bar prop="bar2" />);
     expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
   });
-  */
 });

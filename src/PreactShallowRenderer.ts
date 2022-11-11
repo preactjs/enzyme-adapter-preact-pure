@@ -5,6 +5,7 @@ import {
   commitRoot,
   diffComponent,
   getComponent,
+  isMemo,
   unmount,
 } from './preact10-internals.js';
 
@@ -23,6 +24,7 @@ export default class PreactShallowRenderer {
   private _rendered: ComponentChild = null;
   private _rendering = false;
   private _commitQueue: any[] = [];
+  private _memoResultStack: any[] = [];
 
   constructor() {
     this._reset();
@@ -49,9 +51,19 @@ export default class PreactShallowRenderer {
     this._rendering = true;
 
     try {
-      this._diffComponent(element, context);
+      this._commitQueue = [];
+      const renderResult = this._diffComponent(
+        element,
+        this._oldVNode ?? ({} as ComponentVNode),
+        context,
+        this._commitQueue,
+        this._rendered
+      );
       this._commitRoot(element);
 
+      this._componentInstance = getComponent(element) as PreactComponent;
+      this._componentInstance._renderer = this;
+      this._rendered = renderResult;
       this._oldVNode = element;
     } finally {
       this._rendering = false;
@@ -75,22 +87,49 @@ export default class PreactShallowRenderer {
     this._rendering = false;
 
     this._commitQueue = [];
+    this._memoResultStack = [];
   }
 
-  private _diffComponent(newVNode: ComponentVNode<any>, globalContext: any) {
-    this._commitQueue = [];
-
-    const renderResult = diffComponent(
+  /** Diff a VNode and recurse through any Memo components */
+  private _diffComponent(
+    newVNode: ComponentVNode<any>,
+    oldVNode: ComponentVNode<any>,
+    globalContext: any,
+    commitQueue: any[],
+    prevRenderResult: any
+  ) {
+    let renderResult = diffComponent(
       newVNode,
-      this._oldVNode ?? ({} as ComponentVNode),
+      oldVNode,
       globalContext,
-      this._commitQueue,
-      this._rendered
+      commitQueue,
+      prevRenderResult
     );
 
-    this._componentInstance = getComponent(newVNode) as PreactComponent;
-    this._componentInstance._renderer = this;
-    this._rendered = renderResult;
+    while (isMemo(newVNode)) {
+      const prevMemoResult = this._memoResultStack.pop();
+      if (prevMemoResult === renderResult) {
+        return this._oldVNode;
+      } else {
+        newVNode = renderResult;
+        oldVNode = prevMemoResult ?? {};
+        prevRenderResult = this._memoResultStack.length
+          ? this._memoResultStack[this._memoResultStack.length - 1]
+          : null;
+
+        renderResult = diffComponent(
+          newVNode,
+          oldVNode,
+          globalContext,
+          commitQueue,
+          prevRenderResult
+        );
+
+        this._memoResultStack.push(renderResult);
+      }
+    }
+
+    return renderResult;
   }
 
   private _commitRoot(newVNode: ComponentVNode<any>) {

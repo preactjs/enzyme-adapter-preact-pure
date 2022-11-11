@@ -79,6 +79,18 @@ export function getChildren(node: VNode | null) {
   return (node as InternalVNode)._children!;
 }
 
+export function isMemo(node: VNode) {
+  if (node?.type && typeof node.type === 'function') {
+    const nodeType = node.type;
+    return (
+      (nodeType as any)._forwarded === true &&
+      nodeType.displayName?.startsWith('Memo(')
+    );
+  }
+
+  return false;
+}
+
 export function diffComponent(
   newVNode: ComponentVNode,
   oldVNode: ComponentVNode,
