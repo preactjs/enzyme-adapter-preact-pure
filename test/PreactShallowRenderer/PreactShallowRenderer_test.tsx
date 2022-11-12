@@ -25,7 +25,7 @@ const {
 } = preact;
 const createRenderer = PreactShallowRenderer.createRenderer;
 
-describe.only('PreactShallowRenderer', () => {
+describe('PreactShallowRenderer', () => {
   installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {

@@ -26,7 +26,7 @@ const {
 } = preact;
 const createRenderer = PreactShallowRenderer.createRenderer;
 
-describe.only('ReactShallowRenderer with hooks', () => {
+describe('ReactShallowRenderer with hooks', () => {
   installVNodeTestHook();
 
   it('should work with useState', () => {
