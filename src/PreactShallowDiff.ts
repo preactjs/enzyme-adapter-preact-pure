@@ -1,5 +1,6 @@
 import type { Component, ComponentChild, JSX } from 'preact';
 import { options, isValidElement } from 'preact';
+
 import type { ComponentVNode } from './preact10-internals';
 import {
   commitRoot,
@@ -12,7 +13,7 @@ import {
 
 export interface PreactComponent<P = any> extends Component<P> {
   // Custom property for the Shallow renderer
-  _renderer: PreactShallowRenderer;
+  _renderer: PreactShallowDiff;
 }
 
 let diffedInstalled = false;
@@ -30,9 +31,15 @@ function installDiffedOption() {
   diffedInstalled = true;
 }
 
-export default class PreactShallowRenderer {
+/**
+ * This class mirrors ReactShallowRenderer
+ * (https://github.com/enzymejs/react-shallow-renderer) for the purpose of
+ * shallow rendering Preact components. It implements the same API and passes
+ * almost the exact same test suite
+ */
+export default class PreactShallowDiff {
   static createRenderer = function () {
-    return new PreactShallowRenderer();
+    return new PreactShallowDiff();
   };
 
   private _oldVNode: ComponentVNode | null = null;
@@ -160,7 +167,7 @@ function assertIsComponentVNode(
 ): asserts element is ComponentVNode {
   if (!isValidElement(element)) {
     throw new Error(
-      `PreactShallowRenderer render(): Invalid component element. ${
+      `PreactShallowDiff render(): Invalid component element. ${
         typeof element === 'function'
           ? 'Instead of passing a component class, make sure to instantiate it by passing it to Preact.createElement.'
           : ''
@@ -171,13 +178,13 @@ function assertIsComponentVNode(
   // Show a special message for host elements since it's a common case.
   if (!(typeof element.type !== 'string')) {
     throw new Error(
-      `PreactShallowRenderer render(): Shallow rendering works only with custom components, not primitives (${element.type}). Instead of calling \`.render(el)\` and inspecting the rendered output, look at \`el.props\` directly instead.`
+      `PreactShallowDiff render(): Shallow rendering works only with custom components, not primitives (${element.type}). Instead of calling \`.render(el)\` and inspecting the rendered output, look at \`el.props\` directly instead.`
     );
   }
 
   if (typeof element.type !== 'function') {
     throw new Error(
-      `PreactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was \`${
+      `PreactShallowDiff render(): Shallow rendering works only with custom components, but the provided element type was \`${
         Array.isArray(element.type)
           ? 'array'
           : element.type === null

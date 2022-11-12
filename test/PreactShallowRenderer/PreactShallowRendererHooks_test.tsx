@@ -7,7 +7,7 @@
 import type { VNode } from 'preact';
 import * as preact from 'preact/compat';
 import type { StateUpdater } from 'preact/compat';
-import PreactShallowRenderer from '../../src/PreactShallowRenderer.js';
+import PreactShallowDiff from '../../src/PreactShallowDiff.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const {
@@ -24,9 +24,9 @@ const {
   createContext,
   forwardRef,
 } = preact;
-const createRenderer = PreactShallowRenderer.createRenderer;
+const createRenderer = PreactShallowDiff.createRenderer;
 
-describe('ReactShallowRenderer with hooks', () => {
+describe('PreactShallowDiff with hooks', () => {
   installVNodeTestHook();
 
   it('should work with useState', () => {

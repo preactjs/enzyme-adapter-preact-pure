@@ -11,7 +11,7 @@ import type { VNode } from 'preact';
 import PropTypes from 'prop-types';
 import sinon from 'sinon';
 
-import PreactShallowRenderer from '../../src/PreactShallowRenderer.js';
+import PreactShallowDiff from '../../src/PreactShallowDiff.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const {
@@ -23,9 +23,9 @@ const {
   forwardRef,
   createRef,
 } = preact;
-const createRenderer = PreactShallowRenderer.createRenderer;
+const createRenderer = PreactShallowDiff.createRenderer;
 
-describe('PreactShallowRenderer', () => {
+describe('PreactShallowDiff', () => {
   installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {
@@ -489,12 +489,12 @@ describe('PreactShallowRenderer', () => {
 
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(SomeComponent as any)).toThrowError(
-      'PreactShallowRenderer render(): Invalid component element. Instead of ' +
+      'PreactShallowDiff render(): Invalid component element. Instead of ' +
         'passing a component class, make sure to instantiate it by passing it ' +
         'to Preact.createElement.'
     );
     expect(() => shallowRenderer.render((<div />) as any)).toThrowError(
-      'PreactShallowRenderer render(): Shallow rendering works only with ' +
+      'PreactShallowDiff render(): Shallow rendering works only with ' +
         'custom components, not primitives (div). Instead of calling ' +
         '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
         'directly instead.'
@@ -1440,7 +1440,7 @@ describe('PreactShallowRenderer', () => {
         //     `but got: ${typeString}.`
         // );
       }).toThrowError(
-        'PreactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'PreactShallowDiff render(): Shallow rendering works only with custom ' +
           `components, but the provided element type was \`${typeString}\`.`
       );
     };

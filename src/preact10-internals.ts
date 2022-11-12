@@ -9,7 +9,7 @@ import type {
 } from 'preact/src/internal';
 import { Component, options as rawOptions } from 'preact';
 
-import type { PreactComponent as ShallowRenderComponent } from './PreactShallowRenderer';
+import type { PreactComponent as ShallowRenderComponent } from './PreactShallowDiff';
 
 const options = rawOptions as Options;
 

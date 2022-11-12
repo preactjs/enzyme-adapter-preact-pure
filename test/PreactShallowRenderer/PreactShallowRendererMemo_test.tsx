@@ -11,7 +11,7 @@ import type { ComponentType, VNode } from 'preact';
 import PropTypes from 'prop-types';
 import sinon from 'sinon';
 
-import PreactShallowRenderer from '../../src/PreactShallowRenderer.js';
+import PreactShallowDiff from '../../src/PreactShallowDiff.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const {
@@ -21,7 +21,7 @@ const {
   cloneElement,
   memo: realMemo,
 } = preact;
-const createRenderer = PreactShallowRenderer.createRenderer;
+const createRenderer = PreactShallowDiff.createRenderer;
 
 function memo<T extends ComponentType<any>>(component: T): T {
   return realMemo<T>(component as any) as any;
@@ -35,7 +35,7 @@ const skip = (...args: any[]) => {};
 // `memo` is it's own component, calls to `instance.setState` operate on the
 // memo component and not the real component underneath it. Might need to fix
 // this for proper shallow rendering to work.
-skip('PreactShallowRendererMemo', () => {
+skip('PreactShallowDiffMemo', () => {
   installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {
