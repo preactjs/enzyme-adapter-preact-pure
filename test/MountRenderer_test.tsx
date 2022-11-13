@@ -192,8 +192,8 @@ describe('MountRenderer', () => {
         cancelable: true,
       },
       {
-        type: 'focusin',
-        bubbles: true,
+        type: 'focus',
+        bubbles: false,
         cancelable: false,
       },
       {
