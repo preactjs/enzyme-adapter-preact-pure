@@ -429,51 +429,12 @@ function setAdapter(createNewAdapter: () => Adapter) {
 
 describe('integration tests', () => {
   before(() => {
-    configure({ adapter: new Adapter() });
+    configure({ adapter: createDefaultAdapter() });
   });
 
   describe('"mount" rendering', () => {
     addStaticTests(mount);
     addInteractiveTests(mount);
-
-    it('supports simulating events on deep Components and elements', () => {
-      function FancyButton({ onClick, children }: any) {
-        return (
-          <button type="button" onClick={onClick}>
-            {children}
-          </button>
-        );
-      }
-
-      function FancierButton({ onClick, children }: any) {
-        return <FancyButton onClick={onClick}>{children}</FancyButton>;
-      }
-
-      function App() {
-        const [count, setCount] = useState(0);
-
-        return (
-          <div>
-            <div id="count">Count: {count}</div>
-            <FancierButton onClick={() => setCount(count + 1)}>
-              Increment
-            </FancierButton>
-          </div>
-        );
-      }
-
-      const wrapper = mount(<App />, {
-        // @ts-ignore This works but types don't say so
-        adapter: new Adapter({ simulateEventsOnComponents: true }),
-      });
-      assert.equal(wrapper.find('#count').text(), 'Count: 0');
-
-      wrapper.find(FancyButton).simulate('click');
-      assert.equal(wrapper.find('#count').text(), 'Count: 1');
-
-      wrapper.find('button').simulate('click');
-      assert.equal(wrapper.find('#count').text(), 'Count: 2');
-    });
 
     it('supports retrieving elements', () => {
       // Test workaround for bug where `Adapter.nodeToElement` is called
@@ -549,6 +510,46 @@ describe('integration tests', () => {
         output,
         '<Provider value={{...}}><Component><span>override</span></Component></Provider>'
       );
+    });
+
+    describe('simulateEventsOnComponents: true', () => {
+      setAdapter(() => new Adapter({ simulateEventsOnComponents: true }));
+
+      it('supports simulating events on deep Components and elements', () => {
+        function FancyButton({ onClick, children }: any) {
+          return (
+            <button type="button" onClick={onClick}>
+              {children}
+            </button>
+          );
+        }
+
+        function FancierButton({ onClick, children }: any) {
+          return <FancyButton onClick={onClick}>{children}</FancyButton>;
+        }
+
+        function App() {
+          const [count, setCount] = useState(0);
+
+          return (
+            <div>
+              <div id="count">Count: {count}</div>
+              <FancierButton onClick={() => setCount(count + 1)}>
+                Increment
+              </FancierButton>
+            </div>
+          );
+        }
+
+        const wrapper = mount(<App />);
+        assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+        wrapper.find(FancyButton).simulate('click');
+        assert.equal(wrapper.find('#count').text(), 'Count: 1');
+
+        wrapper.find('button').simulate('click');
+        assert.equal(wrapper.find('#count').text(), 'Count: 2');
+      });
     });
   });
 
@@ -772,35 +773,37 @@ describe('integration tests', () => {
       assert.equal(wrapper.text(), 'Example');
     });
 
-    it('supports simulating events on Components (simulateEventsOnComponents: true)', () => {
-      function FancyButton({ onClick, children }: any) {
-        return (
-          <button type="button" onClick={onClick}>
-            {children}
-          </button>
-        );
-      }
+    describe('simulateEventsOnComponents: true', () => {
+      setAdapter(() => new Adapter({ simulateEventsOnComponents: true }));
 
-      function App() {
-        const [count, setCount] = useState(0);
+      it('supports simulating events on Components', () => {
+        function FancyButton({ onClick, children }: any) {
+          return (
+            <button type="button" onClick={onClick}>
+              {children}
+            </button>
+          );
+        }
 
-        return (
-          <div>
-            <div id="count">Count: {count}</div>
-            <FancyButton onClick={() => setCount(count + 1)}>
-              Increment
-            </FancyButton>
-          </div>
-        );
-      }
+        function App() {
+          const [count, setCount] = useState(0);
 
-      const wrapper = shallow(<App />, {
-        adapter: new Adapter({ simulateEventsOnComponents: true }),
+          return (
+            <div>
+              <div id="count">Count: {count}</div>
+              <FancyButton onClick={() => setCount(count + 1)}>
+                Increment
+              </FancyButton>
+            </div>
+          );
+        }
+
+        const wrapper = shallow(<App />);
+        assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+        wrapper.find(FancyButton).simulate('click');
+        assert.equal(wrapper.find('#count').text(), 'Count: 1');
       });
-      assert.equal(wrapper.find('#count').text(), 'Count: 0');
-
-      wrapper.find(FancyButton).simulate('click');
-      assert.equal(wrapper.find('#count').text(), 'Count: 1');
     });
   });
 
