@@ -44,6 +44,8 @@ interface Wrapper extends CommonWrapper {
  * Register tests for static and interactive rendering modes.
  */
 function addStaticTests(render: (el: ReactElement) => Wrapper) {
+  const isStringRenderer = (render as any) === renderToString;
+
   it('renders a simple component', () => {
     function Button({ label }: any) {
       return <button>{label}</button>;
@@ -70,7 +72,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
     assert.equal(wrapper.html(), '<button>Click me</button>');
   });
 
-  if ((render as any) !== renderToString) {
+  if (!isStringRenderer) {
     it('can find DOM nodes by class name', () => {
       function Widget() {
         return <div class="widget">Test</div>;
@@ -113,7 +115,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
     });
   }
 
-  if ((render as any) !== renderToString) {
+  if (!isStringRenderer) {
     it('returns contents of fragments', () => {
       const el = (
         <div>
@@ -136,6 +138,9 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
  * Register tests for interactive rendering modes (full + shallow rendering).
  */
 function addInteractiveTests(render: typeof mount) {
+  const isMount = (render as any) === mount;
+  const isShallow = (render as any) === shallow;
+
   it('supports finding child components', () => {
     function ListItem() {
       return <li>Test</li>;
@@ -186,9 +191,9 @@ function addInteractiveTests(render: typeof mount) {
 
     // nb. The node with `undefined` type is the Text node itself.
     let expected: Array<string | preact.AnyComponent | undefined>;
-    if (render === mount) {
+    if (isMount) {
       expected = [Widget, 'div', 'span', undefined];
-    } else if ((render as any) === shallow) {
+    } else if (isShallow) {
       // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
@@ -372,8 +377,7 @@ function addInteractiveTests(render: typeof mount) {
     }
 
     const wrapper = render(<Parent />);
-    const expectedText =
-      (render as any) === shallow ? '<Child />' : 'Everything is working';
+    const expectedText = isShallow ? '<Child />' : 'Everything is working';
 
     // Initial render, we should see the original content.
     assert.equal(wrapper.text(), expectedText);
