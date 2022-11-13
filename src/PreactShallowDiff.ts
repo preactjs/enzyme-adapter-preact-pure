@@ -13,7 +13,7 @@ import {
 
 export interface PreactComponent<P = any> extends Component<P> {
   // Custom property for the Shallow renderer
-  _renderer: PreactShallowDiff;
+  _shallowRenderer: PreactShallowDiff;
 }
 
 let diffedInstalled = false;
@@ -86,7 +86,7 @@ export default class PreactShallowDiff {
       this._commitRoot(element);
 
       this._componentInstance = getComponent(element) as PreactComponent;
-      this._componentInstance._renderer = this;
+      this._componentInstance._shallowRenderer = this;
       this._rendered = renderResult;
       this._oldVNode = element;
     } finally {

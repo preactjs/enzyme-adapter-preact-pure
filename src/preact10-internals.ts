@@ -468,6 +468,7 @@ function enqueueRender(component: InternalComponentType) {
 
   component._dirty = true;
 
-  let renderer = (component as unknown as ShallowRenderComponent)._renderer;
+  let renderer = (component as unknown as ShallowRenderComponent)
+    ._shallowRenderer;
   renderer?.render(newVNode, component._globalContext);
 }
