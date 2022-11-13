@@ -53,7 +53,7 @@
     "lint:fix": "eslint src/** test/** --fix",
     "lint-staged": "lint-staged",
     "prepublish": "rm -rf build && yarn build && yarn build-cjs",
-    "test": "yarn build && echo '{\"type\":\"module\"}' > build/package.json && nyc mocha -r build/test/init.js build/test/**/*.js && rm build/package.json",
+    "test": "yarn build && echo '{\"type\":\"module\"}' > build/package.json && nyc mocha --recursive -r build/test/init.js build/test && rm build/package.json",
     "test-cjs": "yarn build-cjs && nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js",
     "test:compat": "yarn test --preact-compat-lib preact/compat",
     "prepare": "husky install"
