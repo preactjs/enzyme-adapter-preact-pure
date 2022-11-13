@@ -9,6 +9,7 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
+import { setupJSDOM, teardownJSDOM } from './jsdom.js';
 
 type TestContextValue = { myTestString: string };
 
@@ -812,6 +813,24 @@ describe('integration tests', () => {
 
     describe('useRenderToString: true', () => {
       setAdapter(() => new Adapter({ useRenderToString: true }));
+
+      // Ensure this flag works without a JSDOM environment so tear it down if
+      // it exists before running these tests
+      let reinitJSDOM = false;
+      before(() => {
+        if (global.window) {
+          reinitJSDOM = true;
+          teardownJSDOM();
+        }
+      });
+
+      after(() => {
+        if (reinitJSDOM) {
+          setupJSDOM();
+          reinitJSDOM = false;
+        }
+      });
+
       addStaticTests(renderToString as any);
     });
   });
