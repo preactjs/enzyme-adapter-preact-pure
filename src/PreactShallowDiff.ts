@@ -1,5 +1,5 @@
-import type { Component, ComponentChild, JSX } from 'preact';
-import { options, isValidElement } from 'preact';
+import type { VNode, ComponentChild, JSX } from 'preact';
+import { Component, options, isValidElement } from 'preact';
 
 import type { ComponentVNode } from './preact10-internals';
 import {
@@ -9,6 +9,8 @@ import {
   isMemo,
   unmount,
   removeEffectCallbacks,
+  shallowSetState,
+  shallowForceUpdate,
 } from './preact10-internals.js';
 
 export interface PreactComponent<P = any> extends Component<P> {
@@ -16,20 +18,77 @@ export interface PreactComponent<P = any> extends Component<P> {
   _shallowRenderer: PreactShallowDiff;
 }
 
-let diffedInstalled = false;
-function installDiffedOption() {
-  if (diffedInstalled) {
+let shallowOptionsInstalled = false;
+
+/** Setup options necessary for shallow rendering */
+function installOptionsForShallowRendering() {
+  if (shallowOptionsInstalled) {
     return;
   }
 
+  const prevRender = (options as any).__r;
+  (options as any).__r = (vnode: VNode<any>) => {
+    prevRender(vnode);
+
+    // Eagerly set _shallowRenderer on the component instance so later code
+    // (e.g. the diffed option later in this function) can inspect it to know
+    // that this component is being shallow rendered and can respond accordingly
+    const component = getComponent(vnode) as PreactComponent | null;
+    if (component && PreactShallowDiff.current) {
+      component._shallowRenderer = PreactShallowDiff.current;
+    }
+  };
+
+  // If this component is being shallow rendered, remove all hook effect callbacks
   const prevDiffed = options.diffed;
   options.diffed = vnode => {
-    removeEffectCallbacks(vnode as any);
+    const component = getComponent(vnode) as PreactComponent | null;
+    if (component && component._shallowRenderer) {
+      removeEffectCallbacks(vnode as any);
+    }
+
     prevDiffed?.(vnode);
   };
 
-  diffedInstalled = true;
+  shallowOptionsInstalled = true;
 }
+
+/**
+ * Replace existing setState and forceUpdate implementations with new
+ * implementations that detect if a component has been shallow rendered and
+ * ensures renders caused by setState/forceUpdate are also shallow rendered.
+ *
+ * Here, the _shallowRenderer property serves a similar purpose the `updater`
+ * property on React Component's serve
+ */
+function installShallowComponentHooks() {
+  const prevSetState = Component.prototype.setState;
+  Component.prototype.setState = function (
+    this: PreactComponent,
+    update: any,
+    callback: () => void
+  ) {
+    if (this._shallowRenderer) {
+      shallowSetState.call(this as any, update, callback);
+    } else {
+      prevSetState.call(this, update, callback);
+    }
+  };
+
+  const prevForceUpdate = Component.prototype.forceUpdate;
+  Component.prototype.forceUpdate = function (
+    this: PreactComponent,
+    callback: () => void
+  ) {
+    if (this._shallowRenderer) {
+      shallowForceUpdate.call(this as any, callback);
+    } else {
+      prevForceUpdate.call(this, callback);
+    }
+  };
+}
+
+installShallowComponentHooks();
 
 /**
  * This class mirrors ReactShallowRenderer
@@ -42,15 +101,16 @@ export default class PreactShallowDiff {
     return new PreactShallowDiff();
   };
 
+  static current: PreactShallowDiff | null = null;
+
   private _oldVNode: ComponentVNode | null = null;
   private _componentInstance: PreactComponent | null = null;
   private _rendered: ComponentChild = null;
-  private _rendering = false;
   private _commitQueue: any[] = [];
   private _memoResultStack: any[] = [];
 
   constructor() {
-    installDiffedOption();
+    installOptionsForShallowRendering();
     this._reset();
   }
 
@@ -65,14 +125,14 @@ export default class PreactShallowDiff {
   public render(element: JSX.Element, context: any = {}): ComponentChild {
     assertIsComponentVNode(element);
 
-    if (this._rendering) {
+    if (PreactShallowDiff.current) {
       return;
     }
     if (this._oldVNode != null && this._oldVNode.type !== element.type) {
       this._reset();
     }
 
-    this._rendering = true;
+    PreactShallowDiff.current = this;
 
     try {
       this._commitQueue = [];
@@ -90,17 +150,20 @@ export default class PreactShallowDiff {
       this._rendered = renderResult;
       this._oldVNode = element;
     } finally {
-      this._rendering = false;
+      PreactShallowDiff.current = null;
     }
 
     return this.getRenderOutput();
   }
 
   public unmount() {
+    PreactShallowDiff.current = this;
+
     if (this._oldVNode) {
       unmount(this._oldVNode);
     }
 
+    PreactShallowDiff.current = null;
     this._reset();
   }
 
@@ -108,10 +171,11 @@ export default class PreactShallowDiff {
     this._oldVNode = null;
     this._componentInstance = null;
     this._rendered = null;
-    this._rendering = false;
 
     this._commitQueue = [];
     this._memoResultStack = [];
+
+    PreactShallowDiff.current = null;
   }
 
   /** Diff a VNode and recurse through any Memo components */

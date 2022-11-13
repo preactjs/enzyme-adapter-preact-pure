@@ -417,8 +417,7 @@ export function removeEffectCallbacks(vnode: InternalVNode) {
   }
 }
 
-// TODO: Only run modified code if in shallow rendering
-Component.prototype.setState = function (
+export function shallowSetState(
   this: InternalComponentType,
   update: any,
   callback: () => void
@@ -450,17 +449,16 @@ Component.prototype.setState = function (
     }
     enqueueRender(this);
   }
-};
+}
 
-// TODO: Only run modified code if running in shallow render
-Component.prototype.forceUpdate = function (
+export function shallowForceUpdate(
   this: InternalComponentType,
   callback: () => void
 ) {
   this._force = true;
   if (callback) this._renderCallbacks.push(callback);
   enqueueRender(this);
-};
+}
 
 function enqueueRender(component: InternalComponentType) {
   let newVNode: InternalVNode = assign({}, component._vnode);
