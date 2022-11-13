@@ -7,9 +7,9 @@
  * The rendered result is converted to RST by traversing these vnode references.
  */
 
-import type { NodeType, RSTNode } from 'enzyme';
-import type { Component, VNode } from 'preact';
-import { Fragment } from 'preact';
+import type { NodeType, RSTNodeTypes, RSTNode } from 'enzyme';
+import type { Component, ComponentChild, VNode } from 'preact';
+import { isValidElement, Fragment } from 'preact';
 
 import { childElements } from './compat.js';
 import {
@@ -22,7 +22,6 @@ import {
 import { getRealType } from './shallow-render-utils.js';
 
 type Props = { [prop: string]: any };
-type RSTNodeTypes = RSTNode | string | null;
 
 function stripSpecialProps(props: Props) {
   const { children, key, ref, ...otherProps } = props;
@@ -112,8 +111,8 @@ function nodeTypeFromType(type: any): NodeType {
  * Convert a JSX element tree returned by Preact's `h` function into an RST
  * node.
  */
-export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
-  if (node == null || typeof node === 'string') {
+export function rstNodeFromElement(node: ComponentChild): RSTNodeTypes {
+  if (!isValidElement(node)) {
     return node;
   }
   const children = childElements(node).map(rstNodeFromElement);

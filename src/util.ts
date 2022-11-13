@@ -1,4 +1,4 @@
-import type { RSTNode } from 'enzyme';
+import type { RSTNode, RSTNodeTypes } from 'enzyme';
 import type { VNode } from 'preact';
 
 export function getType(obj: Object) {
@@ -57,13 +57,25 @@ export function toArray(obj: any) {
   return Array.isArray(obj) ? obj : [obj];
 }
 
+export function isRSTNode(node: RSTNodeTypes): node is RSTNode {
+  return (
+    node != null &&
+    typeof node == 'object' &&
+    'nodeType' in node &&
+    (node.nodeType === 'host' ||
+      node.nodeType === 'class' ||
+      node.nodeType === 'function') &&
+    'rendered' in node
+  );
+}
+
 /**
  * @param node The node to start searching for a host node
  * @returns The first host node in the children of the passed in node. Will
  * return the passed in node if it is a host node
  */
-export function nodeToHostNode(node: RSTNode | string | null): Node | null {
-  if (node == null || typeof node == 'string') {
+export function nodeToHostNode(node: RSTNodeTypes): Node | null {
+  if (!isRSTNode(node)) {
     // Returning `null` here causes `wrapper.text()` to return nothing for a
     // wrapper around a `Text` node. That's not intuitive perhaps, but it
     // matches the React adapters' behaviour.
