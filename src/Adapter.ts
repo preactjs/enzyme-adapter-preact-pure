@@ -17,6 +17,7 @@ import { childElements } from './compat.js';
 import { rstNodeFromElement } from './preact10-rst.js';
 import RootFinder from './RootFinder.js';
 import { isRSTNode, nodeToHostNode } from './util.js';
+import ShallowRendererNative from './ShallowRendererNative.js';
 
 export const { EnzymeAdapter } = enzyme;
 
@@ -36,6 +37,20 @@ export interface PreactAdapterOptions {
    * that preact-render-to-string is passed here.
    */
   renderToString?: (el: VNode<any>, context: any) => string;
+
+  /**
+   * Enable a new shallow renderer that more closely matches the behavior and
+   * mechanics of React's shallow renderer, but uses Preact.
+   *
+   * The previous shallow renderer rendered components into a DOM and modified
+   * it's output so that all children return null to prevent rendering further
+   * down the tree. The new shallow renderer is a custom implementation of
+   * Preact's diffing algorithm that only shallow renders the given component
+   * and does not recurse down the VDOM tree. It's behavior more closely matches
+   * the React 16 enzyme adapter and it well suited for migrating an enzyme test
+   * suite from React to Preact.
+   */
+  useTrueShallowRendering?: boolean;
 }
 
 export default class Adapter extends EnzymeAdapter {
@@ -74,7 +89,11 @@ export default class Adapter extends EnzymeAdapter {
           container: options.attachTo,
         });
       case 'shallow':
-        return new ShallowRenderer({ ...this.preactAdapterOptions });
+        if (this.preactAdapterOptions.useTrueShallowRendering) {
+          return new ShallowRendererNative();
+        } else {
+          return new ShallowRenderer({ ...this.preactAdapterOptions });
+        }
       case 'string':
         return new StringRenderer({ ...this.preactAdapterOptions });
       default:

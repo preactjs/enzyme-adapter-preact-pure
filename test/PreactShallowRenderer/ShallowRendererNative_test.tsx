@@ -1,20 +1,19 @@
 import enzyme from 'enzyme';
 import * as preact from 'preact';
-import preactRenderToString from 'preact-render-to-string';
-import { useContext, useEffect, useState } from 'preact/hooks';
+import { useContext, useState } from 'preact/hooks';
+import renderToString from 'preact-render-to-string';
+
 import { assert } from 'chai';
 
-import Adapter from '../src/Adapter.js';
+import Adapter from '../../src/Adapter.js';
 import {
   addInteractiveTests,
   addStaticTests,
-  createDefaultAdapter,
   debugWrappedShallowComponent,
   normalizeDebugMessage,
-  setAdapter,
   WrappingComponent,
-} from './shared.js';
-import { setupJSDOM, teardownJSDOM } from './jsdom.js';
+  setAdapter,
+} from '../shared.js';
 
 type TestContextValue = { myTestString: string };
 
@@ -22,135 +21,17 @@ const TestContext = preact.createContext<TestContextValue>({
   myTestString: 'default',
 });
 
-const { configure, shallow, mount, render: renderToString } = enzyme;
+const { shallow } = enzyme;
 
 describe('integration tests', () => {
-  before(() => {
-    configure({ adapter: createDefaultAdapter() });
-  });
-
-  describe('"mount" rendering', () => {
-    addStaticTests(mount);
-    addInteractiveTests(mount);
-
-    it('supports retrieving elements', () => {
-      // Test workaround for bug where `Adapter.nodeToElement` is called
-      // with undefined `this` by `ReactWrapper#get`.
-      const wrapper = mount(
-        <div>
-          test<span>bar</span>
-        </div>
-      );
-      const div = wrapper.get(0);
-      assert.deepEqual(div.type, 'div');
-    });
-
-    it('supports rendering into an existing container', () => {
-      const container = document.createElement('div');
-      const wrapper = mount(<button />, { attachTo: container });
-      assert.ok(container.querySelector('button'));
-      wrapper.detach();
-    });
-
-    it('flushes effects and state updates when using `invoke`', () => {
-      let effectCount = 0;
-
-      const Child = ({ children, onClick }: any) => (
-        <button onClick={onClick}>{children}</button>
-      );
-      const Parent = () => {
-        const [count, setCount] = useState(0);
-        useEffect(() => {
-          effectCount = count;
-        }, [count]);
-        return <Child onClick={() => setCount(c => c + 1)}>{count}</Child>;
-      };
-
-      const wrapper = mount(<Parent />);
-      // @ts-ignore - `onClick` type is wrong
-      wrapper.find('Child').invoke('onClick')();
-
-      assert.equal(wrapper.text(), '1');
-      assert.equal(effectCount, 1);
-    });
-
-    it('renders wrapped component with wrapper and props', () => {
-      function Component() {
-        return <span>test</span>;
-      }
-
-      const wrapper = mount(<Component />, {
-        wrappingComponent: WrappingComponent,
-        wrappingComponentProps: { foo: 'bar' },
-      });
-
-      const output = normalizeDebugMessage(wrapper.debug());
-      assert.equal(
-        output,
-        '<WrappingComponent foo="bar"><div foo="bar"><Component><span>test</span></Component></div></WrappingComponent>'
-      );
-    });
-
-    it('passes context to mounted component wrapped with provider', () => {
-      function Component() {
-        const { myTestString } = useContext(TestContext);
-        return <span>{myTestString}</span>;
-      }
-
-      const wrapper = mount(<Component />, {
-        wrappingComponent: TestContext.Provider,
-        wrappingComponentProps: { value: { myTestString: 'override' } },
-      });
-
-      const output = normalizeDebugMessage(wrapper.debug());
-      assert.equal(
-        output,
-        '<Provider value={{...}}><Component><span>override</span></Component></Provider>'
-      );
-    });
-
-    describe('simulateEventsOnComponents: true', () => {
-      setAdapter(() => new Adapter({ simulateEventsOnComponents: true }));
-
-      it('supports simulating events on deep Components and elements', () => {
-        function FancyButton({ onClick, children }: any) {
-          return (
-            <button type="button" onClick={onClick}>
-              {children}
-            </button>
-          );
-        }
-
-        function FancierButton({ onClick, children }: any) {
-          return <FancyButton onClick={onClick}>{children}</FancyButton>;
-        }
-
-        function App() {
-          const [count, setCount] = useState(0);
-
-          return (
-            <div>
-              <div id="count">Count: {count}</div>
-              <FancierButton onClick={() => setCount(count + 1)}>
-                Increment
-              </FancierButton>
-            </div>
-          );
-        }
-
-        const wrapper = mount(<App />);
-        assert.equal(wrapper.find('#count').text(), 'Count: 0');
-
-        wrapper.find(FancyButton).simulate('click');
-        assert.equal(wrapper.find('#count').text(), 'Count: 1');
-
-        wrapper.find('button').simulate('click');
-        assert.equal(wrapper.find('#count').text(), 'Count: 2');
-      });
+  setAdapter(() => {
+    return new Adapter({
+      renderToString,
+      useTrueShallowRendering: true,
     });
   });
 
-  describe('"shallow" rendering', () => {
+  describe('true "shallow" rendering', () => {
     addStaticTests(shallow);
     addInteractiveTests(shallow as any);
 
@@ -371,8 +252,6 @@ describe('integration tests', () => {
     });
 
     describe('simulateEventsOnComponents: true', () => {
-      setAdapter(() => new Adapter({ simulateEventsOnComponents: true }));
-
       it('supports simulating events on Components', () => {
         function FancyButton({ onClick, children }: any) {
           return (
@@ -401,33 +280,6 @@ describe('integration tests', () => {
         wrapper.find(FancyButton).simulate('click');
         assert.equal(wrapper.find('#count').text(), 'Count: 1');
       });
-    });
-  });
-
-  describe('"string" rendering', () => {
-    addStaticTests(renderToString as any);
-
-    describe('using preact-render-to-string (renderToString option)', () => {
-      setAdapter(() => new Adapter({ renderToString: preactRenderToString }));
-
-      // Ensure this flag works without a JSDOM environment so tear it down if
-      // it exists before running these tests
-      let reinitJSDOM = false;
-      before(() => {
-        if (globalThis.window) {
-          reinitJSDOM = true;
-          teardownJSDOM();
-        }
-      });
-
-      after(() => {
-        if (reinitJSDOM) {
-          setupJSDOM();
-          reinitJSDOM = false;
-        }
-      });
-
-      addStaticTests(renderToString as any);
     });
   });
 });
