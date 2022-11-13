@@ -28,6 +28,12 @@ export interface PreactAdapterOptions {
    * behavior of the React 16 enzyme adapter.
    */
   simulateEventsOnComponents?: boolean;
+
+  /**
+   * Flag to indicate to use preact-render-to-string for the 'string' enzyme
+   * renderer instead of mounting into a DOM and extracting the markup
+   */
+  useRenderToString?: boolean;
 }
 
 export default class Adapter extends EnzymeAdapter {
@@ -68,7 +74,7 @@ export default class Adapter extends EnzymeAdapter {
       case 'shallow':
         return new ShallowRenderer({ ...this.preactAdapterOptions });
       case 'string':
-        return new StringRenderer();
+        return new StringRenderer({ ...this.preactAdapterOptions });
       default:
         throw new Error(`"${options.mode}" rendering is not supported`);
     }

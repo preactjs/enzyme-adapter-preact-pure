@@ -416,6 +416,17 @@ function addInteractiveTests(render: typeof mount) {
   });
 }
 
+const createDefaultAdapter = () => new Adapter();
+function setAdapter(createNewAdapter: () => Adapter) {
+  beforeEach(() => {
+    configure({ adapter: createNewAdapter() });
+  });
+
+  afterEach(() => {
+    configure({ adapter: createDefaultAdapter() });
+  });
+}
+
 describe('integration tests', () => {
   before(() => {
     configure({ adapter: new Adapter() });
@@ -795,5 +806,10 @@ describe('integration tests', () => {
 
   describe('"string" rendering', () => {
     addStaticTests(renderToString as any);
+
+    describe('useRenderToString: true', () => {
+      setAdapter(() => new Adapter({ useRenderToString: true }));
+      addStaticTests(renderToString as any);
+    });
   });
 });
