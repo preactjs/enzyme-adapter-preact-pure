@@ -505,12 +505,10 @@ describe('preact10-rst', () => {
       },
       {
         description: 'element with mixed typed children',
-        element: (
-          <div>{[null, undefined, 'string', 1, true, false, 1n, {}]}</div>
-        ),
+        element: <div>{[null, undefined, 'string', 1, true, false, 1n]}</div>,
         expectedNode: hostNode({
           type: 'div',
-          rendered: [null, undefined, 'string', 1, true, false, 1n, {}],
+          rendered: [null, undefined, 'string', 1, true, false, 1n],
         }),
       },
     ].forEach(({ description, element, expectedNode }) => {

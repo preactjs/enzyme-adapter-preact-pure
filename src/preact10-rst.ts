@@ -65,7 +65,11 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
 
   // Preact 10 represents text nodes as VNodes with `node.type == null` and
   // `node.props` equal to the string content.
-  if (typeof node.props === 'string' || typeof node.props === 'number') {
+  if (
+    typeof node.props === 'string' ||
+    typeof node.props === 'number' ||
+    typeof node.props === 'bigint'
+  ) {
     return String(node.props);
   }
 

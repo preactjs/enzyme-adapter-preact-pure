@@ -2,6 +2,7 @@ import type {
   AdapterOptions,
   MountRendererProps,
   RSTNode,
+  RSTNodeTypes,
   ShallowRendererProps,
 } from 'enzyme';
 import enzyme from 'enzyme';
@@ -15,7 +16,7 @@ import StringRenderer from './StringRenderer.js';
 import { childElements } from './compat.js';
 import { rstNodeFromElement } from './preact10-rst.js';
 import RootFinder from './RootFinder.js';
-import { nodeToHostNode } from './util.js';
+import { isRSTNode, nodeToHostNode } from './util.js';
 
 export const { EnzymeAdapter } = enzyme;
 
@@ -81,20 +82,41 @@ export default class Adapter extends EnzymeAdapter {
     }
   }
 
-  nodeToElement(node: RSTNode | string): ReactElement | string {
-    if (typeof node === 'string') {
-      return node;
+  nodeToElement(node: RSTNodeTypes): ReactElement | string {
+    if (node == null || typeof node === 'boolean') {
+      return '';
     }
-    const childElements = node.rendered.map(n => this.nodeToElement(n as any));
-    return h(node.type as any, node.props, ...childElements) as ReactElement;
+
+    if (
+      typeof node === 'string' ||
+      typeof node === 'number' ||
+      typeof node === 'bigint'
+    ) {
+      return '' + node;
+    }
+
+    if (!isRSTNode(node)) {
+      return node as any;
+    }
+
+    const props: any = { ...node.props };
+    if (node.key) {
+      props.key = node.key;
+    }
+    if (node.ref) {
+      props.ref = node.ref;
+    }
+
+    const childElements = node.rendered.map(n => this.nodeToElement(n));
+    return h(node.type as any, props, ...childElements) as ReactElement;
   }
 
-  nodeToHostNode(node: RSTNode | string): Node | null {
+  nodeToHostNode(node: RSTNodeTypes): Node | null {
     return nodeToHostNode(node);
   }
 
   isValidElement(el: any) {
-    if (el == null) {
+    if (el == null || typeof el !== 'object') {
       return false;
     }
     if (

@@ -73,6 +73,22 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
     assert.equal(wrapper.html(), '<button>Click me</button>');
   });
 
+  it('can return HTML content of mixed typed children', () => {
+    function Button({ label }: any) {
+      return (
+        <button>
+          {[null, undefined, true, false, 0n, ' ', label, ' ', 0]}
+        </button>
+      );
+    }
+
+    const wrapper = render(<Button label="Click me" />);
+    assert.equal(
+      wrapper.html(),
+      isStringRenderer ? '0 Click me 0' : '<button>0 Click me 0</button>'
+    );
+  });
+
   if (!isStringRenderer) {
     it('can find DOM nodes by class name', () => {
       function Widget() {

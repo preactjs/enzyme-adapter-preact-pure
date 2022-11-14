@@ -127,7 +127,7 @@ declare module 'enzyme' {
     createRenderer(options: AdapterOptions): Renderer;
     elementToNode(element: ReactElement): RSTNode;
     isValidElement(el: ReactElement): boolean;
-    nodeToElement(node: RSTNode): ReactElement | string;
+    nodeToElement(node: RSTNodeTypes): ReactElement | string;
     nodeToHostNode(node: RSTNode): Node | null;
 
     // Optional methods.
