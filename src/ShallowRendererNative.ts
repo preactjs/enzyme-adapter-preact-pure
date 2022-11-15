@@ -4,6 +4,7 @@ import type {
   ShallowRenderOptions,
 } from 'enzyme';
 import type { VNode } from 'preact';
+import { isValidElement } from 'preact';
 
 import type { EventDetails } from './MountRenderer.js';
 import { propFromEvent } from './util.js';
@@ -28,7 +29,9 @@ export default class ShallowRendererNative implements AbstractShallowRenderer {
 
   render(el: VNode, context?: any, options?: ShallowRenderOptions) {
     this._cachedNode = el;
-    return this._renderer.render(el, context);
+    if (typeof el.type !== 'string') {
+      return this._renderer.render(el, context);
+    }
   }
 
   simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any) {
@@ -69,13 +72,19 @@ export default class ShallowRendererNative implements AbstractShallowRenderer {
   }
 
   getNode() {
-    if (!this._cachedNode) {
+    if (this._cachedNode == null || !isValidElement(this._cachedNode)) {
       return null;
     }
 
     flushRenders();
 
-    const output = this._renderer.getRenderOutput();
+    // The output of DOM elements is props.children whereas for components its
+    // from the renderer
+    const output =
+      typeof this._cachedNode.type === 'string'
+        ? this._cachedNode.props.children
+        : this._renderer.getRenderOutput();
+
     return {
       nodeType: nodeTypeFromType(this._cachedNode.type),
       type: this._cachedNode.type,
