@@ -30,10 +30,11 @@ export interface PreactAdapterOptions {
   simulateEventsOnComponents?: boolean;
 
   /**
-   * Flag to indicate to use preact-render-to-string for the 'string' enzyme
-   * renderer instead of mounting into a DOM and extracting the markup
+   * An option to provide a custom string renderer the 'string' enzyme renderer
+   * instead of mounting into a DOM and extracting the markup. It is expected
+   * that preact-render-to-string is passed here.
    */
-  useRenderToString?: boolean;
+  renderToString?: (el: VNode<any>, context: any) => string;
 }
 
 export default class Adapter extends EnzymeAdapter {

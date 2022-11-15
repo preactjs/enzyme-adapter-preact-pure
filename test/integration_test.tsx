@@ -2,6 +2,7 @@ import type { CommonWrapper } from 'enzyme';
 import enzyme from 'enzyme';
 import { Component, Fragment, options } from 'preact';
 import * as preact from 'preact';
+import preactRenderToString from 'preact-render-to-string';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import type { ReactElement } from 'react';
 
@@ -816,7 +817,7 @@ describe('integration tests', () => {
     addStaticTests(renderToString as any);
 
     describe('useRenderToString: true', () => {
-      setAdapter(() => new Adapter({ useRenderToString: true }));
+      setAdapter(() => new Adapter({ renderToString: preactRenderToString }));
 
       // Ensure this flag works without a JSDOM environment so tear it down if
       // it exists before running these tests

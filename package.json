@@ -36,8 +36,7 @@
   },
   "peerDependencies": {
     "enzyme": "^3.11.0",
-    "preact": "^10.0.0",
-    "preact-render-to-string": "^5.2.6"
+    "preact": "^10.0.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",
