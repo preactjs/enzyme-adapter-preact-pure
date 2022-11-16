@@ -23,14 +23,16 @@ function stripInternalVNodeFields(obj: object | string) {
   const result = {} as Record<string, any>;
   for (const [key, value] of Object.entries(obj)) {
     if (!key.startsWith('__')) {
-      if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) {
+        result[key] = value.map(v => stripInternalVNodeFields(v));
+      } else if (typeof value === 'object' && value !== null) {
         result[key] = stripInternalVNodeFields(value);
       } else {
         result[key] = value;
       }
     }
   }
-  return result;
+  return result as preact.VNode<any>;
 }
 
 describe('Adapter', () => {
@@ -107,30 +109,30 @@ describe('Adapter', () => {
     // not pass due to this lossy behavior. Perhaps in the future we should
     // investigate and fix this.
 
-    // function TextComponent() {
-    //   return 'test' as unknown as VNode<any>;
-    // }
+    function TextComponent() {
+      return 'test' as unknown as preact.VNode<any>;
+    }
 
-    // function Child() {
-    //   return <span>child</span>;
-    // }
+    function Child() {
+      return <span>child</span>;
+    }
 
-    // function Parent() {
-    //   return (
-    //     <div>
-    //       <Child />
-    //     </div>
-    //   );
-    // }
+    function Parent() {
+      return (
+        <div>
+          <Child />
+        </div>
+      );
+    }
 
     [
       {
         description: 'Simple DOM element',
-        el: <button type="button">Click me</button>,
+        element: <button type="button">Click me</button>,
       },
       {
         description: 'DOM elements with keys',
-        el: (
+        element: (
           <ul>
             <li key={1}>Test</li>
             <li key={2}>Test</li>
@@ -139,29 +141,80 @@ describe('Adapter', () => {
       },
       {
         description: 'DOM element with ref',
-        el: <div ref={() => {}} />,
+        element: <div ref={() => {}} />,
       },
-      // {
-      //   description: 'Component that renders text',
-      //   el: <TextComponent />,
-      // },
-      // {
-      //   description: 'Component with children',
-      //   el: <Parent />,
-      // },
-      // {
-      //   description: 'Element with mixed typed children',
-      //   el: <div>{[null, undefined, true, false, 0, 1n, 'a string']}</div>,
-      // },
-    ].forEach(({ description, el }) => {
+      {
+        description: 'Component that renders text',
+        element: <TextComponent />,
+        expected: {
+          type: TextComponent,
+          constructor: undefined,
+          key: undefined,
+          ref: undefined,
+          props: {
+            children: 'test',
+          },
+        },
+      },
+      {
+        description: 'Component with children',
+        element: <Parent />,
+        expected: {
+          type: Parent,
+          constructor: undefined,
+          key: undefined,
+          ref: undefined,
+          props: {
+            children: {
+              type: 'div',
+              constructor: undefined,
+              key: undefined,
+              ref: undefined,
+              props: {
+                children: {
+                  type: Child,
+                  constructor: undefined,
+                  key: undefined,
+                  ref: undefined,
+                  props: {
+                    children: {
+                      type: 'span',
+                      constructor: undefined,
+                      key: undefined,
+                      ref: undefined,
+                      props: {
+                        children: 'child',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        description: 'Element with mixed typed children',
+        element: <div>{[null, undefined, true, false, 0, 1n, 'a string']}</div>,
+        expected: {
+          type: 'div',
+          constructor: undefined,
+          key: undefined,
+          ref: undefined,
+          props: {
+            children: ['0', '1', 'a string'],
+          },
+        },
+      },
+    ].forEach(({ description, element, expected }) => {
       it(`returns JSX element that matches original input (${description})`, () => {
         const renderer = new MountRenderer();
-        renderer.render(el);
+        renderer.render(element);
         const adapter = new Adapter();
         const rstNode = renderer.getNode() as RSTNode;
         assert.deepEqual(
           stripInternalVNodeFields(adapter.nodeToElement(rstNode)),
-          stripInternalVNodeFields(el)
+          expected ?? stripInternalVNodeFields(element)
         );
       });
     });
