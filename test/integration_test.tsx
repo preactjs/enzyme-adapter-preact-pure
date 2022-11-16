@@ -11,6 +11,7 @@ import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
 import { setupJSDOM, teardownJSDOM } from './jsdom.js';
+import { stripInternalVNodeFields } from './shared.js';
 
 type TestContextValue = { myTestString: string };
 
@@ -435,6 +436,32 @@ function addInteractiveTests(render: typeof mount) {
 
     wrapper.find('button').simulate('click');
     assert.equal(wrapper.find('#count').text(), 'Count: 1');
+  });
+
+  it('getElements() returns expected types for mixed type children', () => {
+    function App() {
+      return [undefined, null, true, false, 0, 1n, 'a string'] as any;
+    }
+
+    const wrapper = render(<App />);
+    if (isShallow) {
+      assert.deepEqual(wrapper.getElements(), ['0', '1', 'a string'] as any);
+    } else {
+      assert.deepEqual(stripInternalVNodeFields(wrapper.getElement()), {
+        type: App,
+        constructor: undefined as any,
+        key: undefined,
+        ref: undefined,
+        props: {
+          children: ['0', '1', 'a string'],
+        },
+      } as any);
+      assert.deepEqual(wrapper.children().getElements(), [
+        '0',
+        '1',
+        'a string',
+      ] as any);
+    }
   });
 }
 

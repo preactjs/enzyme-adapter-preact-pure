@@ -83,18 +83,6 @@ export default class Adapter extends EnzymeAdapter {
   }
 
   nodeToElement(node: RSTNodeChild): ReactElement | string {
-    if (node == null || typeof node === 'boolean') {
-      return '';
-    }
-
-    if (
-      typeof node === 'string' ||
-      typeof node === 'number' ||
-      typeof node === 'bigint'
-    ) {
-      return '' + node;
-    }
-
     if (!isRSTNode(node)) {
       return node as any;
     }
