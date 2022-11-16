@@ -15,14 +15,14 @@ const jsdomGlobals: Record<string, (dom: JSDOM) => any> = {
 export function setupJSDOM() {
   // Enable `requestAnimationFrame` which Preact uses for scheduling hooks.
   const dom = new JSDOM('', { pretendToBeVisual: true });
-  const g = global as any;
+  const g = globalThis as any;
   for (const prop of Object.keys(jsdomGlobals)) {
     g[prop] = jsdomGlobals[prop](dom);
   }
 }
 
 export function teardownJSDOM() {
-  const g = global as any;
+  const g = globalThis as any;
   for (const prop in Object.keys(jsdomGlobals)) {
     delete g[prop];
   }

@@ -816,14 +816,14 @@ describe('integration tests', () => {
   describe('"string" rendering', () => {
     addStaticTests(renderToString as any);
 
-    describe('useRenderToString: true', () => {
+    describe('using preact-render-to-string (renderToString option)', () => {
       setAdapter(() => new Adapter({ renderToString: preactRenderToString }));
 
       // Ensure this flag works without a JSDOM environment so tear it down if
       // it exists before running these tests
       let reinitJSDOM = false;
       before(() => {
-        if (global.window) {
+        if (globalThis.window) {
           reinitJSDOM = true;
           teardownJSDOM();
         }

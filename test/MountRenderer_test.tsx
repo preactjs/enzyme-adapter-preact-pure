@@ -13,7 +13,7 @@ describe('MountRenderer', () => {
       const renderer = new MountRenderer();
       renderer.render(<div>Hello</div>);
 
-      const HTMLDivElement = (global as any).window.HTMLDivElement;
+      const HTMLDivElement = (globalThis as any).window.HTMLDivElement;
       assert.instanceOf(renderer.getNode()!.instance, HTMLDivElement);
     });
 
