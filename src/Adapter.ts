@@ -30,7 +30,7 @@ export interface PreactAdapterOptions {
   simulateEventsOnComponents?: boolean;
 
   /**
-   * An option to provide a custom string renderer the 'string' enzyme renderer
+   * An option to provide a custom string renderer for Enzyme's `string` rendering mode
    * instead of mounting into a DOM and extracting the markup. It is expected
    * that preact-render-to-string is passed here.
    */
