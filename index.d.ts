@@ -18,7 +18,7 @@ declare module 'preact' {
 declare module 'enzyme' {
   export type NodeType = 'function' | 'class' | 'host';
 
-  export type RSTNodeTypes = Exclude<ComponentChild, VNode> | RSTNode;
+  export type RSTNodeChild = Exclude<ComponentChild, VNode> | RSTNode;
 
   /**
    * A "React Standard Tree" node.
@@ -39,7 +39,7 @@ declare module 'enzyme' {
     instance: any;
 
     /** The result of the `render` function from this component. */
-    rendered: Array<RSTNodeTypes>;
+    rendered: Array<RSTNodeChild>;
   }
 
   /**
@@ -127,7 +127,7 @@ declare module 'enzyme' {
     createRenderer(options: AdapterOptions): Renderer;
     elementToNode(element: ReactElement): RSTNode;
     isValidElement(el: ReactElement): boolean;
-    nodeToElement(node: RSTNodeTypes): ReactElement | string;
+    nodeToElement(node: RSTNodeChild): ReactElement | string;
     nodeToHostNode(node: RSTNode): Node | null;
 
     // Optional methods.

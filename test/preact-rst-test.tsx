@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import type { VNode } from 'preact';
 import { Component, Fragment } from 'preact';
 import * as preact from 'preact';
-import type { NodeType, RSTNode, RSTNodeTypes } from 'enzyme';
+import type { NodeType, RSTNode, RSTNodeChild } from 'enzyme';
 
 import { getNode, rstNodeFromElement } from '../src/preact10-rst.js';
 import { getType, isRSTNode } from '../src/util.js';
@@ -431,7 +431,7 @@ describe('preact10-rst', () => {
   });
 
   describe('rstNodeFromElement', () => {
-    function stripInstances(node: RSTNodeTypes) {
+    function stripInstances(node: RSTNodeChild) {
       if (!isRSTNode(node)) {
         return node;
       }

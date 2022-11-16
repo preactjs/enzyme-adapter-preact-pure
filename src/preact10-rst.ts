@@ -7,7 +7,7 @@
  * The rendered result is converted to RST by traversing these vnode references.
  */
 
-import type { NodeType, RSTNodeTypes, RSTNode } from 'enzyme';
+import type { NodeType, RSTNodeChild, RSTNode } from 'enzyme';
 import type { Component, ComponentChild, VNode } from 'preact';
 import { isValidElement, Fragment } from 'preact';
 
@@ -41,7 +41,7 @@ function convertDOMProps(props: Props) {
 /**
  * Convert the rendered output of a vnode to RST nodes.
  */
-function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
+function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeChild[] {
   if (!nodes) {
     return [];
   }
@@ -58,7 +58,7 @@ function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
   });
 }
 
-function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
+function rstNodeFromVNode(node: VNode | null): RSTNodeChild | RSTNodeChild[] {
   if (node == null) {
     return null;
   }
@@ -115,7 +115,7 @@ function nodeTypeFromType(type: any): NodeType {
  * Convert a JSX element tree returned by Preact's `h` function into an RST
  * node.
  */
-export function rstNodeFromElement(node: ComponentChild): RSTNodeTypes {
+export function rstNodeFromElement(node: ComponentChild): RSTNodeChild {
   if (!isValidElement(node)) {
     return node;
   }

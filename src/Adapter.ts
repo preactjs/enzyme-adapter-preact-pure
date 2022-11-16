@@ -2,7 +2,7 @@ import type {
   AdapterOptions,
   MountRendererProps,
   RSTNode,
-  RSTNodeTypes,
+  RSTNodeChild,
   ShallowRendererProps,
 } from 'enzyme';
 import enzyme from 'enzyme';
@@ -82,7 +82,7 @@ export default class Adapter extends EnzymeAdapter {
     }
   }
 
-  nodeToElement(node: RSTNodeTypes): ReactElement | string {
+  nodeToElement(node: RSTNodeChild): ReactElement | string {
     if (node == null || typeof node === 'boolean') {
       return '';
     }
@@ -111,7 +111,7 @@ export default class Adapter extends EnzymeAdapter {
     return h(node.type as any, props, ...childElements) as ReactElement;
   }
 
-  nodeToHostNode(node: RSTNodeTypes): Node | null {
+  nodeToHostNode(node: RSTNodeChild): Node | null {
     return nodeToHostNode(node);
   }
 

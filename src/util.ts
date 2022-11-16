@@ -1,4 +1,4 @@
-import type { RSTNode, RSTNodeTypes } from 'enzyme';
+import type { RSTNode, RSTNodeChild } from 'enzyme';
 import type { VNode } from 'preact';
 
 export function getType(obj: Object) {
@@ -57,7 +57,7 @@ export function toArray(obj: any) {
   return Array.isArray(obj) ? obj : [obj];
 }
 
-export function isRSTNode(node: RSTNodeTypes): node is RSTNode {
+export function isRSTNode(node: RSTNodeChild): node is RSTNode {
   return (
     node != null &&
     typeof node == 'object' &&
@@ -74,7 +74,7 @@ export function isRSTNode(node: RSTNodeTypes): node is RSTNode {
  * @returns The first host node in the children of the passed in node. Will
  * return the passed in node if it is a host node
  */
-export function nodeToHostNode(node: RSTNodeTypes): Node | null {
+export function nodeToHostNode(node: RSTNodeChild): Node | null {
   if (!isRSTNode(node)) {
     // Returning `null` here causes `wrapper.text()` to return nothing for a
     // wrapper around a `Text` node. That's not intuitive perhaps, but it
