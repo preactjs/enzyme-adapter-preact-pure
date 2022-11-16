@@ -1,6 +1,7 @@
 // This `<reference ...>` directive is necessary to include the adapter's
 // extensions to types in the "preact" and "enzyme" packages.
 
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference types="enzyme-adapter-preact-pure"/>
 
 // @ts-ignore - JSDOM types are missing
@@ -16,15 +17,15 @@ const dom = new JSDOM('', {
 });
 
 // @ts-ignore
-global.Event = dom.window.Event;
+globalThis.Event = dom.window.Event;
 // @ts-ignore
-global.Node = dom.window.Node;
+globalThis.Node = dom.window.Node;
 // @ts-ignore
-global.window = dom.window;
+globalThis.window = dom.window;
 // @ts-ignore
-global.document = dom.window.document;
+globalThis.document = dom.window.document;
 // @ts-ignore
-global.requestAnimationFrame = dom.window.requestAnimationFrame;
+globalThis.requestAnimationFrame = dom.window.requestAnimationFrame;
 
 // Setup Enzyme
 configure({ adapter: new Adapter() });

@@ -1,20 +1,9 @@
-// @ts-expect-error - JSDOM types are missing
-import { JSDOM } from 'jsdom';
 import minimist from 'minimist';
+import { setupJSDOM } from './jsdom.js';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 // Setup DOM globals required by Preact rendering.
-function setupJSDOM() {
-  // Enable `requestAnimationFrame` which Preact uses for scheduling hooks.
-  const dom = new JSDOM('', { pretendToBeVisual: true });
-  const g = global as any;
-  g.Event = dom.window.Event;
-  g.Node = dom.window.Node;
-  g.window = dom.window;
-  g.document = dom.window.document;
-  g.requestAnimationFrame = dom.window.requestAnimationFrame;
-}
 setupJSDOM();
 
 // Support specifying a custom Preact library on the command line using

@@ -2,6 +2,7 @@ import type { CommonWrapper } from 'enzyme';
 import enzyme from 'enzyme';
 import { Component, Fragment, options } from 'preact';
 import * as preact from 'preact';
+import preactRenderToString from 'preact-render-to-string';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import type { ReactElement } from 'react';
 
@@ -9,6 +10,7 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
+import { setupJSDOM, teardownJSDOM } from './jsdom.js';
 
 type TestContextValue = { myTestString: string };
 
@@ -43,6 +45,8 @@ interface Wrapper extends CommonWrapper {
  * Register tests for static and interactive rendering modes.
  */
 function addStaticTests(render: (el: ReactElement) => Wrapper) {
+  const isStringRenderer = (render as any) === renderToString;
+
   it('renders a simple component', () => {
     function Button({ label }: any) {
       return <button>{label}</button>;
@@ -69,7 +73,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
     assert.equal(wrapper.html(), '<button>Click me</button>');
   });
 
-  if ((render as any) !== renderToString) {
+  if (!isStringRenderer) {
     it('can find DOM nodes by class name', () => {
       function Widget() {
         return <div class="widget">Test</div>;
@@ -112,7 +116,7 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
     });
   }
 
-  if ((render as any) !== renderToString) {
+  if (!isStringRenderer) {
     it('returns contents of fragments', () => {
       const el = (
         <div>
@@ -135,6 +139,9 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
  * Register tests for interactive rendering modes (full + shallow rendering).
  */
 function addInteractiveTests(render: typeof mount) {
+  const isMount = (render as any) === mount;
+  const isShallow = (render as any) === shallow;
+
   it('supports finding child components', () => {
     function ListItem() {
       return <li>Test</li>;
@@ -185,9 +192,9 @@ function addInteractiveTests(render: typeof mount) {
 
     // nb. The node with `undefined` type is the Text node itself.
     let expected: Array<string | preact.AnyComponent | undefined>;
-    if (render === mount) {
+    if (isMount) {
       expected = [Widget, 'div', 'span', undefined];
-    } else if ((render as any) === shallow) {
+    } else if (isShallow) {
       // Shallow rendering omits the top-level component in the output.
       expected = ['div', 'span', undefined];
     } else {
@@ -371,8 +378,7 @@ function addInteractiveTests(render: typeof mount) {
     }
 
     const wrapper = render(<Parent />);
-    const expectedText =
-      (render as any) === shallow ? '<Child />' : 'Everything is working';
+    const expectedText = isShallow ? '<Child />' : 'Everything is working';
 
     // Initial render, we should see the original content.
     assert.equal(wrapper.text(), expectedText);
@@ -416,53 +422,25 @@ function addInteractiveTests(render: typeof mount) {
   });
 }
 
+const createDefaultAdapter = () => new Adapter();
+function setAdapter(createNewAdapter: () => Adapter) {
+  beforeEach(() => {
+    configure({ adapter: createNewAdapter() });
+  });
+
+  afterEach(() => {
+    configure({ adapter: createDefaultAdapter() });
+  });
+}
+
 describe('integration tests', () => {
   before(() => {
-    configure({ adapter: new Adapter() });
+    configure({ adapter: createDefaultAdapter() });
   });
 
   describe('"mount" rendering', () => {
     addStaticTests(mount);
     addInteractiveTests(mount);
-
-    it('supports simulating events on deep Components and elements', () => {
-      function FancyButton({ onClick, children }: any) {
-        return (
-          <button type="button" onClick={onClick}>
-            {children}
-          </button>
-        );
-      }
-
-      function FancierButton({ onClick, children }: any) {
-        return <FancyButton onClick={onClick}>{children}</FancyButton>;
-      }
-
-      function App() {
-        const [count, setCount] = useState(0);
-
-        return (
-          <div>
-            <div id="count">Count: {count}</div>
-            <FancierButton onClick={() => setCount(count + 1)}>
-              Increment
-            </FancierButton>
-          </div>
-        );
-      }
-
-      const wrapper = mount(<App />, {
-        // @ts-ignore This works but types don't say so
-        adapter: new Adapter({ simulateEventsOnComponents: true }),
-      });
-      assert.equal(wrapper.find('#count').text(), 'Count: 0');
-
-      wrapper.find(FancyButton).simulate('click');
-      assert.equal(wrapper.find('#count').text(), 'Count: 1');
-
-      wrapper.find('button').simulate('click');
-      assert.equal(wrapper.find('#count').text(), 'Count: 2');
-    });
 
     it('supports retrieving elements', () => {
       // Test workaround for bug where `Adapter.nodeToElement` is called
@@ -538,6 +516,46 @@ describe('integration tests', () => {
         output,
         '<Provider value={{...}}><Component><span>override</span></Component></Provider>'
       );
+    });
+
+    describe('simulateEventsOnComponents: true', () => {
+      setAdapter(() => new Adapter({ simulateEventsOnComponents: true }));
+
+      it('supports simulating events on deep Components and elements', () => {
+        function FancyButton({ onClick, children }: any) {
+          return (
+            <button type="button" onClick={onClick}>
+              {children}
+            </button>
+          );
+        }
+
+        function FancierButton({ onClick, children }: any) {
+          return <FancyButton onClick={onClick}>{children}</FancyButton>;
+        }
+
+        function App() {
+          const [count, setCount] = useState(0);
+
+          return (
+            <div>
+              <div id="count">Count: {count}</div>
+              <FancierButton onClick={() => setCount(count + 1)}>
+                Increment
+              </FancierButton>
+            </div>
+          );
+        }
+
+        const wrapper = mount(<App />);
+        assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+        wrapper.find(FancyButton).simulate('click');
+        assert.equal(wrapper.find('#count').text(), 'Count: 1');
+
+        wrapper.find('button').simulate('click');
+        assert.equal(wrapper.find('#count').text(), 'Count: 2');
+      });
     });
   });
 
@@ -761,39 +779,64 @@ describe('integration tests', () => {
       assert.equal(wrapper.text(), 'Example');
     });
 
-    it('supports simulating events on Components (simulateEventsOnComponents: true)', () => {
-      function FancyButton({ onClick, children }: any) {
-        return (
-          <button type="button" onClick={onClick}>
-            {children}
-          </button>
-        );
-      }
+    describe('simulateEventsOnComponents: true', () => {
+      setAdapter(() => new Adapter({ simulateEventsOnComponents: true }));
 
-      function App() {
-        const [count, setCount] = useState(0);
+      it('supports simulating events on Components', () => {
+        function FancyButton({ onClick, children }: any) {
+          return (
+            <button type="button" onClick={onClick}>
+              {children}
+            </button>
+          );
+        }
 
-        return (
-          <div>
-            <div id="count">Count: {count}</div>
-            <FancyButton onClick={() => setCount(count + 1)}>
-              Increment
-            </FancyButton>
-          </div>
-        );
-      }
+        function App() {
+          const [count, setCount] = useState(0);
 
-      const wrapper = shallow(<App />, {
-        adapter: new Adapter({ simulateEventsOnComponents: true }),
+          return (
+            <div>
+              <div id="count">Count: {count}</div>
+              <FancyButton onClick={() => setCount(count + 1)}>
+                Increment
+              </FancyButton>
+            </div>
+          );
+        }
+
+        const wrapper = shallow(<App />);
+        assert.equal(wrapper.find('#count').text(), 'Count: 0');
+
+        wrapper.find(FancyButton).simulate('click');
+        assert.equal(wrapper.find('#count').text(), 'Count: 1');
       });
-      assert.equal(wrapper.find('#count').text(), 'Count: 0');
-
-      wrapper.find(FancyButton).simulate('click');
-      assert.equal(wrapper.find('#count').text(), 'Count: 1');
     });
   });
 
   describe('"string" rendering', () => {
     addStaticTests(renderToString as any);
+
+    describe('using preact-render-to-string (renderToString option)', () => {
+      setAdapter(() => new Adapter({ renderToString: preactRenderToString }));
+
+      // Ensure this flag works without a JSDOM environment so tear it down if
+      // it exists before running these tests
+      let reinitJSDOM = false;
+      before(() => {
+        if (globalThis.window) {
+          reinitJSDOM = true;
+          teardownJSDOM();
+        }
+      });
+
+      after(() => {
+        if (reinitJSDOM) {
+          setupJSDOM();
+          reinitJSDOM = false;
+        }
+      });
+
+      addStaticTests(renderToString as any);
+    });
   });
 });

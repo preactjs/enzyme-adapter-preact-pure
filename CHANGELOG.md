@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add an option (`renderToString`) to allow passing in a custom string renderer
+  to use for Enzyme's 'string' renderer instead of rendering into the DOM and
+  reading the HTML output. It is expected that `renderToString` from
+  `preact-render-to-string` is passed into this option. This change enables
+  using the string renderer in non-DOM environments and more closely matches the
+  React adapter's behavior.
+
 - Add a feature flag (`simulateEventsOnComponents`) for supporting simulating
   events on Components
   [#211](https://github.com/preactjs/enzyme-adapter-preact-pure/pull/211)
