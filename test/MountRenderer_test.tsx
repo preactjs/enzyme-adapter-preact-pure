@@ -207,7 +207,7 @@ describe('MountRenderer', () => {
         cancelable: false,
       },
     ].forEach(({ type, bubbles, cancelable }) => {
-      it('sets default event properties based on event type', () => {
+      it(`sets default event properties based on event type (${type})`, () => {
         const renderer = new MountRenderer();
         const callback = sinon.stub();
         const eventProp = 'on' + type;
