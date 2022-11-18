@@ -9,7 +9,7 @@
 
 import type { NodeType, RSTNode } from 'enzyme';
 import type { Component, VNode } from 'preact';
-import { Fragment } from 'preact';
+import { isValidElement, Fragment } from 'preact';
 
 import { childElements } from './compat.js';
 import {
@@ -113,7 +113,7 @@ export function nodeTypeFromType(type: any): NodeType {
  * node.
  */
 export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
-  if (node == null || typeof node === 'string') {
+  if (!isValidElement(node)) {
     return node;
   }
   const children = childElements(node).map(rstNodeFromElement);
