@@ -7,7 +7,7 @@ import type {
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
 import type { VNode } from 'preact';
-import { cloneElement, h } from 'preact';
+import { Fragment, cloneElement, h } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import ShallowRenderer from './ShallowRenderer.js';
@@ -16,6 +16,7 @@ import { childElements } from './compat.js';
 import { rstNodeFromElement } from './preact10-rst.js';
 import RootFinder from './RootFinder.js';
 import { nodeToHostNode } from './util.js';
+import ShallowRendererNew from './ShallowRendererNew.js';
 
 export const { EnzymeAdapter } = enzyme;
 
@@ -35,6 +36,20 @@ export interface PreactAdapterOptions {
    * that preact-render-to-string is passed here.
    */
   renderToString?: (el: VNode<any>, context: any) => string;
+
+  /**
+   * Enable a new shallow renderer that more closely matches the behavior and
+   * mechanics of React's shallow renderer, but uses Preact.
+   *
+   * The previous shallow renderer rendered components into a DOM and modified
+   * it's output so that all children return null to prevent rendering further
+   * down the tree. The new shallow renderer is a custom implementation of
+   * Preact's diffing algorithm that only shallow renders the given component
+   * and does not recurse down the VDOM tree. It's behavior more closely matches
+   * the React 16 enzyme adapter and it well suited for migrating an enzyme test
+   * suite from React to Preact.
+   */
+  useNewShallowRendering?: boolean;
 }
 
 export default class Adapter extends EnzymeAdapter {
@@ -59,6 +74,10 @@ export default class Adapter extends EnzymeAdapter {
     // Work around a bug in Enzyme where `ShallowWrapper.getElements` calls
     // the `nodeToElement` method with undefined `this`.
     this.nodeToElement = this.nodeToElement.bind(this);
+
+    if (this.preactAdapterOptions.useNewShallowRendering) {
+      this.isFragment = node => node?.type === Fragment;
+    }
   }
 
   createRenderer(options: AdapterOptions & MountRendererProps) {
@@ -73,7 +92,11 @@ export default class Adapter extends EnzymeAdapter {
           container: options.attachTo,
         });
       case 'shallow':
-        return new ShallowRenderer({ ...this.preactAdapterOptions });
+        if (this.preactAdapterOptions.useNewShallowRendering) {
+          return new ShallowRendererNew();
+        } else {
+          return new ShallowRenderer({ ...this.preactAdapterOptions });
+        }
       case 'string':
         return new StringRenderer({ ...this.preactAdapterOptions });
       default:

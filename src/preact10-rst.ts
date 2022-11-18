@@ -96,7 +96,7 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
   };
 }
 
-function nodeTypeFromType(type: any): NodeType {
+export function nodeTypeFromType(type: any): NodeType {
   if (typeof type === 'string') {
     return 'host';
   } else if (type.prototype && typeof type.prototype.render === 'function') {
