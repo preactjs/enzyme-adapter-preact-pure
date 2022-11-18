@@ -88,8 +88,11 @@ export function addStaticTests(render: (el: ReactElement) => Wrapper) {
       return <button>{label}</button>;
     }
 
-    const wrapper = mount(<Button label="Click me" />);
-    assert.equal(wrapper.html(), '<button>Click me</button>');
+    const wrapper = render(<Button label="Click me" />);
+    assert.equal(
+      wrapper.html(),
+      isStringRenderer ? 'Click me' : '<button>Click me</button>'
+    );
   });
 
   if (!isStringRenderer) {
