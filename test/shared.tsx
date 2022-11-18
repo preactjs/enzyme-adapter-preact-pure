@@ -284,16 +284,25 @@ export function addInteractiveTests(render: typeof mount) {
         super(props);
       }
 
+      shouldComponentUpdate() {
+        return true;
+      }
+      componentWillReceiveProps() {}
+      componentWillMount() {}
+      componentDidMount() {}
+      componentDidUpdate() {}
+      componentWillUnmount() {}
+
       render() {
         return <div>Test</div>;
       }
     }
-    Test.prototype.shouldComponentUpdate = sinon.stub().returns(true);
-    Test.prototype.componentWillReceiveProps = sinon.stub();
-    Test.prototype.componentWillMount = sinon.stub();
-    Test.prototype.componentDidMount = sinon.stub();
-    Test.prototype.componentDidUpdate = sinon.stub();
-    Test.prototype.componentWillUnmount = sinon.stub();
+    sinon.stub(Test.prototype, 'shouldComponentUpdate').returns(true);
+    sinon.stub(Test.prototype, 'componentWillReceiveProps');
+    sinon.stub(Test.prototype, 'componentWillMount');
+    sinon.stub(Test.prototype, 'componentDidMount');
+    sinon.stub(Test.prototype, 'componentDidUpdate');
+    sinon.stub(Test.prototype, 'componentWillUnmount');
     return Test;
   }
 
@@ -330,6 +339,9 @@ export function addInteractiveTests(render: typeof mount) {
     const allMethods = [...shouldCall, ...shouldNotCall];
 
     const wrapper = render(<Test />);
+    // TODO: Should be resetHistory instead of reset, but that breaks this test
+    // elsewhere and the adapter doesn't currently implement the correct
+    // behavior for shallow rendering
     allMethods.forEach(method => Test.prototype[method].reset());
 
     wrapper.setProps({ label: 'foo' });
@@ -341,6 +353,32 @@ export function addInteractiveTests(render: typeof mount) {
       sinon.assert.notCalled(Test.prototype[method])
     );
   });
+
+  // TODO: Add this test in the appropriate place later
+  // it('invokes componentDidMount and componentDidUpdate once', () => {
+  //   let mountCount = 0;
+  //   let updateCount = 0;
+  //   class Test extends Component<any> {
+  //     constructor(props: any) {
+  //       super(props);
+  //     }
+  //     componentDidMount() {
+  //       mountCount++;
+  //     }
+  //     componentDidUpdate() {
+  //       updateCount++;
+  //     }
+  //     render() {
+  //       return <div>Test</div>;
+  //     }
+  //   }
+  //
+  //   const wrapper = render(<Test />);
+  //   wrapper.setProps({ label: 'foo' });
+  //
+  //   assert.equal(mountCount, 1);
+  //   assert.equal(updateCount, 1);
+  // });
 
   it('invokes lifecycle hooks on unmount', () => {
     const Test = componentWithLifecycles();
