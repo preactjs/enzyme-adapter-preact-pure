@@ -7,11 +7,14 @@ import type {
   FunctionComponent,
   PreactElement,
 } from 'preact/src/internal';
-import { Component, options as rawOptions } from 'preact';
+import { Fragment, Component, options as rawOptions } from 'preact';
 
 import type { PreactComponent as ShallowRenderComponent } from './PreactShallowDiff';
 
 const options = rawOptions as Options;
+
+// This makes enzyme debug output easier to work with by giving Fragments a name that isn't minified
+Fragment.displayName = 'Fragment';
 
 /**
  * This module provides access to internal properties of Preact 10 VNodes,

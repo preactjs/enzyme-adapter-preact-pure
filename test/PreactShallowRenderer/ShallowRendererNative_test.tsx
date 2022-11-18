@@ -15,6 +15,8 @@ import {
   setAdapter,
 } from '../shared.js';
 
+const { Fragment } = preact;
+
 type TestContextValue = { myTestString: string };
 
 const TestContext = preact.createContext<TestContextValue>({
@@ -249,6 +251,77 @@ describe('integration tests', () => {
       wrapper = shallow(childrenFunc());
 
       assert.equal(wrapper.text(), 'Example');
+    });
+
+    // TODO: Consider breaking this test up & adding relevant test to other renderers
+    it('tree traversal APIs function through Fragments', () => {
+      function App() {
+        return (
+          <Fragment key="1">
+            <Fragment key="2">
+              <div key="div">
+                <Fragment key="3">
+                  <Fragment key="4">
+                    <span>Hello</span>
+                  </Fragment>
+                </Fragment>
+                <Fragment key="text">World</Fragment>
+              </div>
+            </Fragment>
+          </Fragment>
+        );
+      }
+
+      const wrapper = shallow(<App />);
+
+      const frag1 = App();
+      const frag2 = frag1.props.children;
+      const divVNode = frag2.props.children;
+      const frag3 = divVNode.props.children[0];
+      const fragText = divVNode.props.children[1];
+
+      assert.equal(frag1.key, '1');
+      assert.equal(frag2.key, '2');
+      assert.equal(divVNode.key, 'div');
+      assert.equal(frag3.key, '3');
+      assert.equal(fragText.key, 'text');
+
+      // Debug exposes root Fragment only
+      assert.equal(
+        normalizeDebugMessage(wrapper.debug()),
+        '<Fragment><div><span>Hello</span>World</div></Fragment>'
+      );
+
+      assert.deepEqual(wrapper.first().getElement().key, frag1.key);
+      assert.deepEqual(
+        wrapper.getElements().map(v => v.key),
+        [frag1.key]
+      );
+      assert.deepEqual(wrapper.get(0).key, frag1.key);
+      assert.deepEqual(wrapper.at(0).getElement().key, frag1.key);
+
+      // TODO: Difference from React => Fragments are functions
+      // assert.throws(() => wrapper.dive(), 'only be called on components');
+      // assert.throws(
+      //   () => wrapper.shallow(),
+      //   'works only with custom components'
+      // );
+
+      assert.equal(wrapper.children().length, 1);
+      assert.equal(wrapper.children().at(0).key(), 'div');
+      assert.equal(wrapper.childAt(0).key(), 'div');
+
+      assert.equal(wrapper.children().children().length, 2);
+      assert.equal(wrapper.children().children().at(0).type(), 'span');
+      // TODO: Difference from React => we return string, etc. children and don't nullify them
+      assert.equal(
+        wrapper.children().children().at(1).getElement(),
+        'World' as any
+      );
+
+      // Returns first fragment, but collapses nested fragments if
+      // Adapter.isFragment is defined
+      assert.equal(wrapper.findWhere(w => w.type() === Fragment).length, 1);
     });
 
     describe('simulateEventsOnComponents: true', () => {

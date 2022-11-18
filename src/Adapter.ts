@@ -8,7 +8,7 @@ import type {
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
 import type { VNode } from 'preact';
-import { cloneElement, h } from 'preact';
+import { Fragment, cloneElement, h } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import ShallowRenderer from './ShallowRenderer.js';
@@ -75,6 +75,10 @@ export default class Adapter extends EnzymeAdapter {
     // Work around a bug in Enzyme where `ShallowWrapper.getElements` calls
     // the `nodeToElement` method with undefined `this`.
     this.nodeToElement = this.nodeToElement.bind(this);
+
+    if (this.preactAdapterOptions.useTrueShallowRendering) {
+      this.isFragment = node => node?.type === Fragment;
+    }
   }
 
   createRenderer(options: AdapterOptions & MountRendererProps) {
