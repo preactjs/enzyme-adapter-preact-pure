@@ -55,10 +55,10 @@
     "lint-staged": "lint-staged",
     "prepublish": "rm -rf build && yarn build && yarn build-cjs",
     "pretest": "yarn build && echo '{\"type\":\"module\"}' > build/package.json",
-    "test": "nyc mocha -r build/test/init.js build/test/*.js && nyc mocha build/test/Preact10ShallowDiff",
+    "test": "nyc mocha -r build/test/init.js build/test/*.js && nyc mocha build/test/no-jsdom",
     "posttest": "rm build/package.json",
     "pretest-cjs": "yarn build-cjs",
-    "test-cjs": "nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js && nyc mocha build-cjs/test/Preact10ShallowDiff",
+    "test-cjs": "nyc mocha -r build-cjs/test/init.js build-cjs/test/*.js && nyc mocha build-cjs/test/no-jsdom",
     "test:compat": "yarn test --preact-compat-lib preact/compat",
     "prepare": "husky install"
   },
