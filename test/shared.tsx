@@ -132,7 +132,10 @@ export function addStaticTests(render: (el: ReactElement) => Wrapper) {
 /**
  * Register tests for interactive rendering modes (full + shallow rendering).
  */
-export function addInteractiveTests(render: typeof mount) {
+export function addInteractiveTests(
+  render: typeof mount,
+  isNewShallowRender = false
+) {
   const isMount = (render as any) === mount;
   const isShallow = (render as any) === shallow;
 
@@ -254,16 +257,25 @@ export function addInteractiveTests(render: typeof mount) {
         super(props);
       }
 
+      shouldComponentUpdate() {
+        return true;
+      }
+      componentWillReceiveProps() {}
+      componentWillMount() {}
+      componentDidMount() {}
+      componentDidUpdate() {}
+      componentWillUnmount() {}
+
       render() {
         return <div>Test</div>;
       }
     }
-    Test.prototype.shouldComponentUpdate = sinon.stub().returns(true);
-    Test.prototype.componentWillReceiveProps = sinon.stub();
-    Test.prototype.componentWillMount = sinon.stub();
-    Test.prototype.componentDidMount = sinon.stub();
-    Test.prototype.componentDidUpdate = sinon.stub();
-    Test.prototype.componentWillUnmount = sinon.stub();
+    sinon.stub(Test.prototype, 'shouldComponentUpdate').returns(true);
+    sinon.stub(Test.prototype, 'componentWillReceiveProps');
+    sinon.stub(Test.prototype, 'componentWillMount');
+    sinon.stub(Test.prototype, 'componentDidMount');
+    sinon.stub(Test.prototype, 'componentDidUpdate');
+    sinon.stub(Test.prototype, 'componentWillUnmount');
     return Test;
   }
 
@@ -300,7 +312,23 @@ export function addInteractiveTests(render: typeof mount) {
     const allMethods = [...shouldCall, ...shouldNotCall];
 
     const wrapper = render(<Test />);
-    allMethods.forEach(method => Test.prototype[method].reset());
+    if (isNewShallowRender) {
+      allMethods.forEach(method => Test.prototype[method].resetHistory());
+    } else {
+      // Calling reset here not only resets call counts, but also any behaviors
+      // setup, such as `.returns(true)`. Calling reset here, removes our
+      // `.returns(true)` setup on shouldComponentUpdate, causing the method to
+      // return `undefined`. In shallow rendering, Enzyme spies on the return
+      // value of `sCU` and chooses to invoke lifecycle methods based on its
+      // return value. Because it returns `undefined` in this case, Enzyme skips
+      // invoking `cDU`.
+      //
+      // In the default shallow renderer, Preact invokes lifecycles. In this
+      // test, once `.reset()` is called, `.sCU` returns `undefined` and so
+      // enzyme does not invoke `cDU`. In a real test environment, cDU would be
+      // invoked twice. A simpler test that doesn't use spies can see this behavior.
+      allMethods.forEach(method => Test.prototype[method].reset());
+    }
 
     wrapper.setProps({ label: 'foo' });
 
@@ -325,7 +353,7 @@ export function addInteractiveTests(render: typeof mount) {
     const allMethods = [...shouldCall, ...shouldNotCall];
 
     const wrapper = render(<Test />);
-    allMethods.forEach(method => Test.prototype[method].reset());
+    allMethods.forEach(method => Test.prototype[method].resetHistory());
 
     const unmountCallback = sinon.stub();
     (options as any).unmount = unmountCallback;
