@@ -34,7 +34,7 @@ describe('integration tests', () => {
 
   describe('new "shallow" rendering', () => {
     addStaticTests(shallow);
-    addInteractiveTests(shallow as any);
+    addInteractiveTests(shallow as any, true);
 
     it('does not render child components', () => {
       function Child() {
