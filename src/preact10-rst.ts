@@ -138,7 +138,7 @@ export function rstNodeFromElement(node: ComponentChild): RSTNodeChild {
     props,
     key: node.key || null,
     ref,
-    instance: null,
+    instance: getComponent(node),
     rendered: children,
   };
 }

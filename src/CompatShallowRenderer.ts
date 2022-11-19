@@ -3,7 +3,7 @@ import type {
   RSTNode,
   ShallowRenderOptions,
 } from 'enzyme';
-import type { VNode } from 'preact';
+import type { ComponentClass, VNode } from 'preact';
 import { isValidElement } from 'preact';
 
 import type { EventDetails } from './MountRenderer.js';
@@ -35,14 +35,28 @@ export default class CompatShallowRenderer implements AbstractShallowRenderer {
   }
 
   simulateError(nodeHierarchy: RSTNode[], rootNode: RSTNode, error: any) {
-    const instance = this._renderer.getMountedInstance();
-    const catchingType = this._cachedNode?.type;
+    nodeHierarchy = nodeHierarchy.concat(
+      rstNodeFromElement(this._cachedNode) as RSTNode
+    );
 
-    const componentDidCatch = instance?.componentDidCatch;
-    const getDerivedStateFromError = (instance as any)
+    const isErrorBoundary = ({ instance: elInstance, type }: RSTNode) => {
+      if (
+        typeof type === 'function' &&
+        (type as ComponentClass).getDerivedStateFromError
+      ) {
+        return true;
+      }
+      return elInstance && elInstance.componentDidCatch;
+    };
+
+    const { instance: catchingInstance, type: catchingType } =
+      nodeHierarchy.find(isErrorBoundary) || {};
+
+    const componentDidCatch = catchingInstance?.componentDidCatch;
+    const getDerivedStateFromError = (catchingType as ComponentClass)
       ?.getDerivedStateFromError;
     if (
-      !instance ||
+      !catchingInstance ||
       !catchingType ||
       (!componentDidCatch && !getDerivedStateFromError)
     ) {
@@ -51,10 +65,10 @@ export default class CompatShallowRenderer implements AbstractShallowRenderer {
 
     if (getDerivedStateFromError) {
       const stateUpdate = getDerivedStateFromError.call(catchingType, error);
-      instance.setState(stateUpdate);
+      catchingInstance.setState(stateUpdate);
     }
     if (componentDidCatch) {
-      componentDidCatch.call(instance, error, {
+      componentDidCatch.call(catchingInstance, error, {
         componentStack: 'Test component stack',
       });
     }
