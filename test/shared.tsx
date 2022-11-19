@@ -199,7 +199,14 @@ export function addInteractiveTests(
     }
     const wrapper = render(<List />);
     const item = wrapper.find('ListItem');
-    assert.deepEqual(item.props(), { label: 'test', children: [] });
+    if (isNewShallowRender) {
+      // The new ShallowRenderer preserves VNode props and doesn't alter them.
+      // In this case, the ListItem VNode is not given an props for children
+      // since it doesn't have any children defined in JSX
+      assert.deepEqual(item.props(), { label: 'test' });
+    } else {
+      assert.deepEqual(item.props(), { label: 'test', children: [] });
+    }
   });
 
   it('can traverse a tree with text nodes', () => {
