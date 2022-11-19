@@ -135,7 +135,7 @@ export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
     props,
     key: node.key || null,
     ref,
-    instance: null,
+    instance: getComponent(node),
     rendered: children,
   };
 }
