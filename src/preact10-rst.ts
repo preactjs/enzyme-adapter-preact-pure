@@ -24,13 +24,18 @@ import { getRealType } from './shallow-render-utils.js';
 type Props = { [prop: string]: any };
 type RSTNodeTypes = RSTNode | string | null;
 
-function stripSpecialProps(props: Props) {
-  const { children, key, ref, ...otherProps } = props;
-  return otherProps;
+function stripSpecialProps(props: Props, preserveChildrenProp = false) {
+  if (preserveChildrenProp) {
+    const { key, ref, ...otherProps } = props;
+    return otherProps;
+  } else {
+    const { children, key, ref, ...otherProps } = props;
+    return otherProps;
+  }
 }
 
-function convertDOMProps(props: Props) {
-  const srcProps = stripSpecialProps(props);
+function convertDOMProps(props: Props, preserveChildrenProp = false) {
+  const srcProps = stripSpecialProps(props, preserveChildrenProp);
   const converted: Props = {};
   Object.keys(srcProps).forEach(srcProp => {
     const destProp = srcProp === 'class' ? 'className' : srcProp;
@@ -112,19 +117,24 @@ export function nodeTypeFromType(type: any): NodeType {
  * Convert a JSX element tree returned by Preact's `h` function into an RST
  * node.
  */
-export function rstNodeFromElement(node: VNode | null | string): RSTNodeTypes {
+export function rstNodeFromElement(
+  node: VNode | null | string,
+  preserveChildrenProp = false
+): RSTNodeTypes {
   if (!isValidElement(node)) {
     return node;
   }
-  const children = childElements(node).map(rstNodeFromElement);
+  const children = childElements(node).map(child =>
+    rstNodeFromElement(child, preserveChildrenProp)
+  );
   const nodeType = nodeTypeFromType(node.type);
 
   let props = {};
   if (typeof node.props === 'object' && node.props) {
     props =
       nodeType === 'host'
-        ? convertDOMProps(node.props)
-        : stripSpecialProps(node.props);
+        ? convertDOMProps(node.props, preserveChildrenProp)
+        : stripSpecialProps(node.props, preserveChildrenProp);
   }
 
   const ref = node.ref || null;

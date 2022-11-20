@@ -142,7 +142,10 @@ export default class Adapter extends EnzymeAdapter {
   }
 
   elementToNode(el: ReactElement): RSTNode {
-    return rstNodeFromElement(el as VNode) as RSTNode;
+    return rstNodeFromElement(
+      el as VNode,
+      this.preactAdapterOptions.useNewShallowRendering ?? false
+    ) as RSTNode;
   }
 
   // This function is only called during shallow rendering
