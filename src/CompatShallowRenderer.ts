@@ -107,8 +107,8 @@ export default class CompatShallowRenderer implements AbstractShallowRenderer {
       ref: this._cachedNode.ref,
       instance: this._renderer.getMountedInstance(),
       rendered: Array.isArray(output)
-        ? output.flat().map(el => rstNodeFromElement(el))
-        : [rstNodeFromElement(output)],
+        ? output.flat().map(el => rstNodeFromElement(el, true))
+        : [rstNodeFromElement(output, true)],
     };
   }
 
