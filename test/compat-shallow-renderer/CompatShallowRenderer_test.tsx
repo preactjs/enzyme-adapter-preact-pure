@@ -320,7 +320,7 @@ describe('integration tests', () => {
       assert.deepEqual(wrapper.at(0).getElement().key, frag1.key);
     });
 
-    it('children() hides root Fragments', () => {
+    it('children() hides all Fragments', () => {
       function App() {
         return (
           <Fragment key="1">
