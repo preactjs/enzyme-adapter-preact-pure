@@ -386,5 +386,63 @@ describe('integration tests', () => {
       // Adapter.isFragment is defined
       assert.equal(wrapper.findWhere(w => w.type() === Fragment).length, 1);
     });
+
+    it('supports update, setState, and setProps on Components that return Fragments with multiple children', () => {
+      function Modal({ isOpen }: { isOpen: boolean }) {
+        return <div>{isOpen ? 'open' : 'closed'}</div>;
+      }
+
+      class App extends preact.Component<
+        { text?: string },
+        { open: boolean; count: number }
+      > {
+        static defaultProps = { text: 'Toggle' };
+
+        constructor() {
+          super();
+          this.state = { open: false, count: 0 };
+        }
+
+        toggle = () => {
+          this.setState(s => ({ open: !s.open }));
+        };
+
+        render() {
+          return (
+            <>
+              <button
+                type="button"
+                onClick={this.toggle}
+                data-count={this.state.count}
+              >
+                {this.props.text}
+              </button>
+              <Modal isOpen={this.state.open} />
+            </>
+          );
+        }
+      }
+
+      const wrapper = shallow(<App />);
+      const getInstance = () => wrapper.instance() as App;
+
+      assert.equal(wrapper.find('button').text(), 'Toggle');
+      assert.equal(wrapper.find(Modal).props().isOpen, false);
+
+      getInstance().toggle();
+      wrapper.update();
+      assert.equal(wrapper.find(Modal).props().isOpen, true);
+
+      getInstance().toggle();
+      wrapper.update();
+      assert.equal(wrapper.find(Modal).props().isOpen, false);
+
+      wrapper.setState({ count: 10 });
+      const buttonProps = wrapper.find('button').props() as any;
+      assert.equal(buttonProps['data-count'], 10);
+
+      wrapper.setProps({ text: 'Open' });
+      assert.equal(wrapper.find('button').text(), 'Open');
+    });
   });
 });
