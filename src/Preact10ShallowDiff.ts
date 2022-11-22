@@ -139,7 +139,7 @@ export default class Preact10ShallowDiff {
 
   static current: Preact10ShallowDiff | null = null;
 
-  private _oldVNode: ComponentVNode | null = null;
+  private _prevElement: ComponentVNode | null = null;
   private _componentInstance: ShallowDiffComponent | null = null;
   private _rendered: ComponentChild = null;
   private _memoRendered: ComponentVNode | null = null;
@@ -163,8 +163,15 @@ export default class Preact10ShallowDiff {
     if (Preact10ShallowDiff.current) {
       return;
     }
-    if (this._oldVNode != null && this._oldVNode.type !== element.type) {
+
+    let oldVNode: ComponentVNode;
+    if (this._prevElement?.type === element.type) {
+      oldVNode = this._prevElement;
+    } else if (this._memoRendered?.type === element.type) {
+      oldVNode = this._memoRendered;
+    } else {
       this._reset();
+      oldVNode = {} as any;
     }
 
     Preact10ShallowDiff.current = this;
@@ -173,16 +180,23 @@ export default class Preact10ShallowDiff {
       const commitQueue: any[] = [];
       const renderResult = this._diffComponent(
         element,
-        this._oldVNode ?? ({} as ComponentVNode),
+        oldVNode,
         context,
         commitQueue
       );
       commitRoot(commitQueue, element);
 
-      this._componentInstance = getComponent(element) as ShallowDiffComponent;
+      this._componentInstance = getComponent(
+        this._memoRendered ?? element
+      ) as ShallowDiffComponent;
       this._componentInstance._preact10ShallowDiff = this;
       this._rendered = renderResult;
-      this._oldVNode = element;
+
+      if (this._memoRendered?.type === element.type) {
+        this._memoRendered = element;
+      } else {
+        this._prevElement = element;
+      }
     } finally {
       Preact10ShallowDiff.current = null;
     }
@@ -193,8 +207,12 @@ export default class Preact10ShallowDiff {
   public unmount() {
     Preact10ShallowDiff.current = this;
 
-    if (this._oldVNode) {
-      unmount(this._oldVNode);
+    if (this._prevElement) {
+      unmount(this._prevElement);
+    }
+
+    if (this._memoRendered) {
+      unmount(this._memoRendered);
     }
 
     Preact10ShallowDiff.current = null;
@@ -202,7 +220,7 @@ export default class Preact10ShallowDiff {
   }
 
   private _reset() {
-    this._oldVNode = null;
+    this._prevElement = null;
     this._componentInstance = null;
     this._rendered = null;
     this._memoRendered = null;
