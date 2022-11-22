@@ -163,19 +163,36 @@ export default class Preact10ShallowDiff {
       return;
     }
 
+    // React's memo function wraps a component. It doesn't create a new VNode in
+    // the virtual tree. To be compatible with React's shallow renderer, we'll
+    // try to mimic this behavior so shallow enzyme tests don't need to be aware
+    // of this subtle difference between Preact and React. Further, how Preact
+    // implements Memo today, may change in the future so we'll try to avoid
+    // exposing that implementation detail to users.
+    //
+    // To mimic React's behavior here, we'll render through memo components. If
+    // `render` is given an element representing a Memoed component, we will
+    // render Memo and the component that it memos (assuming the Memo doesn't
+    // instruct us to bail out and stop). The public methods on this class
+    // should never return references to the Memo component, but always the
+    // component that it is memoizing.
+
     let i = 0;
     const commitQueue: any[] = [];
     const newRenderedVNodes: ComponentVNode[] = [];
     const newRenderResults: ComponentChild[] = [];
 
-    // If we previously rendered VNodes, determine if the given element to
-    // rerender is in this list of previously rendered VNodes. If so, resume
-    // rendering from that VNode by pre-populating renderedVNodes and
-    // renderResults with the elements/results that came before the given VNode.
-    //
-    // If this is a brand new VNode (i.e. there is no matching type), then reset
-    // everything and start a brand new render
     if (this._renderedVNodes.length > 0) {
+      // If we previously rendered VNodes, determine if the given element to
+      // rerender is in this list of previously rendered VNodes. If so, resume
+      // rendering from that VNode by pre-populating newRenderedVNodes and
+      // newRenderResults with the elements/results that came before the given
+      // VNode. This can happen if someone using enzyme calls `wrapper.setState`
+      // on a component that was wrapped in memo.
+      //
+      // If this is a brand new VNode (i.e. there is no matching type), then
+      // reset everything and start a brand new render.
+
       const matchingIndex = this._renderedVNodes.findIndex(
         el => el.type === element.type
       );
@@ -191,6 +208,7 @@ export default class Preact10ShallowDiff {
       }
     }
 
+    // We'll start rendering with the passed in VNode (a.k.a. element)
     let newVNode: ComponentVNode<any> = element;
     let renderResult: ComponentChild | typeof bailoutSymbol;
 
@@ -220,7 +238,7 @@ export default class Preact10ShallowDiff {
           newVNode = renderResult;
         } else {
           throw new Error(
-            `Memo rendered a non-component element. Only memo'ed components is currently supported for shallow rendering`
+            `Memo rendered a non-component element. Only memoed components is currently supported for shallow rendering`
           );
         }
 
@@ -251,6 +269,7 @@ export default class Preact10ShallowDiff {
       Preact10ShallowDiff.current = null;
     }
 
+    // Call any queued up lifecycle methods
     commitRoot(commitQueue, newRenderedVNodes[0]);
 
     // The last rendered VNode is the memoed component
