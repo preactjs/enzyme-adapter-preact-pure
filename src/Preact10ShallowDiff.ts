@@ -172,7 +172,14 @@ export default class Preact10ShallowDiff {
     const renderedVNodes: ComponentVNode[] = [];
     const renderResults: ComponentChild[] = [];
 
-    if (this._renderedVNodes.length > 0) {
+    // If we previously rendered VNodes, determine if the given element to
+    // rerender is in this list of previously rendered VNodes. If so, resume
+    // rendering from that VNode by pre-populating renderedVNodes and
+    // renderResults with the elements/results that came before the given VNode.
+    //
+    // If this is a brand new VNode (i.e. there is no matching type), then reset
+    // everything and start a brand new render
+    if (prevRenderedVNodes.length > 0) {
       const matchingElementIndex = this._renderedVNodes.findIndex(
         el => isValidElement(el) && el.type === element.type
       );
@@ -182,6 +189,8 @@ export default class Preact10ShallowDiff {
         prevRenderedVNodes.splice(0);
         prevRenderResults.splice(0);
       } else {
+        // Update our index with the index of the given element and pre-populate
+        // renderedVNodes and renderResults with the items before this VNode
         i = matchingElementIndex;
         renderedVNodes.push(
           ...prevRenderedVNodes.slice(0, matchingElementIndex)
@@ -196,6 +205,7 @@ export default class Preact10ShallowDiff {
     let newVNode = element;
 
     try {
+      // First render through any memo components
       while (isMemo(newVNode)) {
         const oldVNode = prevRenderedVNodes[i] ?? {};
         renderedVNodes.push(newVNode);
@@ -225,6 +235,9 @@ export default class Preact10ShallowDiff {
       }
 
       if (!bailedOut) {
+        // If the parent memo components did not bail out, then render the inner
+        // component. If one of them bailed out, then skip this render. The bail
+        // out code above handled updating renderedVNodes and renderResults
         const oldVNode = prevRenderedVNodes[i] ?? {};
         renderedVNodes.push(newVNode);
         const renderResult = diffComponent(
