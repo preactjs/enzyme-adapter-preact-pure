@@ -1,4 +1,4 @@
-import type { VNode, ComponentChild, JSX } from 'preact';
+import type { ComponentChild, JSX } from 'preact';
 import type {
   VNode as InternalVNode,
   Component as InternalComponentType,
@@ -25,6 +25,10 @@ import { getComponent } from './preact10-internals.js';
 
 const options = rawOptions as Options;
 
+interface ElementVNode<P = any> extends InternalVNode<P> {
+  type: string;
+}
+
 interface ClassComponentVNode<P = any> extends InternalVNode<P> {
   type: ComponentClass<P>;
 }
@@ -36,6 +40,8 @@ interface FunctionComponentVNode<P = any> extends InternalVNode<P> {
 type ComponentVNode<P = any> =
   | ClassComponentVNode<P>
   | FunctionComponentVNode<P>;
+
+type VNode<P = any> = ElementVNode<P> | ComponentVNode<P>;
 
 interface ShallowDiffComponent<P = any> extends Component<P> {
   // Custom property for the Shallow renderer
@@ -136,7 +142,7 @@ export default class Preact10ShallowDiff {
   private _oldVNode: ComponentVNode | null = null;
   private _componentInstance: ShallowDiffComponent | null = null;
   private _rendered: ComponentChild = null;
-  private _memoResultStack: any[] = [];
+  private _memoRendered: ComponentVNode | null = null;
 
   constructor() {
     installOptionsForShallowDiff();
@@ -169,8 +175,7 @@ export default class Preact10ShallowDiff {
         element,
         this._oldVNode ?? ({} as ComponentVNode),
         context,
-        commitQueue,
-        this._rendered
+        commitQueue
       );
       commitRoot(commitQueue, element);
 
@@ -200,8 +205,7 @@ export default class Preact10ShallowDiff {
     this._oldVNode = null;
     this._componentInstance = null;
     this._rendered = null;
-
-    this._memoResultStack = [];
+    this._memoRendered = null;
 
     Preact10ShallowDiff.current = null;
   }
@@ -211,42 +215,44 @@ export default class Preact10ShallowDiff {
     newVNode: ComponentVNode<any>,
     oldVNode: ComponentVNode<any>,
     globalContext: any,
-    commitQueue: any[],
-    prevRenderResult: any
+    commitQueue: any[]
   ) {
-    let renderResult = diffComponent(
-      newVNode,
-      oldVNode,
-      globalContext,
-      commitQueue,
-      prevRenderResult
-    );
+    let renderResult: ComponentChild | typeof bailoutSymbol;
+    if (isMemo(newVNode)) {
+      renderResult = diffComponent(
+        newVNode,
+        oldVNode,
+        globalContext,
+        commitQueue
+      );
 
-    while (isMemo(newVNode)) {
-      const prevMemoResult = this._memoResultStack.pop();
-      if (prevMemoResult === renderResult) {
-        return this._oldVNode;
+      if (renderResult == bailoutSymbol) {
+        return this._rendered;
+      }
+
+      if (isComponentVNode(renderResult)) {
+        oldVNode = this._memoRendered ?? ({} as any);
+        this._memoRendered = newVNode = renderResult;
       } else {
-        newVNode = renderResult;
-        oldVNode = prevMemoResult ?? {};
-        prevRenderResult = this._memoResultStack.length
-          ? this._memoResultStack[this._memoResultStack.length - 1]
-          : null;
-
-        renderResult = diffComponent(
-          newVNode,
-          oldVNode,
-          globalContext,
-          commitQueue,
-          prevRenderResult
+        throw new Error(
+          `Memo rendered a non-component element. Only memo'ed components is currently supported for shallow rendering`
         );
-
-        this._memoResultStack.push(renderResult);
       }
     }
 
-    return renderResult;
+    renderResult = diffComponent(
+      newVNode,
+      oldVNode,
+      globalContext,
+      commitQueue
+    );
+
+    return renderResult === bailoutSymbol ? this._rendered : renderResult;
   }
+}
+
+function isComponentVNode<P = any>(element: any): element is ComponentVNode<P> {
+  return isValidElement(element) && typeof element.type === 'function';
 }
 
 function assertIsComponentVNode(
@@ -263,7 +269,7 @@ function assertIsComponentVNode(
   }
 
   // Show a special message for host elements since it's a common case.
-  if (!(typeof element.type !== 'string')) {
+  if (typeof element.type === 'string') {
     throw new Error(
       `Preact10ShallowDiff render(): Shallow rendering works only with custom components, not primitives (${element.type}). Instead of calling \`.render(el)\` and inspecting the rendered output, look at \`el.props\` directly instead.`
     );
@@ -295,6 +301,9 @@ function isMemo(node: VNode) {
   return false;
 }
 
+/** Symbol to return if a component indicates it should not update */
+const bailoutSymbol = Symbol('Preact10ShallowDiff bailout');
+
 /**
  * Shallowly diff a component. Much of this function is copied directly from the
  * Preact 10 source. Differences to the original source are commented.
@@ -303,8 +312,7 @@ function diffComponent(
   newVNode: ComponentVNode,
   oldVNode: ComponentVNode,
   globalContext: any,
-  commitQueue: Component[],
-  prevRenderResult: any
+  commitQueue: Component[]
 ) {
   /* eslint-disable */
   let tmp,
@@ -423,7 +431,7 @@ function diffComponent(
       }
 
       // break outer;
-      return prevRenderResult; // === SHALLOW DIFF CHANGE: return previous result
+      return bailoutSymbol; // === SHALLOW DIFF CHANGE: return bailout symbol
     }
 
     if (c.componentWillUpdate != null) {
