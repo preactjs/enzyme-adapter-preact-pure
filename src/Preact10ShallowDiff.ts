@@ -139,7 +139,6 @@ export default class Preact10ShallowDiff {
 
   static current: Preact10ShallowDiff | null = null;
 
-  private _oldVNode: ComponentVNode | null = null;
   private _componentInstance: ShallowDiffComponent | null = null;
   private _rendered: ComponentChild = null;
   private _renderedVNodes: ComponentVNode[] = [];
@@ -173,7 +172,7 @@ export default class Preact10ShallowDiff {
     const renderedVNodes: ComponentVNode[] = [];
     const renderResults: ComponentChild[] = [];
 
-    if (this._oldVNode != null) {
+    if (this._renderedVNodes.length > 0) {
       const matchingElementIndex = this._renderedVNodes.findIndex(
         el => isValidElement(el) && el.type === element.type
       );
@@ -262,7 +261,6 @@ export default class Preact10ShallowDiff {
     this._renderedVNodes = renderedVNodes;
     this._renderResults = renderResults;
 
-    this._oldVNode = renderedVNodes[0];
     this._rendered = renderResults[renderResults.length - 1];
 
     return this.getRenderOutput();
@@ -271,8 +269,10 @@ export default class Preact10ShallowDiff {
   public unmount() {
     Preact10ShallowDiff.current = this;
 
-    if (this._oldVNode) {
-      unmount(this._oldVNode);
+    if (this._renderedVNodes.length > 0) {
+      for (const vnode of this._renderedVNodes) {
+        unmount(vnode);
+      }
     }
 
     Preact10ShallowDiff.current = null;
@@ -280,7 +280,6 @@ export default class Preact10ShallowDiff {
   }
 
   private _reset() {
-    this._oldVNode = null;
     this._componentInstance = null;
     this._rendered = null;
 
