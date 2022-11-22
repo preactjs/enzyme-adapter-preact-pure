@@ -136,7 +136,6 @@ export default class Preact10ShallowDiff {
   private _oldVNode: ComponentVNode | null = null;
   private _componentInstance: ShallowDiffComponent | null = null;
   private _rendered: ComponentChild = null;
-  private _commitQueue: any[] = [];
   private _memoResultStack: any[] = [];
 
   constructor() {
@@ -165,15 +164,15 @@ export default class Preact10ShallowDiff {
     Preact10ShallowDiff.current = this;
 
     try {
-      this._commitQueue = [];
+      const commitQueue: any[] = [];
       const renderResult = this._diffComponent(
         element,
         this._oldVNode ?? ({} as ComponentVNode),
         context,
-        this._commitQueue,
+        commitQueue,
         this._rendered
       );
-      this._commitRoot(element);
+      commitRoot(commitQueue, element);
 
       this._componentInstance = getComponent(element) as ShallowDiffComponent;
       this._componentInstance._preact10ShallowDiff = this;
@@ -202,7 +201,6 @@ export default class Preact10ShallowDiff {
     this._componentInstance = null;
     this._rendered = null;
 
-    this._commitQueue = [];
     this._memoResultStack = [];
 
     Preact10ShallowDiff.current = null;
@@ -248,11 +246,6 @@ export default class Preact10ShallowDiff {
     }
 
     return renderResult;
-  }
-
-  private _commitRoot(newVNode: ComponentVNode<any>) {
-    commitRoot(this._commitQueue, newVNode);
-    this._commitQueue = []; // Clear queue after committing
   }
 }
 
