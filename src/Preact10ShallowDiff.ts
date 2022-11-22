@@ -193,6 +193,8 @@ export default class Preact10ShallowDiff {
     } else if (this._prevElement?.type === element.type) {
       oldVNode = this._prevElement;
     } else {
+      // No matching element was found or this is the first render. Start with a
+      // fresh state and reset the renderer.
       this._reset();
       oldVNode = {} as any;
     }
@@ -244,7 +246,6 @@ export default class Preact10ShallowDiff {
     Preact10ShallowDiff.current = null;
   }
 
-  /** Diff a VNode and recurse through any Memo components */
   private _diffComponent(
     newVNode: ComponentVNode<any>,
     oldVNode: ComponentVNode<any>,
@@ -261,11 +262,11 @@ export default class Preact10ShallowDiff {
     // To mimic React's behavior here, we'll render through memo components. If
     // `render` is given an element representing a Memoed component, we will
     // render Memo and the component that it memos (assuming the Memo doesn't
-    // instruct us to bail out and stop). The public methods on this class
-    // should never return references to the Memo component, but always the
-    // component that it is memoizing.
+    // instruct us to skip updating). The public methods on this class should
+    // never return references to the Memo component, but always the component
+    // that it is memoizing.
 
-    let renderResult: ComponentChild | typeof bailoutSymbol;
+    let renderResult: ComponentChild | typeof skipUpdateSymbol;
     if (isMemo(newVNode)) {
       this._memoElement = newVNode;
       renderResult = diffComponent(
@@ -275,7 +276,7 @@ export default class Preact10ShallowDiff {
         commitQueue
       );
 
-      if (renderResult == bailoutSymbol) {
+      if (renderResult == skipUpdateSymbol) {
         // The memo component told us not to update, so return the result of the
         // previous render
         return this._rendered;
@@ -303,7 +304,7 @@ export default class Preact10ShallowDiff {
 
     // If diffing this component told us not to update, then return the result
     // of the previous render. Else, return the result of the diff
-    return renderResult === bailoutSymbol ? this._rendered : renderResult;
+    return renderResult === skipUpdateSymbol ? this._rendered : renderResult;
   }
 }
 
@@ -358,7 +359,7 @@ function isMemo(node: VNode) {
 }
 
 /** Symbol to return if a component indicates it should not update */
-const bailoutSymbol = Symbol('Preact10ShallowDiff bailout');
+const skipUpdateSymbol = Symbol('Preact10ShallowDiff skip update');
 
 /**
  * Shallowly diff a component. Much of this function is copied directly from the
@@ -487,7 +488,7 @@ function diffComponent(
       }
 
       // break outer;
-      return bailoutSymbol; // === SHALLOW DIFF CHANGE: return bailout symbol
+      return skipUpdateSymbol; // === SHALLOW DIFF CHANGE: return skip update symbol
     }
 
     if (c.componentWillUpdate != null) {
