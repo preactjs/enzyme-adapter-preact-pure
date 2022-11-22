@@ -520,3 +520,64 @@ export function setAdapter(createNewAdapter: () => Adapter) {
     configure({ adapter: createDefaultAdapter() });
   });
 }
+
+const allLifecycleMethods = [
+  'componentWillMount',
+  'shouldComponentUpdate',
+  'componentWillReceiveProps',
+  'componentWillUpdate',
+  'componentDidMount',
+  'componentDidUpdate',
+  'componentWillUnmount',
+];
+
+export function createLifecycleComponent(displayName = 'SomeComponent') {
+  class SomeComponent extends Component<{ name?: string }> {
+    shouldComponentUpdate() {
+      return true;
+    }
+    componentWillReceiveProps() {}
+    componentWillMount() {}
+    componentWillUpdate() {}
+    componentDidMount() {}
+    componentDidUpdate() {}
+    componentWillUnmount() {}
+
+    render() {
+      return <div>Hello {this.props.name ?? displayName}</div>;
+    }
+  }
+
+  SomeComponent.displayName = displayName;
+
+  sinon.stub(SomeComponent.prototype, 'shouldComponentUpdate').returns(true);
+  sinon.stub(SomeComponent.prototype, 'componentWillReceiveProps');
+  sinon.stub(SomeComponent.prototype, 'componentWillMount');
+  sinon.stub(SomeComponent.prototype, 'componentWillUpdate');
+  sinon.stub(SomeComponent.prototype, 'componentDidMount');
+  sinon.stub(SomeComponent.prototype, 'componentDidUpdate');
+  sinon.stub(SomeComponent.prototype, 'componentWillUnmount');
+
+  return SomeComponent;
+}
+
+export const expectLifecycleCalled =
+  (SomeComponent: any) => (methodName: string) => {
+    const proto = SomeComponent.prototype as any;
+    sinon.assert.calledOnce(proto[methodName]);
+  };
+
+export const expectLifecycleNotCalled =
+  (SomeComponent: any) => (methodName: string) => {
+    const proto = SomeComponent.prototype as any;
+    sinon.assert.notCalled(proto[methodName]);
+  };
+
+export function resetLifecycleHistory(
+  SomeComponent: any,
+  lifecycleMethods = allLifecycleMethods
+) {
+  lifecycleMethods.forEach(method =>
+    SomeComponent.prototype[method].resetHistory()
+  );
+}

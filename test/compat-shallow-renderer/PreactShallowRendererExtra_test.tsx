@@ -4,10 +4,15 @@
 
 import * as preact from 'preact/compat';
 import type { ComponentType } from 'preact';
-import sinon from 'sinon';
 
 import PreactShallowRenderer from '../../src/compat-shallow-renderer/PreactShallowRenderer.js';
 import { expect, installVNodeTestHook } from './utils.js';
+import {
+  createLifecycleComponent,
+  expectLifecycleCalled,
+  expectLifecycleNotCalled,
+  resetLifecycleHistory,
+} from '../shared.js';
 
 const { Component, memo: realMemo } = preact;
 const createRenderer = PreactShallowRenderer.createRenderer;
@@ -18,60 +23,6 @@ function memo<T extends ComponentType<any>>(component: T): T {
 
 describe('PreactShallowRenderer extra', () => {
   installVNodeTestHook();
-
-  function createLifecycleComponent(displayName = 'SomeComponent') {
-    class SomeComponent extends Component<{ name?: string }> {
-      shouldComponentUpdate() {
-        return true;
-      }
-      componentWillReceiveProps() {}
-      componentWillMount() {}
-      componentWillUpdate() {}
-      componentDidMount() {}
-      componentDidUpdate() {}
-      componentWillUnmount() {}
-
-      render() {
-        return <div>Hello {this.props.name ?? displayName}</div>;
-      }
-    }
-
-    SomeComponent.displayName = displayName;
-
-    sinon.stub(SomeComponent.prototype, 'shouldComponentUpdate').returns(true);
-    sinon.stub(SomeComponent.prototype, 'componentWillReceiveProps');
-    sinon.stub(SomeComponent.prototype, 'componentWillMount');
-    sinon.stub(SomeComponent.prototype, 'componentWillUpdate');
-    sinon.stub(SomeComponent.prototype, 'componentDidMount');
-    sinon.stub(SomeComponent.prototype, 'componentDidUpdate');
-    sinon.stub(SomeComponent.prototype, 'componentWillUnmount');
-
-    return SomeComponent;
-  }
-
-  const expectLifecycleCalled =
-    (SomeComponent: any) => (methodName: string) => {
-      const proto = SomeComponent.prototype as any;
-      expect(proto[methodName]).toHaveBeenCalled();
-    };
-
-  const expectLifecycleNotCalled =
-    (SomeComponent: any) => (methodName: string) => {
-      const proto = SomeComponent.prototype as any;
-      expect(proto[methodName]).not.toHaveBeenCalled();
-    };
-
-  function resetLifecycleHistory(SomeComponent: any) {
-    [
-      'componentWillMount',
-      'shouldComponentUpdate',
-      'componentWillReceiveProps',
-      'componentWillUpdate',
-      'componentDidMount',
-      'componentDidUpdate',
-      'componentWillUnmount',
-    ].forEach(method => SomeComponent.prototype[method].resetHistory());
-  }
 
   it('can update and unmount a memoed component', () => {
     const SomeComponent = createLifecycleComponent();
