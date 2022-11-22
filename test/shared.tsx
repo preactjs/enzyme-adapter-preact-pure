@@ -471,7 +471,9 @@ export function addInteractiveTests(
     }
 
     const wrapper = render(<App />);
-    if (isShallow) {
+    if (isNewShallowRender) {
+      assert.deepEqual(wrapper.getElements(), App());
+    } else if (isShallow) {
       assert.deepEqual(wrapper.getElements(), ['0', '1', 'a string'] as any);
     } else {
       assert.deepEqual(stripInternalVNodeFields(wrapper.getElement()), {
@@ -483,6 +485,7 @@ export function addInteractiveTests(
           children: ['0', '1', 'a string'],
         },
       } as any);
+
       assert.deepEqual(wrapper.children().getElements(), [
         '0',
         '1',
