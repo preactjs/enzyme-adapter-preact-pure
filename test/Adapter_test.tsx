@@ -1,4 +1,3 @@
-import type { VNode } from 'preact';
 import * as preact from 'preact';
 import { assert } from 'chai';
 import type { RSTNode } from 'enzyme';
@@ -7,28 +6,7 @@ import Adapter from '../src/Adapter.js';
 import MountRenderer from '../src/MountRenderer.js';
 import ShallowRenderer from '../src/ShallowRenderer.js';
 import StringRenderer from '../src/StringRenderer.js';
-
-/**
- * Return a deep copy of a vnode, omitting internal fields that have a `__`
- * prefix.
- *
- * Stripping private fields is useful when comparing vnodes because the private
- * fields may differ even if the VNodes are logically the same value. For example
- * in some Preact versions VNodes include an ID counter field.
- */
-function stripInternalVNodeFields(obj: object) {
-  const result = {} as Record<string, any>;
-  for (const [key, value] of Object.entries(obj)) {
-    if (!key.startsWith('__')) {
-      if (typeof value === 'object' && value !== null) {
-        result[key] = stripInternalVNodeFields(value);
-      } else {
-        result[key] = value;
-      }
-    }
-  }
-  return result;
-}
+import { stripInternalVNodeFields } from './shared.js';
 
 describe('Adapter', () => {
   it('adds `type` and `props` attributes to VNodes', () => {
@@ -98,18 +76,14 @@ describe('Adapter', () => {
   });
 
   describe('#nodeToElement', () => {
-    function stripPrivateKeys<T>(obj: T) {
-      const result: any = { ...obj };
-      Object.keys(result).forEach(key => {
-        if (key.startsWith('_')) {
-          delete result[key];
-        }
-      });
-      return result;
-    }
+    // Conversion from Preact elements to RST nodes is a lossy process because
+    // we clear the children prop, so converting back (RST nodes to Preact
+    // elements) will also be lossy. We have commented out that tests that do
+    // not pass due to this lossy behavior. Perhaps in the future we should
+    // investigate and fix this.
 
     function TextComponent() {
-      return 'test' as unknown as VNode<any>;
+      return 'test' as unknown as preact.VNode<any>;
     }
 
     function Child() {
@@ -126,12 +100,12 @@ describe('Adapter', () => {
 
     [
       {
-        // Simple DOM element.
-        el: <button type="button">Click me</button>,
+        description: 'Simple DOM element',
+        element: <button type="button">Click me</button>,
       },
       {
-        // DOM elements with keys.
-        el: (
+        description: 'DOM elements with keys',
+        element: (
           <ul>
             <li key={1}>Test</li>
             <li key={2}>Test</li>
@@ -139,27 +113,81 @@ describe('Adapter', () => {
         ),
       },
       {
-        // DOM element with ref.
-        el: <div ref={() => {}} />,
+        description: 'DOM element with ref',
+        element: <div ref={() => {}} />,
       },
       {
-        // Component that renders text.
-        el: <TextComponent />,
+        description: 'Component that renders text',
+        element: <TextComponent />,
+        expected: {
+          type: TextComponent,
+          constructor: undefined,
+          key: undefined,
+          ref: undefined,
+          props: {
+            children: 'test',
+          },
+        },
       },
       {
-        // Component with children.
-        el: <Parent />,
+        description: 'Component with children',
+        element: <Parent />,
+        expected: {
+          type: Parent,
+          constructor: undefined,
+          key: undefined,
+          ref: undefined,
+          props: {
+            children: {
+              type: 'div',
+              constructor: undefined,
+              key: undefined,
+              ref: undefined,
+              props: {
+                children: {
+                  type: Child,
+                  constructor: undefined,
+                  key: undefined,
+                  ref: undefined,
+                  props: {
+                    children: {
+                      type: 'span',
+                      constructor: undefined,
+                      key: undefined,
+                      ref: undefined,
+                      props: {
+                        children: 'child',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
-    ].forEach(({ el }) => {
-      it('returns JSX element that matches original input', () => {
+      {
+        description: 'Element with mixed typed children',
+        element: <div>{[null, undefined, true, false, 0, 1n, 'a string']}</div>,
+        expected: {
+          type: 'div',
+          constructor: undefined,
+          key: undefined,
+          ref: undefined,
+          props: {
+            children: ['0', '1', 'a string'],
+          },
+        },
+      },
+    ].forEach(({ description, element, expected }) => {
+      it(`returns JSX element that matches original input (${description})`, () => {
         const renderer = new MountRenderer();
-        const el = <button type="button">Click me</button>;
-        renderer.render(el);
+        renderer.render(element);
         const adapter = new Adapter();
         const rstNode = renderer.getNode() as RSTNode;
         assert.deepEqual(
-          stripPrivateKeys(adapter.nodeToElement(rstNode)),
-          stripPrivateKeys(el)
+          stripInternalVNodeFields(adapter.nodeToElement(rstNode)),
+          expected ?? stripInternalVNodeFields(element)
         );
       });
     });

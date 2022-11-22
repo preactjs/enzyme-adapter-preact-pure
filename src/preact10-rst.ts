@@ -7,8 +7,8 @@
  * The rendered result is converted to RST by traversing these vnode references.
  */
 
-import type { NodeType, RSTNode } from 'enzyme';
-import type { Component, VNode } from 'preact';
+import type { NodeType, RSTNodeChild, RSTNode } from 'enzyme';
+import type { Component, ComponentChild, VNode } from 'preact';
 import { isValidElement, Fragment } from 'preact';
 
 import { childElements } from './compat.js';
@@ -22,7 +22,6 @@ import {
 import { getRealType } from './shallow-render-utils.js';
 
 type Props = { [prop: string]: any };
-type RSTNodeTypes = RSTNode | string | null;
 
 function stripSpecialProps(props: Props, preserveChildrenProp = false) {
   if (preserveChildrenProp) {
@@ -47,7 +46,7 @@ function convertDOMProps(props: Props, preserveChildrenProp = false) {
 /**
  * Convert the rendered output of a vnode to RST nodes.
  */
-function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
+function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeChild[] {
   if (!nodes) {
     return [];
   }
@@ -64,14 +63,18 @@ function rstNodesFromChildren(nodes: (VNode | null)[] | null): RSTNodeTypes[] {
   });
 }
 
-function rstNodeFromVNode(node: VNode | null): RSTNodeTypes | RSTNodeTypes[] {
+function rstNodeFromVNode(node: VNode | null): RSTNodeChild | RSTNodeChild[] {
   if (node == null) {
     return null;
   }
 
   // Preact 10 represents text nodes as VNodes with `node.type == null` and
   // `node.props` equal to the string content.
-  if (typeof node.props === 'string' || typeof node.props === 'number') {
+  if (
+    typeof node.props === 'string' ||
+    typeof node.props === 'number' ||
+    typeof node.props === 'bigint'
+  ) {
     return String(node.props);
   }
 
@@ -118,9 +121,9 @@ export function nodeTypeFromType(type: any): NodeType {
  * node.
  */
 export function rstNodeFromElement(
-  node: VNode | null | string,
+  node: ComponentChild,
   preserveChildrenProp = false
-): RSTNodeTypes {
+): RSTNodeChild {
   if (!isValidElement(node)) {
     return node;
   }

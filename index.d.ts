@@ -1,6 +1,6 @@
-import { ComponentFactory, VNode } from 'preact';
+import type { ComponentChild, VNode } from 'preact';
 import 'enzyme';
-import { ReactElement, ReactInstance } from 'react';
+import type { ReactElement, ReactInstance } from 'react';
 
 // Extensions to the Preact types for compatibility with the Enzyme types.
 declare module 'preact' {
@@ -17,6 +17,8 @@ declare module 'preact' {
 // Extensions to the Enzyme types needed for writing an adapter.
 declare module 'enzyme' {
   export type NodeType = 'function' | 'class' | 'host';
+
+  export type RSTNodeChild = Exclude<ComponentChild, VNode> | RSTNode;
 
   /**
    * A "React Standard Tree" node.
@@ -37,7 +39,7 @@ declare module 'enzyme' {
     instance: any;
 
     /** The result of the `render` function from this component. */
-    rendered: Array<RSTNode | string | null>;
+    rendered: Array<RSTNodeChild>;
   }
 
   /**
@@ -125,7 +127,7 @@ declare module 'enzyme' {
     createRenderer(options: AdapterOptions): Renderer;
     elementToNode(element: ReactElement): RSTNode;
     isValidElement(el: ReactElement): boolean;
-    nodeToElement(node: RSTNode): ReactElement | string;
+    nodeToElement(node: RSTNodeChild): ReactElement | string;
     nodeToHostNode(node: RSTNode): Node | null;
 
     // Optional methods.
