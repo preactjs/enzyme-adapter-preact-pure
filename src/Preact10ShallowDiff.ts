@@ -253,7 +253,10 @@ export default class Preact10ShallowDiff {
 
     commitRoot(commitQueue, newRenderedVNodes[0]);
 
-    this._componentInstance = getComponent(newVNode) as ShallowDiffComponent;
+    // The last rendered VNode is the memoed component
+    this._componentInstance = getComponent(
+      newRenderedVNodes[newRenderResults.length - 1]
+    ) as ShallowDiffComponent;
     this._componentInstance._preact10ShallowDiff = this;
 
     this._renderedVNodes = newRenderedVNodes;
