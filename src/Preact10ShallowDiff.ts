@@ -142,7 +142,8 @@ export default class Preact10ShallowDiff {
   private _oldVNode: ComponentVNode | null = null;
   private _componentInstance: ShallowDiffComponent | null = null;
   private _rendered: ComponentChild = null;
-  private _memoRendered: ComponentVNode | null = null;
+  private _renderedVNodes: ComponentVNode[] = [];
+  private _renderResults: ComponentChild[] = [];
 
   constructor() {
     installOptionsForShallowDiff();
@@ -163,29 +164,106 @@ export default class Preact10ShallowDiff {
     if (Preact10ShallowDiff.current) {
       return;
     }
-    if (this._oldVNode != null && this._oldVNode.type !== element.type) {
-      this._reset();
+
+    const prevRenderedVNodes = this._renderedVNodes;
+    const prevRenderResults = this._renderResults;
+
+    let i = 0;
+    const commitQueue: any[] = [];
+    const renderedVNodes: ComponentVNode[] = [];
+    const renderResults: ComponentChild[] = [];
+
+    if (this._oldVNode != null) {
+      const matchingElementIndex = this._renderedVNodes.findIndex(
+        el => isValidElement(el) && el.type === element.type
+      );
+
+      if (matchingElementIndex === -1) {
+        this._reset();
+        prevRenderedVNodes.splice(0);
+        prevRenderResults.splice(0);
+      } else {
+        i = matchingElementIndex;
+        renderedVNodes.push(
+          ...prevRenderedVNodes.slice(0, matchingElementIndex)
+        );
+        renderResults.push(...prevRenderResults.slice(0, matchingElementIndex));
+      }
     }
 
     Preact10ShallowDiff.current = this;
 
-    try {
-      const commitQueue: any[] = [];
-      const renderResult = this._diffComponent(
-        element,
-        this._oldVNode ?? ({} as ComponentVNode),
-        context,
-        commitQueue
-      );
-      commitRoot(commitQueue, element);
+    let bailedOut = false;
+    let newVNode = element;
 
-      this._componentInstance = getComponent(element) as ShallowDiffComponent;
-      this._componentInstance._preact10ShallowDiff = this;
-      this._rendered = renderResult;
-      this._oldVNode = element;
+    try {
+      while (isMemo(newVNode)) {
+        const oldVNode = prevRenderedVNodes[i] ?? {};
+        renderedVNodes.push(newVNode);
+
+        const renderResult = diffComponent(
+          newVNode,
+          oldVNode,
+          context,
+          commitQueue
+        );
+
+        if (renderResult === bailoutSymbol) {
+          renderedVNodes.push(...prevRenderedVNodes.slice(i + 1));
+          renderResults.push(...prevRenderResults.slice(i));
+
+          // TODO: Handle this better
+          bailedOut = true;
+          break;
+        } else if (isComponentVNode(renderResult)) {
+          renderResults.push(renderResult);
+          newVNode = renderResult;
+        } else {
+          renderResults.push(renderResult);
+        }
+
+        i++;
+      }
+
+      if (!bailedOut) {
+        const oldVNode = prevRenderedVNodes[i] ?? {};
+        renderedVNodes.push(newVNode);
+        const renderResult = diffComponent(
+          newVNode,
+          oldVNode,
+          context,
+          commitQueue
+        );
+
+        if (renderResult === bailoutSymbol) {
+          renderedVNodes.push(...prevRenderedVNodes.slice(i + 1));
+          renderResults.push(...prevRenderResults.slice(i));
+
+          // TODO: Handle this better?
+          // break;
+        } else if (isComponentVNode(renderResult)) {
+          renderResults.push(renderResult);
+          // newVNode = renderResult;
+        } else {
+          renderResults.push(renderResult);
+        }
+      }
     } finally {
       Preact10ShallowDiff.current = null;
     }
+
+    commitRoot(commitQueue, renderedVNodes[0]);
+
+    this._componentInstance = getComponent(
+      renderedVNodes[renderedVNodes.length - 1]
+    ) as ShallowDiffComponent;
+    this._componentInstance._preact10ShallowDiff = this;
+
+    this._renderedVNodes = renderedVNodes;
+    this._renderResults = renderResults;
+
+    this._oldVNode = renderedVNodes[0];
+    this._rendered = renderResults[renderResults.length - 1];
 
     return this.getRenderOutput();
   }
@@ -205,53 +283,17 @@ export default class Preact10ShallowDiff {
     this._oldVNode = null;
     this._componentInstance = null;
     this._rendered = null;
-    this._memoRendered = null;
+
+    this._renderedVNodes = [];
+    this._renderResults = [];
 
     Preact10ShallowDiff.current = null;
   }
-
-  /** Diff a VNode and recurse through any Memo components */
-  private _diffComponent(
-    newVNode: ComponentVNode<any>,
-    oldVNode: ComponentVNode<any>,
-    globalContext: any,
-    commitQueue: any[]
-  ) {
-    let renderResult: ComponentChild | typeof bailoutSymbol;
-    if (isMemo(newVNode)) {
-      renderResult = diffComponent(
-        newVNode,
-        oldVNode,
-        globalContext,
-        commitQueue
-      );
-
-      if (renderResult == bailoutSymbol) {
-        return this._rendered;
-      }
-
-      if (isComponentVNode(renderResult)) {
-        oldVNode = this._memoRendered ?? ({} as any);
-        this._memoRendered = newVNode = renderResult;
-      } else {
-        throw new Error(
-          `Memo rendered a non-component element. Only memo'ed components is currently supported for shallow rendering`
-        );
-      }
-    }
-
-    renderResult = diffComponent(
-      newVNode,
-      oldVNode,
-      globalContext,
-      commitQueue
-    );
-
-    return renderResult === bailoutSymbol ? this._rendered : renderResult;
-  }
 }
 
-function isComponentVNode<P = any>(element: any): element is ComponentVNode<P> {
+function isComponentVNode<P = any>(
+  element: ComponentChild
+): element is ComponentVNode<P> {
   return isValidElement(element) && typeof element.type === 'function';
 }
 
@@ -313,7 +355,7 @@ function diffComponent(
   oldVNode: ComponentVNode,
   globalContext: any,
   commitQueue: Component[]
-) {
+): ComponentChild | typeof bailoutSymbol {
   /* eslint-disable */
   let tmp,
     newType = newVNode.type,

@@ -29,15 +29,13 @@ function memo<T extends ComponentType<any>>(component: T): T {
   return realMemo<T>(component as any) as any;
 }
 
-const skip = (...args: any[]) => {};
-
 // TODO: React.memo doesn't manifest as a separate component in the virtual
 // tree, so calls to `instance.setState` and other methods are expected to
 // operate on the underlying component beneath memo. However in Preact, since
 // `memo` is it's own component, calls to `instance.setState` operate on the
 // memo component and not the real component underneath it. Might need to fix
 // this for proper shallow rendering to work.
-skip('Preact10ShallowDiffMemo', () => {
+describe('Preact10ShallowDiffMemo', () => {
   installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {
@@ -164,7 +162,8 @@ skip('Preact10ShallowDiffMemo', () => {
     shallowRenderer.render(<SomeComponent />);
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+  // Preact doesn't use gSBU as a signal to avoid deprecated lifecycles. Only gDSFP is that signal
+  it.skip('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
     const SomeComponent = memo(
       class SomeComponent extends Component<{ value: number }> {
         getSnapshotBeforeUpdate() {
@@ -498,12 +497,12 @@ skip('Preact10ShallowDiffMemo', () => {
 
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(SomeComponent as any)).toThrowError(
-      'ReactShallowRenderer render(): Invalid component element. Instead of ' +
+      'Preact10ShallowDiff render(): Invalid component element. Instead of ' +
         'passing a component class, make sure to instantiate it by passing it ' +
-        'to createElement.'
+        'to Preact.createElement.'
     );
     expect(() => shallowRenderer.render(<div />)).toThrowError(
-      'ReactShallowRenderer render(): Shallow rendering works only with ' +
+      'Preact10ShallowDiff render(): Shallow rendering works only with ' +
         'custom components, not primitives (div). Instead of calling ' +
         '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
         'directly instead.'
@@ -1099,7 +1098,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(result.props.children).toEqual(2);
   });
 
-  it('can access component instance from setState updater function', done => {
+  // Preact doesn't invoke setState updater functions with a this context
+  it.skip('can access component instance from setState updater function', done => {
     let instance: any;
 
     const SimpleComponent = memo(
@@ -1272,7 +1272,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(result).toEqual(<div>foo:baz</div>);
   });
 
-  it('should filter context by contextTypes', () => {
+  // Preact doesn't support this contextTypes
+  it.skip('should filter context by contextTypes', () => {
     const SimpleComponent = memo(
       class SimpleComponent extends Component {
         static contextTypes: any = {
@@ -1292,7 +1293,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(result).toEqual(<div>foo:undefined</div>);
   });
 
-  it('can fail context when shallowly rendering', () => {
+  // Preact doesn't support this contextTypes
+  it.skip('can fail context when shallowly rendering', () => {
     const SimpleComponent = memo(
       class SimpleComponent extends Component {
         static contextTypes: any = {
@@ -1313,7 +1315,8 @@ skip('Preact10ShallowDiffMemo', () => {
     );
   });
 
-  it('should warn about propTypes (but only once)', () => {
+  // Preact only validates prop types when preact/debug is included
+  it.skip('should warn about propTypes (but only once)', () => {
     const SimpleComponent = memo(
       class SimpleComponent extends Component<{ name: any }> {
         static propTypes: any = {
@@ -1365,7 +1368,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(result).toEqual(<div>baz:bar</div>);
   });
 
-  it('this.state should be updated on setState callback inside componentWillMount', () => {
+  // TODO: Renable when preactjs/preact#3806 is released
+  it.skip('this.state should be updated on setState callback inside componentWillMount', () => {
     let stateSuccessfullyUpdated = false;
 
     type Props = {};
@@ -1397,7 +1401,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(stateSuccessfullyUpdated).toBe(true);
   });
 
-  it('should handle multiple callbacks', () => {
+  // TODO: Renable when preactjs/preact#3806 is released
+  it.skip('should handle multiple callbacks', () => {
     const mockFn = sinon.spy();
     const shallowRenderer = createRenderer();
 
@@ -1476,13 +1481,15 @@ skip('Preact10ShallowDiffMemo', () => {
       typeString: any
     ) => {
       expect(() => {
-        expect(() => shallowRenderer.render(<SomeComponent />)).toErrorDev(
-          'createElement: type is invalid -- expected a string ' +
-            '(for built-in components) or a class/function (for composite components) ' +
-            `but got: ${typeString}.`
-        );
+        shallowRenderer.render(<SomeComponent />);
+        // Preact doesn't support dev time only errors outside of preact/debug
+        // expect(() => shallowRenderer.render(<SomeComponent />)).toErrorDev(
+        //   'createElement: type is invalid -- expected a string ' +
+        //     '(for built-in components) or a class/function (for composite components) ' +
+        //     `but got: ${typeString}.`
+        // );
       }).toThrowError(
-        'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'Preact10ShallowDiff render(): Shallow rendering works only with custom ' +
           `components, but the provided element type was \`${typeString}\`.`
       );
     };
@@ -1493,7 +1500,8 @@ skip('Preact10ShallowDiffMemo', () => {
     renderAndVerifyWarningAndError({}, 'object');
   });
 
-  it('should have initial state of null if not defined', () => {
+  // Preact always initializes state to empty obj
+  it.skip('should have initial state of null if not defined', () => {
     const SomeComponent = memo(
       class SomeComponent extends Component {
         render() {
@@ -1508,7 +1516,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(shallowRenderer.getMountedInstance()!.state).toBeNull();
   });
 
-  it('should invoke both deprecated and new lifecycles if both are present', () => {
+  // Preact does not invoke both methods. Both should never be defined
+  it.skip('should invoke both deprecated and new lifecycles if both are present', () => {
     const log: string[] = [];
 
     const SomeComponent = memo(
@@ -1583,7 +1592,8 @@ skip('Preact10ShallowDiffMemo', () => {
     expect(log).toEqual(['render']);
   });
 
-  it('should not get this in a function component', () => {
+  // Preact 10 does set this for Function components
+  it.skip('should not get this in a function component', () => {
     const logs: any[] = [];
     const Foo = memo(function Foo(this: any, props: any) {
       logs.push(this);
