@@ -137,12 +137,32 @@ export default class Preact10ShallowDiff {
     return new Preact10ShallowDiff();
   };
 
+  /** The current rendering instance of Preact10ShallowDiff */
   static current: Preact10ShallowDiff | null = null;
 
+  /**
+   * The previous element that was shallowed rendered. It is used to diff an
+   * element that gets updated through props or a setState call
+   *
+   * If render was given a memoed element, this holds the component that was
+   * wrapped in memo. It is used if `setState` is called on the component and it
+   * needs to be diffed directly.
+   */
   private _prevElement: ComponentVNode | null = null;
+  /**
+   * If render was given a memoed component to render, this is the previous
+   * memoed element that will be used if that memoed element is rerendered
+   */
+  private _memoElement: ComponentVNode | null = null;
+  /**
+   * The component instance that was shallow rendered. If render was given a
+   * memoed element, then this is the instance of the component that was memoed
+   */
   private _componentInstance: ShallowDiffComponent | null = null;
+  /**
+   * The result of the last call to render.
+   */
   private _rendered: ComponentChild = null;
-  private _memoRendered: ComponentVNode | null = null;
 
   constructor() {
     installOptionsForShallowDiff();
@@ -164,11 +184,14 @@ export default class Preact10ShallowDiff {
       return;
     }
 
+    // Determine if we need to diff against a previous render or if this is a
+    // new render. If the given element type matches any of the previously
+    // rendered elements, use it as the old VNode to diff against.
     let oldVNode: ComponentVNode;
-    if (this._prevElement?.type === element.type) {
+    if (this._memoElement?.type === element.type) {
+      oldVNode = this._memoElement;
+    } else if (this._prevElement?.type === element.type) {
       oldVNode = this._prevElement;
-    } else if (this._memoRendered?.type === element.type) {
-      oldVNode = this._memoRendered;
     } else {
       this._reset();
       oldVNode = {} as any;
@@ -178,7 +201,7 @@ export default class Preact10ShallowDiff {
 
     try {
       const commitQueue: any[] = [];
-      const renderResult = this._diffComponent(
+      this._rendered = this._diffComponent(
         element,
         oldVNode,
         context,
@@ -187,21 +210,14 @@ export default class Preact10ShallowDiff {
       commitRoot(commitQueue, element);
 
       this._componentInstance = getComponent(
-        this._memoRendered ?? element
+        this._prevElement! // this._diffComponent sets _prevElement for us
       ) as ShallowDiffComponent;
       this._componentInstance._preact10ShallowDiff = this;
-      this._rendered = renderResult;
-
-      if (this._memoRendered?.type === element.type) {
-        this._memoRendered = element;
-      } else {
-        this._prevElement = element;
-      }
     } finally {
       Preact10ShallowDiff.current = null;
     }
 
-    return this.getRenderOutput();
+    return this._rendered;
   }
 
   public unmount() {
@@ -211,8 +227,8 @@ export default class Preact10ShallowDiff {
       unmount(this._prevElement);
     }
 
-    if (this._memoRendered) {
-      unmount(this._memoRendered);
+    if (this._memoElement) {
+      unmount(this._memoElement);
     }
 
     Preact10ShallowDiff.current = null;
@@ -221,9 +237,9 @@ export default class Preact10ShallowDiff {
 
   private _reset() {
     this._prevElement = null;
+    this._memoElement = null;
     this._componentInstance = null;
     this._rendered = null;
-    this._memoRendered = null;
 
     Preact10ShallowDiff.current = null;
   }
@@ -235,8 +251,23 @@ export default class Preact10ShallowDiff {
     globalContext: any,
     commitQueue: any[]
   ) {
+    // React's memo function wraps a component. It doesn't create a new VNode in
+    // the virtual tree. To be compatible with React's shallow renderer, we'll
+    // try to mimic this behavior so shallow enzyme tests don't need to be aware
+    // of this subtle difference between Preact and React. Further, how Preact
+    // implements Memo today may change in the future so we'll try to avoid
+    // exposing that implementation detail to users.
+    //
+    // To mimic React's behavior here, we'll render through memo components. If
+    // `render` is given an element representing a Memoed component, we will
+    // render Memo and the component that it memos (assuming the Memo doesn't
+    // instruct us to bail out and stop). The public methods on this class
+    // should never return references to the Memo component, but always the
+    // component that it is memoizing.
+
     let renderResult: ComponentChild | typeof bailoutSymbol;
     if (isMemo(newVNode)) {
+      this._memoElement = newVNode;
       renderResult = diffComponent(
         newVNode,
         oldVNode,
@@ -245,12 +276,16 @@ export default class Preact10ShallowDiff {
       );
 
       if (renderResult == bailoutSymbol) {
+        // The memo component told us not to update, so return the result of the
+        // previous render
         return this._rendered;
       }
 
       if (isComponentVNode(renderResult)) {
-        oldVNode = this._memoRendered ?? ({} as any);
-        this._memoRendered = newVNode = renderResult;
+        // The memo component updated, so let's setup to update and diff the
+        // component it returned
+        newVNode = renderResult;
+        oldVNode = this._prevElement ?? ({} as any);
       } else {
         throw new Error(
           `Memo rendered a non-component element. Only memo'ed components is currently supported for shallow rendering`
@@ -258,6 +293,7 @@ export default class Preact10ShallowDiff {
       }
     }
 
+    this._prevElement = newVNode;
     renderResult = diffComponent(
       newVNode,
       oldVNode,
@@ -265,6 +301,8 @@ export default class Preact10ShallowDiff {
       commitQueue
     );
 
+    // If diffing this component told us not to update, then return the result
+    // of the previous render. Else, return the result of the diff
     return renderResult === bailoutSymbol ? this._rendered : renderResult;
   }
 }
