@@ -140,7 +140,6 @@ export default class Preact10ShallowDiff {
   static current: Preact10ShallowDiff | null = null;
 
   private _componentInstance: ShallowDiffComponent | null = null;
-  private _rendered: ComponentChild = null;
   private _renderedVNodes: ComponentVNode[] = [];
   private _renderResults: ComponentChild[] = [];
 
@@ -154,7 +153,7 @@ export default class Preact10ShallowDiff {
   }
 
   public getRenderOutput(): ComponentChild {
-    return this._rendered;
+    return this._renderResults[this._renderResults.length - 1];
   }
 
   public render(element: JSX.Element, context: any = {}): ComponentChild {
@@ -164,13 +163,10 @@ export default class Preact10ShallowDiff {
       return;
     }
 
-    const prevRenderedVNodes = this._renderedVNodes;
-    const prevRenderResults = this._renderResults;
-
     let i = 0;
     const commitQueue: any[] = [];
-    const renderedVNodes: ComponentVNode[] = [];
-    const renderResults: ComponentChild[] = [];
+    const newRenderedVNodes: ComponentVNode[] = [];
+    const newRenderResults: ComponentChild[] = [];
 
     // If we previously rendered VNodes, determine if the given element to
     // rerender is in this list of previously rendered VNodes. If so, resume
@@ -179,102 +175,89 @@ export default class Preact10ShallowDiff {
     //
     // If this is a brand new VNode (i.e. there is no matching type), then reset
     // everything and start a brand new render
-    if (prevRenderedVNodes.length > 0) {
-      const matchingElementIndex = this._renderedVNodes.findIndex(
-        el => isValidElement(el) && el.type === element.type
+    if (this._renderedVNodes.length > 0) {
+      const matchingIndex = this._renderedVNodes.findIndex(
+        el => el.type === element.type
       );
 
-      if (matchingElementIndex === -1) {
+      if (matchingIndex === -1) {
         this._reset();
-        prevRenderedVNodes.splice(0);
-        prevRenderResults.splice(0);
       } else {
         // Update our index with the index of the given element and pre-populate
         // renderedVNodes and renderResults with the items before this VNode
-        i = matchingElementIndex;
-        renderedVNodes.push(
-          ...prevRenderedVNodes.slice(0, matchingElementIndex)
-        );
-        renderResults.push(...prevRenderResults.slice(0, matchingElementIndex));
+        i = matchingIndex;
+        newRenderedVNodes.push(...this._renderedVNodes.slice(0, matchingIndex));
+        newRenderResults.push(...this._renderResults.slice(0, matchingIndex));
       }
     }
 
-    Preact10ShallowDiff.current = this;
-
-    let bailedOut = false;
-    let newVNode = element;
+    let newVNode: ComponentVNode<any> = element;
+    let renderResult: ComponentChild | typeof bailoutSymbol;
 
     try {
+      Preact10ShallowDiff.current = this;
+
       // First render through any memo components
       while (isMemo(newVNode)) {
-        const oldVNode = prevRenderedVNodes[i] ?? {};
-        renderedVNodes.push(newVNode);
+        newRenderedVNodes.push(newVNode);
 
-        const renderResult = diffComponent(
-          newVNode,
-          oldVNode,
-          context,
-          commitQueue
-        );
+        const oldVNode: ComponentVNode<any> =
+          i < this._renderedVNodes.length
+            ? this._renderedVNodes[i]
+            : ({} as any);
+
+        renderResult = diffComponent(newVNode, oldVNode, context, commitQueue);
 
         if (renderResult === bailoutSymbol) {
-          renderedVNodes.push(...prevRenderedVNodes.slice(i + 1));
-          renderResults.push(...prevRenderResults.slice(i));
-
-          // TODO: Handle this better
-          bailedOut = true;
+          newRenderedVNodes.push(...this._renderedVNodes.slice(i + 1));
+          newRenderResults.push(...this._renderResults.slice(i));
           break;
-        } else if (isComponentVNode(renderResult)) {
-          renderResults.push(renderResult);
+        } else {
+          newRenderResults.push(renderResult);
+        }
+
+        if (isComponentVNode(renderResult)) {
           newVNode = renderResult;
         } else {
-          renderResults.push(renderResult);
+          throw new Error(
+            `Memo rendered a non-component element. Only memo'ed components is currently supported for shallow rendering`
+          );
         }
 
         i++;
       }
 
-      if (!bailedOut) {
+      if (renderResult !== bailoutSymbol) {
         // If the parent memo components did not bail out, then render the inner
         // component. If one of them bailed out, then skip this render. The bail
-        // out code above handled updating renderedVNodes and renderResults
-        const oldVNode = prevRenderedVNodes[i] ?? {};
-        renderedVNodes.push(newVNode);
-        const renderResult = diffComponent(
-          newVNode,
-          oldVNode,
-          context,
-          commitQueue
-        );
+        // out code above handled updating newRenderedVNodes and newRenderResults
+        newRenderedVNodes.push(newVNode);
+
+        const oldVNode: ComponentVNode<any> =
+          i < this._renderedVNodes.length
+            ? this._renderedVNodes[i]
+            : ({} as any);
+
+        renderResult = diffComponent(newVNode, oldVNode, context, commitQueue);
 
         if (renderResult === bailoutSymbol) {
-          renderedVNodes.push(...prevRenderedVNodes.slice(i + 1));
-          renderResults.push(...prevRenderResults.slice(i));
-
-          // TODO: Handle this better?
-          // break;
-        } else if (isComponentVNode(renderResult)) {
-          renderResults.push(renderResult);
-          // newVNode = renderResult;
+          newRenderedVNodes.push(...this._renderedVNodes.slice(i + 1));
+          newRenderResults.push(...this._renderResults.slice(i));
         } else {
-          renderResults.push(renderResult);
+          newRenderResults.push(renderResult);
         }
       }
     } finally {
       Preact10ShallowDiff.current = null;
     }
 
-    commitRoot(commitQueue, renderedVNodes[0]);
+    commitRoot(commitQueue, newRenderedVNodes[0]);
 
-    this._componentInstance = getComponent(
-      renderedVNodes[renderedVNodes.length - 1]
-    ) as ShallowDiffComponent;
+    this._componentInstance = getComponent(newVNode) as ShallowDiffComponent;
     this._componentInstance._preact10ShallowDiff = this;
 
-    this._renderedVNodes = renderedVNodes;
-    this._renderResults = renderResults;
-
-    this._rendered = renderResults[renderResults.length - 1];
+    this._renderedVNodes = newRenderedVNodes;
+    this._renderResults = newRenderResults;
 
     return this.getRenderOutput();
   }
@@ -294,8 +277,6 @@ export default class Preact10ShallowDiff {
 
   private _reset() {
     this._componentInstance = null;
-    this._rendered = null;
-
     this._renderedVNodes = [];
     this._renderResults = [];
 
@@ -303,9 +284,7 @@ export default class Preact10ShallowDiff {
   }
 }
 
-function isComponentVNode<P = any>(
-  element: ComponentChild
-): element is ComponentVNode<P> {
+function isComponentVNode<P = any>(element: any): element is ComponentVNode<P> {
   return isValidElement(element) && typeof element.type === 'function';
 }
 
