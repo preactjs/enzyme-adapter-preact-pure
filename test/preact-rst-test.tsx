@@ -2,10 +2,10 @@ import { assert } from 'chai';
 import type { VNode } from 'preact';
 import { Component, Fragment } from 'preact';
 import * as preact from 'preact';
-import type { NodeType, RSTNode } from 'enzyme';
+import type { NodeType, RSTNode, RSTNodeChild } from 'enzyme';
 
 import { getNode, rstNodeFromElement } from '../src/preact10-rst.js';
-import { getType } from '../src/util.js';
+import { getType, isRSTNode } from '../src/util.js';
 import { render } from '../src/compat.js';
 
 function Child({ label }: any) {
@@ -119,7 +119,7 @@ function filterNode(node: RSTNode | null) {
 
   // Process rendered output.
   node.rendered.forEach(node => {
-    if (node && typeof node !== 'string' && node.nodeType) {
+    if (isRSTNode(node)) {
       filterNode(node);
     }
   });
@@ -431,8 +431,8 @@ describe('preact10-rst', () => {
   });
 
   describe('rstNodeFromElement', () => {
-    function stripInstances(node: RSTNode | string | null) {
-      if (node == null || typeof node === 'string') {
+    function stripInstances(node: RSTNodeChild) {
+      if (!isRSTNode(node)) {
         return node;
       }
 
@@ -501,6 +501,14 @@ describe('preact10-rst', () => {
         expectedNode: hostNode({
           type: 'ul',
           rendered: [hostNode({ type: 'li', rendered: ['item'] })],
+        }),
+      },
+      {
+        description: 'element with mixed typed children',
+        element: <div>{[null, undefined, 'string', 1, true, false, 1n]}</div>,
+        expectedNode: hostNode({
+          type: 'div',
+          rendered: [null, undefined, 'string', 1, true, false, 1n],
         }),
       },
     ].forEach(({ description, element, expectedNode }) => {

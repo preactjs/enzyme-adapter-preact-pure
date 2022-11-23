@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Support more return types (e.g. booleans, numbers, BigInts) from components
+
 - Add an option (`renderToString`) to allow passing in a custom string renderer
   to use for Enzyme's 'string' renderer instead of rendering into the DOM and
   reading the HTML output. It is expected that `renderToString` from

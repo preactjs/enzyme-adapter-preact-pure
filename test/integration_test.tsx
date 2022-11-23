@@ -11,6 +11,7 @@ import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
 import { setupJSDOM, teardownJSDOM } from './jsdom.js';
+import { stripInternalVNodeFields } from './shared.js';
 
 type TestContextValue = { myTestString: string };
 
@@ -71,6 +72,22 @@ function addStaticTests(render: (el: ReactElement) => Wrapper) {
 
     const wrapper = mount(<Button label="Click me" />);
     assert.equal(wrapper.html(), '<button>Click me</button>');
+  });
+
+  it('can return HTML content of mixed typed children', () => {
+    function Button({ label }: any) {
+      return (
+        <button>
+          {[null, undefined, true, false, 0n, ' ', label, ' ', 0]}
+        </button>
+      );
+    }
+
+    const wrapper = render(<Button label="Click me" />);
+    assert.equal(
+      wrapper.html(),
+      isStringRenderer ? '0 Click me 0' : '<button>0 Click me 0</button>'
+    );
   });
 
   if (!isStringRenderer) {
@@ -419,6 +436,32 @@ function addInteractiveTests(render: typeof mount) {
 
     wrapper.find('button').simulate('click');
     assert.equal(wrapper.find('#count').text(), 'Count: 1');
+  });
+
+  it('getElements() returns expected types for mixed type children', () => {
+    function App() {
+      return [undefined, null, true, false, 0, 1n, 'a string'] as any;
+    }
+
+    const wrapper = render(<App />);
+    if (isShallow) {
+      assert.deepEqual(wrapper.getElements(), ['0', '1', 'a string'] as any);
+    } else {
+      assert.deepEqual(stripInternalVNodeFields(wrapper.getElement()), {
+        type: App,
+        constructor: undefined as any,
+        key: undefined,
+        ref: undefined,
+        props: {
+          children: ['0', '1', 'a string'],
+        },
+      } as any);
+      assert.deepEqual(wrapper.children().getElements(), [
+        '0',
+        '1',
+        'a string',
+      ] as any);
+    }
   });
 }
 
