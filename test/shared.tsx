@@ -510,6 +510,105 @@ export function addInteractiveTests(
   });
 }
 
+export function disableLifecycleMethodsTests(createNewAdapter: () => Adapter) {
+  describe('disableLifecycleMethods', () => {
+    afterEach(() => {
+      configure({
+        adapter: createDefaultAdapter(),
+        disableLifecycleMethods: undefined,
+      });
+    });
+
+    it('defaults disableLifecycleMethods to true', () => {
+      configure({
+        adapter: createNewAdapter(),
+        disableLifecycleMethods: undefined,
+      });
+
+      const SomeComponent = createLifecycleComponent();
+      const wrapper = shallow(<SomeComponent />);
+
+      sinon.assert.calledOnce(SomeComponent.prototype.render as any);
+      sinon.assert.calledOnce(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidUpdate as any);
+
+      wrapper.setProps({ name: 'Earth' });
+
+      sinon.assert.calledTwice(SomeComponent.prototype.render as any);
+      sinon.assert.calledOnce(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.calledOnce(
+        SomeComponent.prototype.componentDidUpdate as any
+      );
+    });
+
+    it('supports global disableLifecycleMethods option', () => {
+      configure({
+        adapter: createNewAdapter(),
+        disableLifecycleMethods: true,
+      });
+
+      const SomeComponent = createLifecycleComponent();
+      const wrapper = shallow(<SomeComponent />);
+
+      sinon.assert.calledOnce(SomeComponent.prototype.render as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidUpdate as any);
+
+      wrapper.setProps({ name: 'Earth' });
+
+      sinon.assert.calledTwice(SomeComponent.prototype.render as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidUpdate as any);
+    });
+
+    it('supports overriding disableLifecycleMethods in shallow method (false => true)', () => {
+      configure({
+        adapter: createNewAdapter(),
+        disableLifecycleMethods: false,
+      });
+
+      const SomeComponent = createLifecycleComponent();
+      const wrapper = shallow(<SomeComponent />, {
+        disableLifecycleMethods: true,
+      });
+
+      sinon.assert.calledOnce(SomeComponent.prototype.render as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidUpdate as any);
+
+      wrapper.setProps({ name: 'Earth' });
+
+      sinon.assert.calledTwice(SomeComponent.prototype.render as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidUpdate as any);
+    });
+
+    it('supports overriding disableLifecycleMethods in shallow method (true => false)', () => {
+      configure({
+        adapter: createNewAdapter(),
+        disableLifecycleMethods: true,
+      });
+
+      const SomeComponent = createLifecycleComponent();
+      const wrapper = shallow(<SomeComponent />, {
+        disableLifecycleMethods: false,
+      });
+
+      sinon.assert.calledOnce(SomeComponent.prototype.render as any);
+      sinon.assert.calledOnce(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.notCalled(SomeComponent.prototype.componentDidUpdate as any);
+
+      wrapper.setProps({ name: 'Earth' });
+
+      sinon.assert.calledTwice(SomeComponent.prototype.render as any);
+      sinon.assert.calledOnce(SomeComponent.prototype.componentDidMount as any);
+      sinon.assert.calledOnce(
+        SomeComponent.prototype.componentDidUpdate as any
+      );
+    });
+  });
+}
+
 export const createDefaultAdapter = () => new Adapter();
 export function setAdapter(createNewAdapter: () => Adapter) {
   beforeEach(() => {
@@ -531,8 +630,9 @@ const allLifecycleMethods = [
   'componentWillUnmount',
 ];
 
+type LifecycleComponentProps = { name?: string };
 export function createLifecycleComponent(displayName = 'SomeComponent') {
-  class SomeComponent extends Component<{ name?: string }> {
+  class SomeComponent extends Component<LifecycleComponentProps> {
     shouldComponentUpdate() {
       return true;
     }
@@ -542,9 +642,9 @@ export function createLifecycleComponent(displayName = 'SomeComponent') {
     componentDidMount() {}
     componentDidUpdate() {}
     componentWillUnmount() {}
-
     render() {
-      return <div>Hello {this.props.name ?? displayName}</div>;
+      // Will be replaced below
+      return <div />;
     }
   }
 
@@ -557,8 +657,19 @@ export function createLifecycleComponent(displayName = 'SomeComponent') {
   sinon.stub(SomeComponent.prototype, 'componentDidMount');
   sinon.stub(SomeComponent.prototype, 'componentDidUpdate');
   sinon.stub(SomeComponent.prototype, 'componentWillUnmount');
+  sinon
+    .stub(SomeComponent.prototype, 'render')
+    .callsFake(function render(this: SomeComponent) {
+      return <div>Hello {this.props.name ?? displayName}</div>;
+    });
 
   return SomeComponent;
+}
+
+export function getLifecycleComponentOutput(
+  props: LifecycleComponentProps = { name: 'SomeComponent' }
+) {
+  return <div>Hello {props.name}</div>;
 }
 
 export const expectLifecycleCalled =

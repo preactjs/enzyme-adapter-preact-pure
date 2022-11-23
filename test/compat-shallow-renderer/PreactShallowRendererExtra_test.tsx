@@ -11,6 +11,7 @@ import {
   createLifecycleComponent,
   expectLifecycleCalled,
   expectLifecycleNotCalled,
+  getLifecycleComponentOutput,
   resetLifecycleHistory,
 } from '../shared.js';
 
@@ -31,7 +32,7 @@ describe('PreactShallowRenderer extra', () => {
     const renderer = createRenderer();
     let output = renderer.render(<Memoed name="Earth" />);
 
-    expect(output).toEqual(<div>Hello {'Earth'}</div>);
+    expect(output).toEqual(getLifecycleComponentOutput({ name: 'Earth' }));
     ['componentWillMount'].forEach(expectLifecycleCalled(SomeComponent));
     [
       'shouldComponentUpdate',
@@ -45,7 +46,7 @@ describe('PreactShallowRenderer extra', () => {
     resetLifecycleHistory(SomeComponent);
     output = renderer.render(<Memoed name="Universe" />);
 
-    expect(output).toEqual(<div>Hello {'Universe'}</div>);
+    expect(output).toEqual(getLifecycleComponentOutput({ name: 'Universe' }));
     [
       'shouldComponentUpdate',
       'componentWillReceiveProps',
@@ -81,7 +82,9 @@ describe('PreactShallowRenderer extra', () => {
     const renderer = createRenderer();
     let output = renderer.render(<Memo1 />);
 
-    expect(output).toEqual(<div>Hello {'SomeComponent1'}</div>);
+    expect(output).toEqual(
+      getLifecycleComponentOutput({ name: 'SomeComponent1' })
+    );
     expect(SomeComponent1.prototype.componentWillMount).toHaveBeenCalled();
     expect(SomeComponent1.prototype.componentWillUpdate).not.toHaveBeenCalled();
     expect(SomeComponent2.prototype.componentWillMount).not.toHaveBeenCalled();
@@ -91,7 +94,9 @@ describe('PreactShallowRenderer extra', () => {
     resetLifecycleHistory(SomeComponent2);
     output = renderer.render(<Memo2 />);
 
-    expect(output).toEqual(<div>Hello {'SomeComponent2'}</div>);
+    expect(output).toEqual(
+      getLifecycleComponentOutput({ name: 'SomeComponent2' })
+    );
     expect(SomeComponent1.prototype.componentWillMount).not.toHaveBeenCalled();
     expect(SomeComponent1.prototype.componentWillUpdate).not.toHaveBeenCalled();
     expect(SomeComponent2.prototype.componentWillMount).toHaveBeenCalled();

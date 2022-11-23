@@ -13,6 +13,7 @@ import {
   normalizeDebugMessage,
   WrappingComponent,
   setAdapter,
+  disableLifecycleMethodsTests,
 } from '../shared.js';
 
 const { Fragment } = preact;
@@ -25,16 +26,19 @@ const TestContext = preact.createContext<TestContextValue>({
 });
 
 describe('integration tests', () => {
-  setAdapter(() => {
+  const createAdapter = () => {
     return new Adapter({
       renderToString,
       useCompatShallowRendering: true,
     });
-  });
+  };
+
+  setAdapter(createAdapter);
 
   describe('new "shallow" rendering', () => {
     addStaticTests(shallow);
     addInteractiveTests(shallow as any, true);
+    disableLifecycleMethodsTests(createAdapter);
 
     it('does not render child components', () => {
       function Child() {
