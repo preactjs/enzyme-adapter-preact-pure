@@ -476,6 +476,38 @@ export function addInteractiveTests(
     wrapper.find('button').simulate('click');
     assert.equal(wrapper.find('#count').text(), 'Count: 1');
   });
+
+  it('supports nested arrays in children', () => {
+    function ListItem() {
+      return <div>Child</div>;
+    }
+
+    function List() {
+      const chunk1 = [0, 1];
+      const chunk2 = [2, 3];
+
+      // Wrapping ListItems in <li>s is important to reproduce the error this
+      // tests checks for
+      return (
+        <ul>
+          {chunk1.map(id => (
+            <li key={id}>
+              <ListItem />
+            </li>
+          ))}
+          {chunk2.map(id => (
+            <li key={id}>
+              <ListItem key={id} />
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    const wrapper = render(<List />);
+
+    assert.equal(wrapper.find(ListItem).length, 4);
+  });
 }
 
 export const createDefaultAdapter = () => new Adapter();

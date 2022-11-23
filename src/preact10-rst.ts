@@ -127,9 +127,9 @@ export function rstNodeFromElement(
   if (!isValidElement(node)) {
     return node;
   }
-  const children = childElements(node).map(child =>
-    rstNodeFromElement(child, preserveChildrenProp)
-  );
+  const children = childElements(node)
+    .flat()
+    .map(child => rstNodeFromElement(child, preserveChildrenProp));
   const nodeType = nodeTypeFromType(node.type);
 
   let props = {};
