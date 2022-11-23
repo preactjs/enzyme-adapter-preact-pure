@@ -93,8 +93,13 @@ function installOptionsForShallowDiff() {
  * implementations that detect if a component has been shallow rendered and
  * ensures renders caused by setState/forceUpdate are also shallow rendered.
  *
- * Here, the _preact10ShallowDiff property serves a similar purpose the
- * `updater` property on React Component's serve
+ * Here, the _preact10ShallowDiff property does something similar as React
+ * Component's `updater` property. React Component's `updater` property contains
+ * a reference to the implementations of `setState`, `forceUpdate`, etc. and it
+ * is set by the code that rendered the component (e.g. ReactDOM). Here the
+ * presence of the `_preact10ShallowDiff` property (set by the shallow renderer)
+ * indicates `setState` and `forceUpdate` should call into our custom shallow
+ * implementation.
  */
 function installShallowComponentHooks() {
   const prevSetState = Component.prototype.setState;
