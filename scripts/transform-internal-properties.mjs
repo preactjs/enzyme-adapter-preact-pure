@@ -5,7 +5,9 @@ import { fileURLToPath } from 'url';
 
 /**
  * This module transforms Preact internal field names from their friendly names
- * to their mangled names (e.g. _component -> __c)
+ * to their mangled names (e.g. _component -> __c). The 'mangle.json' file next
+ * to this file is copied directly from the Preact v10 source and used here to
+ * do to the property renaming.
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -16,62 +18,23 @@ const preact10Files = [
   repoRoot('./build-cjs/src/Preact10ShallowDiff.js'),
 ];
 
-const preact10Renames = {
-  _listeners: 'l',
-  _cleanup: '__c',
-  __hooks: '__H',
-  _list: '__',
-  _pendingEffects: '__h',
-  _value: '__',
-  _pendingValue: '__V',
-  _nextValue: '__N',
-  _original: '__v',
-  _args: '__H',
-  _factory: '__h',
-  _depth: '__b',
-  _nextDom: '__d',
-  _dirty: '__d',
-  _mask: '__m',
-  _detachOnNextRender: '__b',
-  _force: '__e',
-  _nextState: '__s',
-  _renderCallbacks: '__h',
-  _stateCallbacks: '_sb',
-  _vnode: '__v',
-  _children: '__k',
-  _pendingSuspensionCount: '__u',
-  _childDidSuspend: '__c',
-  _onResolve: '__R',
-  _suspended: '__a',
-  _dom: '__e',
-  _hydrating: '__h',
-  _component: '__c',
-  __html: '__html',
-  _parent: '__',
-  _pendingError: '__E',
-  _processingException: '__',
-  _globalContext: '__n',
-  _context: 'c',
-  _defaultValue: '__',
-  _id: '__c',
-  _contextRef: '__',
-  _parentDom: '__P',
-  _originalParentDom: '__O',
-  _prevState: '__u',
-  _root: '__',
-  _diff: '__b',
-  _commit: '__c',
-  _addHookName: '__a',
-  _render: '__r',
-  _hook: '__h',
-  _catchError: '__e',
-  _unmount: '__u',
-  _owner: '__o',
-  _skipEffects: '__s',
-  _rerenderCount: '__r',
-  _forwarded: '__f',
-  _isSuspended: '__i',
-};
+function getPreact10Renames() {
+  const rename = {};
+
+  const manglePath = repoRoot('scripts/mangle.json');
+  const mangle = JSON.parse(readFileSync(manglePath, 'utf8'));
+
+  for (let prop in mangle.props.props) {
+    let name = prop;
+    if (name[0] === '$') {
+      name = name.slice(1);
+    }
+
+    rename[name] = mangle.props.props[prop];
+  }
+
+  return rename;
+}
 
 /** @type {(inputSourceMapPath: string | null) => import('@babel/core').TransformOptions} */
 const preact10BabelConfig = inputSourceMapPath => {
@@ -81,12 +44,12 @@ const preact10BabelConfig = inputSourceMapPath => {
     inputSourceMap = JSON.parse(readFileSync(inputSourceMapPath, 'utf-8'));
   }
 
+  const rename = getPreact10Renames();
+
   return {
     babelrc: false,
     configFile: false,
-    plugins: [
-      ['babel-plugin-transform-rename-properties', { rename: preact10Renames }],
-    ],
+    plugins: [['babel-plugin-transform-rename-properties', { rename }]],
     inputSourceMap,
     sourceMaps: inputSourceMapPath ? true : false,
   };
