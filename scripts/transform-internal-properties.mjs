@@ -14,8 +14,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = (...args) => path.join(__dirname, '..', ...args);
 
 const preact10Files = [
-  repoRoot('./build/src/Preact10ShallowDiff.js'),
-  repoRoot('./build-cjs/src/Preact10ShallowDiff.js'),
+  repoRoot('./build/src/compat-shallow-renderer/Preact10ShallowDiff.js'),
+  repoRoot('./build-cjs/src/compat-shallow-renderer/Preact10ShallowDiff.js'),
 ];
 
 function getPreact10Renames() {

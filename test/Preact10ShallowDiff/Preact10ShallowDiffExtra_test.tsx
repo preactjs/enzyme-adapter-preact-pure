@@ -6,7 +6,7 @@ import * as preact from 'preact/compat';
 import type { ComponentType } from 'preact';
 import sinon from 'sinon';
 
-import Preact10ShallowDiff from '../../src/Preact10ShallowDiff.js';
+import Preact10ShallowDiff from '../../src/compat-shallow-renderer/Preact10ShallowDiff.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const { Component, memo: realMemo } = preact;

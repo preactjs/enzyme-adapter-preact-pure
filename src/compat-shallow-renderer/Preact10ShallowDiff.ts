@@ -7,7 +7,7 @@ import type {
   Options,
 } from 'preact/src/internal';
 import { Component, options as rawOptions, isValidElement } from 'preact';
-import { getComponent } from './preact10-internals.js';
+import { getComponent } from '../preact10-internals.js';
 
 /*
  * This module implements a custom diff algorithm for Preact components that
