@@ -1,6 +1,6 @@
 /**
  * This file is largely taken and adapted from react-shallow-renderer, which is
- * copyrighted to Facebook and licensed under the MIT License, found a the link
+ * copyrighted to Facebook and licensed under the MIT License, found at the link
  * below:
  *
  * https://github.com/enzymejs/react-shallow-renderer/blob/802c735ee53bf2d965797760698cacbd46088f66/LICENSE

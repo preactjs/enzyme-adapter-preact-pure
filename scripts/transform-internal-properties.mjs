@@ -1,5 +1,5 @@
 import { transformFileSync } from '@babel/core';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, readdirSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -13,9 +13,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = (...args) => path.join(__dirname, '..', ...args);
 
-const preact10Files = [
-  repoRoot('./build/src/compat-shallow-renderer/Preact10ShallowDiff.js'),
-  repoRoot('./build-cjs/src/compat-shallow-renderer/Preact10ShallowDiff.js'),
+const preact10Dirs = [
+  repoRoot('./build/src/compat-shallow-renderer/'),
+  repoRoot('./build-cjs/src/compat-shallow-renderer/'),
 ];
 
 function getPreact10Renames() {
@@ -36,6 +36,8 @@ function getPreact10Renames() {
   return rename;
 }
 
+const preact10Renames = getPreact10Renames();
+
 /** @type {(inputSourceMapPath: string | null) => import('@babel/core').TransformOptions} */
 const preact10BabelConfig = inputSourceMapPath => {
   /** @type {import('@babel/core').TransformOptions["inputSourceMap"]} */
@@ -44,23 +46,18 @@ const preact10BabelConfig = inputSourceMapPath => {
     inputSourceMap = JSON.parse(readFileSync(inputSourceMapPath, 'utf-8'));
   }
 
-  const rename = getPreact10Renames();
-
   return {
     babelrc: false,
     configFile: false,
-    plugins: [['babel-plugin-transform-rename-properties', { rename }]],
+    plugins: [
+      ['babel-plugin-transform-rename-properties', { rename: preact10Renames }],
+    ],
     inputSourceMap,
     sourceMaps: inputSourceMapPath ? true : false,
   };
 };
 
-for (let filePath of preact10Files) {
-  if (!existsSync(filePath)) {
-    // Skip any files not built yet
-    continue;
-  }
-
+function manglePreact10Properties(filePath) {
   // Determine if we should render source maps
   /** @type {string | null} */
   let inputSourceMapPath = filePath + '.map';
@@ -80,5 +77,18 @@ for (let filePath of preact10Files) {
 
   if (output?.map && inputSourceMapPath) {
     writeFileSync(inputSourceMapPath, JSON.stringify(output.map), 'utf8');
+  }
+}
+
+for (let fileDir of preact10Dirs) {
+  if (!existsSync(fileDir)) {
+    // Skip any files not built yet
+    continue;
+  }
+
+  for (let filename of readdirSync(fileDir)) {
+    if (filename.endsWith('.js') || filename.endsWith('.mjs')) {
+      manglePreact10Properties(path.join(fileDir, filename));
+    }
   }
 }

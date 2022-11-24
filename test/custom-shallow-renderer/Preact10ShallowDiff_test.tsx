@@ -1,6 +1,6 @@
 /**
  * This file is largely taken and adapted from react-shallow-renderer, which is
- * copyrighted to Facebook and licensed under the MIT License, found a the link
+ * copyrighted to Facebook and licensed under the MIT License, found at the link
  * below:
  *
  * https://github.com/enzymejs/react-shallow-renderer/blob/802c735ee53bf2d965797760698cacbd46088f66/LICENSE
@@ -9,7 +9,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 
 import * as preact from 'preact/compat';
-import type { ComponentType, VNode } from 'preact';
+import type { VNode } from 'preact';
 import PropTypes from 'prop-types';
 import sinon from 'sinon';
 
@@ -21,46 +21,34 @@ const {
   PureComponent,
   createElement,
   cloneElement,
-  memo: realMemo,
+  memo,
+  forwardRef,
+  createRef,
 } = preact;
 const createRenderer = Preact10ShallowDiff.createRenderer;
 
-function memo<T extends ComponentType<any>>(component: T): T {
-  return realMemo<T>(component as any) as any;
-}
-
-// TODO: React.memo doesn't manifest as a separate component in the virtual
-// tree, so calls to `instance.setState` and other methods are expected to
-// operate on the underlying component beneath memo. However in Preact, since
-// `memo` is it's own component, calls to `instance.setState` operate on the
-// memo component and not the real component underneath it. Might need to fix
-// this for proper shallow rendering to work.
-describe('Preact10ShallowDiffMemo', () => {
+describe('Preact10ShallowDiff', () => {
   installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {
     const logs: string[] = [];
     const logger = (message: string) => () => {
       logs.push(message);
+      return true;
     };
 
-    const SomeComponent = memo(
-      class SomeComponent extends Component<{ foo: number }> {
-        UNSAFE_componentWillMount = logger('componentWillMount');
-        componentDidMount = logger('componentDidMount');
-        UNSAFE_componentWillReceiveProps = logger('componentWillReceiveProps');
-        shouldComponentUpdate = () => {
-          logger('shouldComponentUpdate')();
-          return true;
-        };
-        UNSAFE_componentWillUpdate = logger('componentWillUpdate');
-        componentDidUpdate = logger('componentDidUpdate');
-        componentWillUnmount = logger('componentWillUnmount');
-        render() {
-          return <div />;
-        }
+    class SomeComponent extends Component<{ foo?: number }> {
+      UNSAFE_componentWillMount = logger('componentWillMount');
+      componentDidMount = logger('componentDidMount');
+      UNSAFE_componentWillReceiveProps = logger('componentWillReceiveProps');
+      shouldComponentUpdate = logger('shouldComponentUpdate');
+      UNSAFE_componentWillUpdate = logger('componentWillUpdate');
+      componentDidUpdate = logger('componentDidUpdate');
+      componentWillUnmount = logger('componentWillUnmount');
+      render() {
+        return <div />;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent foo={1} />);
@@ -71,7 +59,7 @@ describe('Preact10ShallowDiffMemo', () => {
 
     logs.splice(0);
 
-    const instance = shallowRenderer.getMountedInstance()!;
+    const instance = shallowRenderer.getMountedInstance() as SomeComponent;
     instance.setState({});
 
     expect(logs).toEqual(['shouldComponentUpdate', 'componentWillUpdate']);
@@ -92,27 +80,23 @@ describe('Preact10ShallowDiffMemo', () => {
     const logs: string[] = [];
     const logger = (message: string) => () => {
       logs.push(message);
+      return true;
     };
 
-    const SomeComponent = memo(
-      class SomeComponent extends Component<{ foo: number }> {
-        state = {};
-        static getDerivedStateFromProps = () => {
-          logger('getDerivedStateFromProps')();
-          return null;
-        };
-        componentDidMount = logger('componentDidMount');
-        shouldComponentUpdate = () => {
-          logger('shouldComponentUpdate')();
-          return true;
-        };
-        componentDidUpdate = logger('componentDidUpdate');
-        componentWillUnmount = logger('componentWillUnmount');
-        render() {
-          return <div />;
-        }
+    class SomeComponent extends Component<{ foo?: number }> {
+      state = {};
+      static getDerivedStateFromProps = () => {
+        logger('getDerivedStateFromProps')();
+        return null;
+      };
+      componentDidMount = logger('componentDidMount');
+      shouldComponentUpdate = logger('shouldComponentUpdate');
+      componentDidUpdate = logger('componentDidUpdate');
+      componentWillUnmount = logger('componentWillUnmount');
+      render() {
+        return <div />;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent foo={1} />);
@@ -123,7 +107,7 @@ describe('Preact10ShallowDiffMemo', () => {
 
     logs.splice(0);
 
-    const instance = shallowRenderer.getMountedInstance()!;
+    const instance = shallowRenderer.getMountedInstance() as SomeComponent;
     instance.setState({});
 
     expect(logs).toEqual(['getDerivedStateFromProps', 'shouldComponentUpdate']);
@@ -137,26 +121,24 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
-    const SomeComponent = memo(
-      class SomeComponent extends Component {
-        state = {};
-        static getDerivedStateFromProps() {
-          return null;
-        }
-        componentWillMount() {
-          throw Error('unexpected');
-        }
-        componentWillReceiveProps() {
-          throw Error('unexpected');
-        }
-        componentWillUpdate() {
-          throw Error('unexpected');
-        }
-        render() {
-          return null;
-        }
+    class SomeComponent extends Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
       }
-    );
+      componentWillMount() {
+        throw Error('unexpected componentWillMount');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected componentWillUpdate');
+      }
+      render() {
+        return null;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent />);
@@ -164,25 +146,23 @@ describe('Preact10ShallowDiffMemo', () => {
 
   // Preact doesn't use gSBU as a signal to avoid deprecated lifecycles. Only gDSFP is that signal
   it.skip('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
-    const SomeComponent = memo(
-      class SomeComponent extends Component<{ value: number }> {
-        getSnapshotBeforeUpdate() {
-          return null;
-        }
-        componentWillMount() {
-          throw Error('unexpected');
-        }
-        componentWillReceiveProps() {
-          throw Error('unexpected');
-        }
-        componentWillUpdate() {
-          throw Error('unexpected');
-        }
-        render() {
-          return null;
-        }
+    class SomeComponent extends Component<{ value: number }> {
+      getSnapshotBeforeUpdate() {
+        return null;
       }
-    );
+      componentWillMount() {
+        throw Error('unexpected componentWillMount');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected componentWillUpdate');
+      }
+      render() {
+        return null;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent value={1} />);
@@ -190,19 +170,17 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should not call getSnapshotBeforeUpdate or componentDidUpdate when updating since refs wont exist', () => {
-    const SomeComponent = memo(
-      class SomeComponent extends Component<{ value: number }> {
-        getSnapshotBeforeUpdate() {
-          throw Error('unexpected');
-        }
-        componentDidUpdate() {
-          throw Error('unexpected');
-        }
-        render() {
-          return null;
-        }
+    class SomeComponent extends Component<{ value: number }> {
+      getSnapshotBeforeUpdate() {
+        throw Error('unexpected');
       }
-    );
+      componentDidUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent value={1} />);
@@ -210,15 +188,14 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should only render 1 level deep', () => {
-    const Parent = memo(function Parent() {
+    function Parent() {
       return (
         <div>
           <Child />
         </div>
       );
-    });
-
-    function Child(): JSX.Element {
+    }
+    function Child(): any {
       throw Error('This component should not render');
     }
 
@@ -227,18 +204,16 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should have shallow rendering', () => {
-    const SomeComponent = memo(
-      class SomeComponent extends Component {
-        render() {
-          return (
-            <div>
-              <span className="child1" />
-              <span className="child2" />
-            </div>
-          );
-        }
+    class SomeComponent extends Component {
+      render() {
+        return (
+          <div>
+            <span className="child1" />
+            <span className="child2" />
+          </div>
+        );
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent />) as VNode<any>;
@@ -250,27 +225,50 @@ describe('Preact10ShallowDiffMemo', () => {
     ]);
   });
 
+  it('should handle ForwardRef', () => {
+    const testRef = createRef();
+    const SomeComponent = forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(
+      <SomeComponent ref={testRef} />
+    ) as VNode;
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
+  // Note: Preact doesn't have a Profiler
   it.skip('should handle Profiler', () => {
     // To make TS happy;
     const Profiler = (props: any) => props.children;
 
-    const SomeComponent = memo(
-      class SomeComponent extends Component {
-        render() {
-          return (
-            <Profiler id="test" onRender={sinon.spy()}>
-              <div>
-                <span className="child1" />
-                <span className="child2" />
-              </div>
-            </Profiler>
-          );
-        }
+    class SomeComponent extends Component {
+      render() {
+        return (
+          <Profiler id="test" onRender={() => {}}>
+            <div>
+              <span className="child1" />
+              <span className="child2" />
+            </div>
+          </Profiler>
+        );
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SomeComponent />) as VNode<any>;
+    const result = shallowRenderer.render(<SomeComponent />) as VNode;
 
     expect(result.type).toBe(Profiler);
     expect(result.props.children).toEqual(
@@ -283,19 +281,18 @@ describe('Preact10ShallowDiffMemo', () => {
 
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
     type State = { update: boolean };
+
     let renderCounter = 0;
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{}, State> {
-        state = { update: false };
-        shouldComponentUpdate(nextProps: {}, nextState: State) {
-          return this.state.update !== nextState.update;
-        }
-        render() {
-          renderCounter++;
-          return <div>{`${renderCounter}`}</div>;
-        }
+    class SimpleComponent extends Component<{}, State> {
+      state = { update: false };
+      shouldComponentUpdate(nextProps: State, nextState: State) {
+        return this.state.update !== nextState.update;
       }
-    );
+      render() {
+        renderCounter++;
+        return <div>{`${renderCounter}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -311,15 +308,13 @@ describe('Preact10ShallowDiffMemo', () => {
 
   it('should enable PureComponent to prevent a re-render', () => {
     let renderCounter = 0;
-    const SimpleComponent = memo(
-      class SimpleComponent extends PureComponent {
-        state = { update: false };
-        render() {
-          renderCounter++;
-          return <div>{`${renderCounter}`}</div>;
-        }
+    class SimpleComponent extends PureComponent {
+      state = { update: false };
+      render() {
+        renderCounter++;
+        return <div>{`${renderCounter}`}</div>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -334,19 +329,19 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should not run shouldComponentUpdate during forced update', () => {
+    type State = { count: number };
+
     let scuCounter = 0;
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        state = { count: 1 };
-        shouldComponentUpdate() {
-          scuCounter++;
-          return false;
-        }
-        render() {
-          return <div>{`${this.state.count}`}</div>;
-        }
+    class SimpleComponent extends Component<{}, State> {
+      state = { count: 1 };
+      shouldComponentUpdate() {
+        scuCounter++;
+        return false;
       }
-    );
+      render() {
+        return <div>{`${this.state.count}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -375,14 +370,12 @@ describe('Preact10ShallowDiffMemo', () => {
 
   it('should rerender when calling forceUpdate', () => {
     let renderCounter = 0;
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        render() {
-          renderCounter += 1;
-          return <div />;
-        }
+    class SimpleComponent extends Component {
+      render() {
+        renderCounter += 1;
+        return <div />;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -404,16 +397,14 @@ describe('Preact10ShallowDiffMemo', () => {
         </div>
       );
     }
-    const SomeMemoComponent = memo(SomeComponent);
-
     SomeComponent.contextTypes = {
       bar: PropTypes.string,
     };
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SomeMemoComponent foo={'FOO'} />, {
+    const result = shallowRenderer.render(<SomeComponent foo={'FOO'} />, {
       bar: 'BAR',
-    }) as VNode<any>;
+    }) as VNode;
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -425,17 +416,19 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should shallow render a component returning strings directly from render', () => {
-    const Text = memo(({ value }) => value);
+    const Text = ({ value }: { value: string }) => value;
 
     const shallowRenderer = createRenderer();
+    // @ts-ignore Components can return strings
     const result = shallowRenderer.render(<Text value="foo" />);
     expect(result).toEqual('foo');
   });
 
   it('should shallow render a component returning numbers directly from render', () => {
-    const Text = memo(({ value }) => value);
+    const Text = ({ value }: { value: number }) => value;
 
     const shallowRenderer = createRenderer();
+    // @ts-ignore Components can return numbers
     const result = shallowRenderer.render(<Text value={10} />);
     expect(result).toEqual(10);
   });
@@ -446,13 +439,13 @@ describe('Preact10ShallowDiffMemo', () => {
         return <div />;
       }
     }
-    class Fragment extends Component {
+    class ArrayReturn extends Component {
       render() {
         return [<div key="a" />, <span key="b" />, <SomeComponent />];
       }
     }
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<Fragment />);
+    const result = shallowRenderer.render(<ArrayReturn />);
     expect(result).toEqual([
       <div key="a" />,
       <span key="b" />,
@@ -501,7 +494,7 @@ describe('Preact10ShallowDiffMemo', () => {
         'passing a component class, make sure to instantiate it by passing it ' +
         'to Preact.createElement.'
     );
-    expect(() => shallowRenderer.render(<div />)).toThrowError(
+    expect(() => shallowRenderer.render((<div />) as any)).toThrowError(
       'Preact10ShallowDiff render(): Shallow rendering works only with ' +
         'custom components, not primitives (div). Instead of calling ' +
         '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
@@ -542,7 +535,7 @@ describe('Preact10ShallowDiffMemo', () => {
   it('can shallow render with a ref', () => {
     class SomeComponent extends Component {
       render() {
-        // @ts-ignore Allow string refs for this test
+        // @ts-ignore Specifically testing that string refs don't cause crash
         return <div ref="hello" />;
       }
     }
@@ -553,7 +546,10 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('lets you update shallowly rendered components', () => {
-    class SomeComponent extends Component<{ aNew?: string }> {
+    class SomeComponent extends Component<
+      { aNew?: string },
+      { clicked: boolean }
+    > {
       state = { clicked: false };
 
       onClick = () => {
@@ -581,7 +577,7 @@ describe('Preact10ShallowDiffMemo', () => {
     }
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SomeComponent />) as VNode<any>;
+    const result = shallowRenderer.render(<SomeComponent />) as VNode;
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
       <span className="child1" />,
@@ -603,36 +599,32 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can access the mounted component instance', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{ n: number }> {
-        someMethod = () => {
-          return this.props.n;
-        };
+    class SimpleComponent extends Component<{ n: number }> {
+      someMethod = () => {
+        return this.props.n;
+      };
 
-        render() {
-          return <div>{this.props.n}</div>;
-        }
+      render() {
+        return <div>{this.props.n}</div>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent n={5} />);
-    const instance = shallowRenderer.getMountedInstance() as any;
+    const instance = shallowRenderer.getMountedInstance() as SimpleComponent;
     expect(instance.someMethod()).toEqual(5);
   });
 
   it('can shallowly render components with contextTypes', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        static contextTypes: any = {
-          name: PropTypes.string,
-        };
+    class SimpleComponent extends Component {
+      static contextTypes = {
+        name: PropTypes.string,
+      };
 
-        render() {
-          return <div />;
-        }
+      render() {
+        return <div />;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent />);
@@ -653,38 +645,38 @@ describe('Preact10ShallowDiffMemo', () => {
     const updatedProp = { prop: 'updated prop' };
     const updatedContext = { context: 'updated context' };
 
-    type Props = { prop: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props> {
-        constructor(props: Props, context: any) {
-          super(props, context);
-          this.state = initialState;
-        }
-        static contextTypes: any = {
-          context: PropTypes.string,
-        };
-        componentDidUpdate(...args: any[]) {
-          componentDidUpdateParams.push(...args);
-        }
-        UNSAFE_componentWillReceiveProps(...args: any[]) {
-          componentWillReceivePropsParams.push(...args);
-          this.setState((...innerArgs) => {
-            setStateParams.push(...innerArgs);
-            return updatedState;
-          });
-        }
-        UNSAFE_componentWillUpdate(...args: any[]) {
-          componentWillUpdateParams.push(...args);
-        }
-        shouldComponentUpdate(...args: any[]) {
-          shouldComponentUpdateParams.push(...args);
-          return true;
-        }
-        render() {
-          return null;
-        }
+    class SimpleComponent extends Component<
+      { prop: string },
+      { state: string }
+    > {
+      constructor(props: any, context: any) {
+        super(props, context);
+        this.state = initialState;
       }
-    );
+      static contextTypes = {
+        context: PropTypes.string,
+      };
+      componentDidUpdate(...args: any[]) {
+        componentDidUpdateParams.push(...args);
+      }
+      UNSAFE_componentWillReceiveProps(...args: any[]) {
+        componentWillReceivePropsParams.push(...args);
+        this.setState((...innerArgs) => {
+          setStateParams.push(...innerArgs);
+          return updatedState;
+        });
+      }
+      UNSAFE_componentWillUpdate(...args: any[]) {
+        componentWillUpdateParams.push(...args);
+      }
+      shouldComponentUpdate(...args: any[]) {
+        shouldComponentUpdateParams.push(...args);
+        return true;
+      }
+      render() {
+        return null;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(
@@ -731,32 +723,32 @@ describe('Preact10ShallowDiffMemo', () => {
     const updatedProp = { prop: 'updated prop' };
     const updatedContext = { context: 'updated context' };
 
-    type Props = { prop: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props> {
-        constructor(props: Props, context: any) {
-          super(props, context);
-          this.state = initialState;
-        }
-        static contextTypes: any = {
-          context: PropTypes.string,
-        };
-        componentDidUpdate(...args: any[]) {
-          componentDidUpdateParams.push(...args);
-        }
-        static getDerivedStateFromProps(...args: any[]) {
-          getDerivedStateFromPropsParams.push(args);
-          return null;
-        }
-        shouldComponentUpdate(...args: any[]) {
-          shouldComponentUpdateParams.push(...args);
-          return true;
-        }
-        render() {
-          return null;
-        }
+    class SimpleComponent extends Component<
+      { prop: string },
+      { state: string }
+    > {
+      constructor(props: any, context: any) {
+        super(props, context);
+        this.state = initialState;
       }
-    );
+      static contextTypes = {
+        context: PropTypes.string,
+      };
+      componentDidUpdate(...args: any[]) {
+        componentDidUpdateParams.push(...args);
+      }
+      static getDerivedStateFromProps(...args: any[]) {
+        getDerivedStateFromPropsParams.push(args);
+        return null;
+      }
+      shouldComponentUpdate(...args: any) {
+        shouldComponentUpdateParams.push(...args);
+        return true;
+      }
+      render() {
+        return null;
+      }
+    }
 
     const shallowRenderer = createRenderer();
 
@@ -790,25 +782,23 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can shallowly render components with ref as function', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        state = { clicked: false };
+    class SimpleComponent extends Component {
+      state = { clicked: false };
 
-        handleUserClick = () => {
-          this.setState({ clicked: true });
-        };
+      handleUserClick = () => {
+        this.setState({ clicked: true });
+      };
 
-        render() {
-          return (
-            <div
-              ref={() => {}}
-              onClick={this.handleUserClick}
-              className={this.state.clicked ? 'clicked' : ''}
-            />
-          );
-        }
+      render() {
+        return (
+          <div
+            ref={() => {}}
+            onClick={this.handleUserClick}
+            className={this.state.clicked ? 'clicked' : ''}
+          />
+        );
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -823,28 +813,29 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can initialize state via static getDerivedStateFromProps', () => {
-    type Props = { incrementBy: number };
-    type State = { count: number; other?: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        state: State = {
-          count: 1,
+    class SimpleComponent extends Component<
+      { incrementBy: number },
+      { count: number; other?: string }
+    > {
+      state = {
+        count: 1,
+      };
+
+      static getDerivedStateFromProps(props: any, prevState: any) {
+        return {
+          count: prevState.count + props.incrementBy,
+          other: 'foobar',
         };
-
-        static getDerivedStateFromProps(props: Props, prevState: State) {
-          return {
-            count: prevState.count + props.incrementBy,
-            other: 'foobar',
-          };
-        }
-
-        render() {
-          return (
-            <div>{`count:${this.state.count}, other:${this.state.other}`}</div>
-          );
-        }
       }
-    );
+
+      render() {
+        return (
+          <div>{`count:${this.state.count}, other:${
+            (this.state as any).other
+          }`}</div>
+        );
+      }
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent incrementBy={2} />);
@@ -852,17 +843,15 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can setState in componentWillMount when shallow rendering', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{}, { groovy: string }> {
-        UNSAFE_componentWillMount() {
-          this.setState({ groovy: 'doovy' });
-        }
-
-        render() {
-          return <div>{this.state.groovy}</div>;
-        }
+    class SimpleComponent extends Component<{}, { groovy: string }> {
+      UNSAFE_componentWillMount() {
+        this.setState({ groovy: 'doovy' });
       }
-    );
+
+      render() {
+        return <div>{this.state.groovy}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent />);
@@ -870,25 +859,25 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can setState in componentWillMount repeatedly when shallow rendering', () => {
-    type State = { separator: string; groovy?: string; doovy?: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{}, State> {
-        state: State = {
-          separator: '-',
-        };
+    class SimpleComponent extends Component<
+      {},
+      { separator: string; groovy?: string; doovy?: string }
+    > {
+      state = {
+        separator: '-',
+      };
 
-        UNSAFE_componentWillMount() {
-          this.setState({ groovy: 'doovy' });
-          this.setState({ doovy: 'groovy' });
-        }
-
-        render() {
-          const { groovy, doovy, separator } = this.state;
-
-          return <div>{`${groovy}${separator}${doovy}`}</div>;
-        }
+      UNSAFE_componentWillMount() {
+        this.setState({ groovy: 'doovy' });
+        this.setState({ doovy: 'groovy' });
       }
-    );
+
+      render() {
+        const { groovy, doovy, separator } = this.state as any;
+
+        return <div>{`${groovy}${separator}${doovy}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent />);
@@ -896,25 +885,25 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can setState in componentWillMount with an updater function repeatedly when shallow rendering', () => {
-    type State = { separator: string; groovy?: string; doovy?: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{}, State> {
-        state: State = {
-          separator: '-',
-        };
+    class SimpleComponent extends Component<
+      {},
+      { separator: string; groovy?: string; doovy?: string }
+    > {
+      state = {
+        separator: '-',
+      };
 
-        UNSAFE_componentWillMount() {
-          this.setState(state => ({ groovy: 'doovy' }));
-          this.setState(state => ({ doovy: state.groovy }));
-        }
-
-        render() {
-          const { groovy, doovy, separator } = this.state;
-
-          return <div>{`${groovy}${separator}${doovy}`}</div>;
-        }
+      UNSAFE_componentWillMount() {
+        this.setState(state => ({ groovy: 'doovy' }));
+        this.setState(state => ({ doovy: state.groovy }));
       }
-    );
+
+      render() {
+        const { groovy, doovy, separator } = this.state as any;
+
+        return <div>{`${groovy}${separator}${doovy}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent />);
@@ -924,98 +913,91 @@ describe('Preact10ShallowDiffMemo', () => {
   it('can setState in componentWillReceiveProps when shallow rendering', () => {
     type Props = { updateState: boolean };
     type State = { count: number };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        state = { count: 0 };
+    class SimpleComponent extends Component<Props, State> {
+      state = { count: 0 };
 
-        UNSAFE_componentWillReceiveProps(nextProps: Props) {
-          if (nextProps.updateState) {
-            this.setState({ count: 1 });
-          }
-        }
-
-        render() {
-          return <div>{this.state.count}</div>;
+      UNSAFE_componentWillReceiveProps(nextProps: Props) {
+        if (nextProps.updateState) {
+          this.setState({ count: 1 });
         }
       }
-    );
+
+      render() {
+        return <div>{this.state.count}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(
       <SimpleComponent updateState={false} />
-    ) as VNode<any>;
+    ) as VNode;
     expect(result.props.children).toEqual(0);
 
     result = shallowRenderer.render(
       <SimpleComponent updateState={true} />
-    ) as VNode<any>;
+    ) as VNode;
     expect(result.props.children).toEqual(1);
   });
 
   it('can update state with static getDerivedStateFromProps when shallow rendering', () => {
     type Props = { updateState: boolean; incrementBy: number };
     type State = { count: number };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        state = { count: 1 };
+    class SimpleComponent extends Component<Props, State> {
+      state = { count: 1 };
 
-        static getDerivedStateFromProps(nextProps: Props, prevState: State) {
-          if (nextProps.updateState) {
-            return { count: nextProps.incrementBy + prevState.count };
-          }
-
-          return null;
+      static getDerivedStateFromProps(nextProps: Props, prevState: State) {
+        if (nextProps.updateState) {
+          return { count: nextProps.incrementBy + prevState.count };
         }
 
-        render() {
-          return <div>{this.state.count}</div>;
-        }
+        return null;
       }
-    );
+
+      render() {
+        return <div>{this.state.count}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(
       <SimpleComponent updateState={false} incrementBy={0} />
-    ) as VNode<any>;
+    ) as VNode;
     expect(result.props.children).toEqual(1);
 
     result = shallowRenderer.render(
       <SimpleComponent updateState={true} incrementBy={2} />
-    ) as VNode<any>;
+    ) as VNode;
     expect(result.props.children).toEqual(3);
 
     result = shallowRenderer.render(
       <SimpleComponent updateState={false} incrementBy={2} />
-    ) as VNode<any>;
+    ) as VNode;
     expect(result.props.children).toEqual(3);
   });
 
   it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
-    type Props = {};
     type State = { value: number };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        state = { value: 0 };
+    class SimpleComponent extends Component<{}, State> {
+      state = { value: 0 };
 
-        static getDerivedStateFromProps(nextProps: Props, prevState: State) {
-          return { ...prevState };
-        }
-
-        updateState = () => {
-          this.setState(state => ({ value: state.value + 1 }));
-        };
-
-        render() {
-          return <div>{`value:${this.state.value}`}</div>;
-        }
+      static getDerivedStateFromProps(nextProps: {}, prevState: State) {
+        return { ...prevState };
       }
-    );
+
+      updateState = () => {
+        this.setState(state => ({ value: state.value + 1 }));
+      };
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(<SimpleComponent />);
     expect(result).toEqual(<div>value:0</div>);
 
-    const instance = shallowRenderer.getMountedInstance() as any;
+    const instance = shallowRenderer.getMountedInstance() as SimpleComponent;
     instance.updateState();
     result = shallowRenderer.getRenderOutput();
     expect(result).toEqual(<div>value:1</div>);
@@ -1024,31 +1006,29 @@ describe('Preact10ShallowDiffMemo', () => {
   it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
     type Props = { value: string };
     type State = { value: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        constructor(props: Props) {
-          super(props);
-          this.state = {
-            value: props.value,
-          };
-        }
-
-        static getDerivedStateFromProps(nextProps: Props, prevState: State) {
-          if (nextProps.value === prevState.value) {
-            return null;
-          }
-          return { value: nextProps.value };
-        }
-
-        shouldComponentUpdate(nextProps: Props, nextState: State) {
-          return nextState.value !== this.state.value;
-        }
-
-        render() {
-          return <div>{`value:${this.state.value}`}</div>;
-        }
+    class SimpleComponent extends Component<Props, State> {
+      constructor(props: Props) {
+        super(props);
+        this.state = {
+          value: props.value,
+        };
       }
-    );
+
+      static getDerivedStateFromProps(nextProps: Props, prevState: State) {
+        if (nextProps.value === prevState.value) {
+          return null;
+        }
+        return { value: nextProps.value };
+      }
+
+      shouldComponentUpdate(nextProps: Props, nextState: State) {
+        return nextState.value !== this.state.value;
+      }
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     const initialResult = shallowRenderer.render(
@@ -1062,178 +1042,166 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('can setState with an updater function', () => {
-    let instance: any;
+    let instance: SimpleComponent = null as any;
 
-    type Props = { defaultCount: number };
-    type State = { counter: number };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        state = {
-          counter: 0,
-        };
+    class SimpleComponent extends Component<
+      { defaultCount: number },
+      { counter: number }
+    > {
+      state = {
+        counter: 0,
+      };
 
-        render() {
-          instance = this;
-          return (
-            // @ts-ignore Preserve the test as written here
-            <button ref="button" onClick={this.onClick}>
-              {this.state.counter}
-            </button>
-          );
-        }
+      render() {
+        instance = this;
+        return (
+          // @ts-ignore Not sure why these are here, but leaving to match original test
+          <button ref="button" onClick={this.onClick}>
+            {this.state.counter}
+          </button>
+        );
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(
       <SimpleComponent defaultCount={1} />
-    ) as VNode<any>;
+    ) as VNode;
     expect(result.props.children).toEqual(0);
 
-    instance.setState((state: State, props: Props) => {
+    instance.setState((state, props) => {
       return { counter: props.defaultCount + 1 };
     });
 
-    result = shallowRenderer.getRenderOutput() as VNode<any>;
+    result = shallowRenderer.getRenderOutput() as VNode;
     expect(result.props.children).toEqual(2);
   });
 
   // Preact doesn't invoke setState updater functions with a this context
   it.skip('can access component instance from setState updater function', done => {
-    let instance: any;
+    let instance: SimpleComponent = null as any;
 
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{}, {}> {
-        state = {};
+    class SimpleComponent extends Component {
+      state = {};
 
-        render() {
-          instance = this;
-          return null;
-        }
+      render() {
+        instance = this;
+        return null;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
 
-    instance.setState(function updater(this: any, state: any, props: any) {
+    instance.setState(function updater(this: SimpleComponent) {
       expect(this).toBe(instance);
       done();
     });
   });
 
   it('can setState with a callback', () => {
-    let instance: any;
+    let instance: SimpleComponent = null as any;
 
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        state = {
-          counter: 0,
-        };
-        render() {
-          instance = this;
-          return <p>{this.state.counter}</p>;
-        }
+    class SimpleComponent extends Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return <p>{this.state.counter}</p>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SimpleComponent />) as VNode<any>;
+    const result = shallowRenderer.render(<SimpleComponent />) as VNode;
     expect(result.props.children).toBe(0);
 
-    const callback = sinon.spy(function (this: any) {
+    const callback = sinon.spy(function (this: SimpleComponent) {
       expect(this).toBe(instance);
     });
 
     instance.setState({ counter: 1 }, callback);
 
-    const updated = shallowRenderer.getRenderOutput() as VNode<any>;
+    const updated = shallowRenderer.getRenderOutput() as VNode;
     expect(updated.props.children).toBe(1);
     expect(callback).toHaveBeenCalled();
   });
 
-  // Removing test for not-supported React API
+  // Ignoring test for a non public React renderer API
   /*
-  it.skip('can replaceState with a callback', () => {
-    let instance: any;
+  it('can replaceState with a callback', () => {
+    let instance;
 
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        state = {
-          counter: 0,
-        };
-        render() {
-          instance = this;
-          return <p>{this.state.counter}</p>;
-        }
+    class SimpleComponent extends React.Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return <p>{this.state.counter}</p>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SimpleComponent />) as VNode<any>;
+    const result = shallowRenderer.render(<SimpleComponent />);
     expect(result.props.children).toBe(0);
 
-    const callback = sinon.spy(function (this: any) {
+    const callback = jest.fn(function () {
       expect(this).toBe(instance);
     });
 
     // No longer a public API, but we can test that it works internally by
     // reaching into the updater.
-    (shallowRenderer as any)._updater.enqueueReplaceState(
+    shallowRenderer._updater.enqueueReplaceState(
       instance,
       { counter: 1 },
       callback
     );
 
-    const updated = shallowRenderer.getRenderOutput() as VNode<any>;
+    const updated = shallowRenderer.getRenderOutput();
     expect(updated.props.children).toBe(1);
     expect(callback).toHaveBeenCalled();
   });
   */
 
   it('can forceUpdate with a callback', () => {
-    let instance: any;
+    let instance: SimpleComponent = null as any;
 
-    type State = { counter: number };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{}, State> {
-        state = {
-          counter: 0,
-        };
-        render() {
-          instance = this;
-          return <p>{this.state.counter}</p>;
-        }
+    class SimpleComponent extends Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return <p>{this.state.counter}</p>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SimpleComponent />) as VNode<any>;
+    const result = shallowRenderer.render(<SimpleComponent />) as VNode;
     expect(result.props.children).toBe(0);
 
-    const callback = sinon.spy(function (this: any) {
+    const callback = sinon.spy(function (this: SimpleComponent) {
       expect(this).toBe(instance);
     });
 
     instance.forceUpdate(callback);
 
-    const updated = shallowRenderer.getRenderOutput() as VNode<any>;
+    const updated = shallowRenderer.getRenderOutput() as VNode;
     expect(updated.props.children).toBe(0);
     expect(callback).toHaveBeenCalled();
   });
 
   it('can pass context when shallowly rendering', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        static contextTypes: any = {
-          name: PropTypes.string,
-        };
+    class SimpleComponent extends Component {
+      static contextTypes = {
+        name: PropTypes.string,
+      };
 
-        render() {
-          return <div>{this.context.name}</div>;
-        }
+      render() {
+        return <div>{this.context.name}</div>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent />, {
@@ -1243,21 +1211,19 @@ describe('Preact10ShallowDiffMemo', () => {
   });
 
   it('should track context across updates', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        static contextTypes: any = {
-          foo: PropTypes.string,
-        };
+    class SimpleComponent extends Component {
+      static contextTypes = {
+        foo: PropTypes.string,
+      };
 
-        state = {
-          bar: 'bar',
-        };
+      state = {
+        bar: 'bar',
+      };
 
-        render() {
-          return <div>{`${this.context.foo}:${this.state.bar}`}</div>;
-        }
+      render() {
+        return <div>{`${this.context.foo}:${this.state.bar}`}</div>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     let result = shallowRenderer.render(<SimpleComponent />, {
@@ -1265,7 +1231,7 @@ describe('Preact10ShallowDiffMemo', () => {
     });
     expect(result).toEqual(<div>foo:bar</div>);
 
-    const instance = shallowRenderer.getMountedInstance()!;
+    const instance = shallowRenderer.getMountedInstance() as SimpleComponent;
     instance.setState({ bar: 'baz' });
 
     result = shallowRenderer.getRenderOutput();
@@ -1274,38 +1240,34 @@ describe('Preact10ShallowDiffMemo', () => {
 
   // Preact doesn't support this contextTypes
   it.skip('should filter context by contextTypes', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        static contextTypes: any = {
-          foo: PropTypes.string,
-        };
-        render() {
-          return <div>{`${this.context.foo}:${this.context.bar}`}</div>;
-        }
+    class SimpleComponent extends Component {
+      static contextTypes = {
+        foo: PropTypes.string,
+      };
+      render() {
+        return <div>{`${this.context.foo}:${this.context.bar}`}</div>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SimpleComponent />, {
       foo: 'foo',
       bar: 'bar',
-    });
+    }) as VNode;
     expect(result).toEqual(<div>foo:undefined</div>);
   });
 
   // Preact doesn't support this contextTypes
   it.skip('can fail context when shallowly rendering', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component {
-        static contextTypes: any = {
-          name: PropTypes.string.isRequired,
-        };
+    class SimpleComponent extends Component {
+      static contextTypes = {
+        name: PropTypes.string.isRequired,
+      };
 
-        render() {
-          return <div>{this.context.name}</div>;
-        }
+      render() {
+        return <div>{this.context.name}</div>;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(<SimpleComponent />)).toErrorDev(
@@ -1317,46 +1279,44 @@ describe('Preact10ShallowDiffMemo', () => {
 
   // Preact only validates prop types when preact/debug is included
   it.skip('should warn about propTypes (but only once)', () => {
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<{ name: any }> {
-        static propTypes: any = {
-          name: PropTypes.string.isRequired,
-        };
+    class SimpleComponent extends Component<{ name: any }> {
+      static propTypes: any;
 
-        render() {
-          return createElement('div', null, this.props.name);
-        }
+      render() {
+        return createElement('div', null, this.props.name);
       }
-    );
+    }
+
+    SimpleComponent.propTypes = {
+      name: PropTypes.string.isRequired,
+    };
 
     const shallowRenderer = createRenderer();
     expect(() =>
       shallowRenderer.render(createElement(SimpleComponent, { name: 123 }))
     ).toErrorDev(
       'Warning: Failed prop type: Invalid prop `name` of type `number` ' +
-        'supplied to `SimpleComponent`, expected `string`.\n' +
-        '    in SimpleComponent'
+        'supplied to `SimpleComponent`, expected `string`.',
+      { withoutStack: true }
     );
   });
 
   it('should enable rendering of cloned element', () => {
     type Props = { foo: string };
     type State = { bar: string };
-    const SimpleComponent = memo(
-      class SimpleComponent extends Component<Props, State> {
-        constructor(props: Props) {
-          super(props);
+    class SimpleComponent extends Component<Props, State> {
+      constructor(props: Props) {
+        super(props);
 
-          this.state = {
-            bar: 'bar',
-          };
-        }
-
-        render() {
-          return <div>{`${this.props.foo}:${this.state.bar}`}</div>;
-        }
+        this.state = {
+          bar: 'bar',
+        };
       }
-    );
+
+      render() {
+        return <div>{`${this.props.foo}:${this.state.bar}`}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     const el = <SimpleComponent foo="foo" />;
@@ -1374,30 +1334,28 @@ describe('Preact10ShallowDiffMemo', () => {
 
     type Props = {};
     type State = { hasUpdatedState: boolean };
-    const SomeComponent = memo(
-      class SomeComponent extends Component<Props, State> {
-        constructor(props: Props, context: any) {
-          super(props, context);
-          this.state = {
-            hasUpdatedState: false,
-          };
-        }
-
-        UNSAFE_componentWillMount() {
-          this.setState(
-            { hasUpdatedState: true },
-            () => (stateSuccessfullyUpdated = this.state.hasUpdatedState)
-          );
-        }
-
-        render() {
-          return <div>{this.props.children}</div>;
-        }
+    class SimpleComponent extends Component<Props, State> {
+      constructor(props: Props, context: any) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
       }
-    );
+
+      UNSAFE_componentWillMount() {
+        this.setState(
+          { hasUpdatedState: true },
+          () => (stateSuccessfullyUpdated = this.state.hasUpdatedState)
+        );
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.render(<SimpleComponent />);
     expect(stateSuccessfullyUpdated).toBe(true);
   });
 
@@ -1406,34 +1364,31 @@ describe('Preact10ShallowDiffMemo', () => {
     const mockFn = sinon.spy();
     const shallowRenderer = createRenderer();
 
-    type Props = {};
-    type State = { foo: string };
-    const SomeComponent = memo(
-      class SomeComponent extends Component<Props, State> {
-        constructor(props: Props, context: any) {
-          super(props, context);
-          this.state = {
-            foo: 'foo',
-          };
-        }
-
-        UNSAFE_componentWillMount() {
-          this.setState({ foo: 'bar' }, () => mockFn());
-          this.setState({ foo: 'foobar' }, () => mockFn());
-        }
-
-        render() {
-          return <div>{this.state.foo}</div>;
-        }
+    class SimpleComponent extends Component<{}, { foo: string }> {
+      constructor(props: {}, context: any) {
+        super(props, context);
+        this.state = {
+          foo: 'foo',
+        };
       }
-    );
 
-    shallowRenderer.render(<SomeComponent />);
+      UNSAFE_componentWillMount() {
+        this.setState({ foo: 'bar' }, () => mockFn());
+        this.setState({ foo: 'foobar' }, () => mockFn());
+      }
+
+      render() {
+        return <div>{this.state.foo}</div>;
+      }
+    }
+
+    shallowRenderer.render(<SimpleComponent />);
 
     expect(mockFn).toHaveBeenCalledTimes(2);
 
     // Ensure the callback queue is cleared after the callbacks are invoked
-    const mountedInstance = shallowRenderer.getMountedInstance()!;
+    const mountedInstance =
+      shallowRenderer.getMountedInstance() as SimpleComponent;
     mountedInstance.setState({ foo: 'bar' }, () => mockFn());
     expect(mockFn).toHaveBeenCalledTimes(3);
   });
@@ -1441,31 +1396,28 @@ describe('Preact10ShallowDiffMemo', () => {
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
     const mockFn = sinon.spy(() => false);
 
-    type Props = {};
-    type State = { hasUpdatedState: boolean };
-    const SomeComponent = memo(
-      class SomeComponent extends Component<Props, State> {
-        constructor(props: Props, context: any) {
-          super(props, context);
-          this.state = {
-            hasUpdatedState: false,
-          };
-        }
-
-        shouldComponentUpdate() {
-          return mockFn();
-        }
-
-        render() {
-          return <div>{this.state.hasUpdatedState}</div>;
-        }
+    class SimpleComponent extends Component<{}, { hasUpdatedState: boolean }> {
+      constructor(props: {}, context: any) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
       }
-    );
+
+      shouldComponentUpdate() {
+        return mockFn();
+      }
+
+      render() {
+        return <div>{this.state.hasUpdatedState}</div>;
+      }
+    }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.render(<SimpleComponent />);
 
-    const mountedInstance = shallowRenderer.getMountedInstance()!;
+    const mountedInstance =
+      shallowRenderer.getMountedInstance() as SimpleComponent;
     mountedInstance.setState({ hasUpdatedState: true }, () => {
       expect(mockFn).toBeCalled();
       expect(mountedInstance.state.hasUpdatedState).toBe(true);
@@ -1478,13 +1430,13 @@ describe('Preact10ShallowDiffMemo', () => {
 
     const renderAndVerifyWarningAndError = (
       SomeComponent: any,
-      typeString: any
+      typeString: string
     ) => {
       expect(() => {
         shallowRenderer.render(<SomeComponent />);
         // Preact doesn't support dev time only errors outside of preact/debug
-        // expect(() => shallowRenderer.render(<SomeComponent />)).toErrorDev(
-        //   'createElement: type is invalid -- expected a string ' +
+        // expect(() => shallowRenderer.render(<Component />)).toErrorDev(
+        //   'Preact.createElement: type is invalid -- expected a string ' +
         //     '(for built-in components) or a class/function (for composite components) ' +
         //     `but got: ${typeString}.`
         // );
@@ -1502,49 +1454,46 @@ describe('Preact10ShallowDiffMemo', () => {
 
   // Preact always initializes state to empty obj
   it.skip('should have initial state of null if not defined', () => {
-    const SomeComponent = memo(
-      class SomeComponent extends Component {
-        render() {
-          return <span />;
-        }
+    class SomeComponent extends Component {
+      render() {
+        return <span />;
       }
-    );
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent />);
 
-    expect(shallowRenderer.getMountedInstance()!.state).toBeNull();
+    const instance = shallowRenderer.getMountedInstance() as SomeComponent;
+    expect(instance.state).toBeNull();
   });
 
   // Preact does not invoke both methods. Both should never be defined
   it.skip('should invoke both deprecated and new lifecycles if both are present', () => {
     const log: string[] = [];
 
-    const SomeComponent = memo(
-      class SomeComponent extends Component<{ foo: string }> {
-        componentWillMount() {
-          log.push('componentWillMount');
-        }
-        componentWillReceiveProps() {
-          log.push('componentWillReceiveProps');
-        }
-        componentWillUpdate() {
-          log.push('componentWillUpdate');
-        }
-        UNSAFE_componentWillMount() {
-          log.push('UNSAFE_componentWillMount');
-        }
-        UNSAFE_componentWillReceiveProps() {
-          log.push('UNSAFE_componentWillReceiveProps');
-        }
-        UNSAFE_componentWillUpdate() {
-          log.push('UNSAFE_componentWillUpdate');
-        }
-        render() {
-          return null;
-        }
+    class SomeComponent extends Component<{ foo: string }> {
+      componentWillMount() {
+        log.push('componentWillMount');
       }
-    );
+      componentWillReceiveProps() {
+        log.push('componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('componentWillUpdate');
+      }
+      UNSAFE_componentWillMount() {
+        log.push('UNSAFE_componentWillMount');
+      }
+      UNSAFE_componentWillReceiveProps() {
+        log.push('UNSAFE_componentWillReceiveProps');
+      }
+      UNSAFE_componentWillUpdate() {
+        log.push('UNSAFE_componentWillUpdate');
+      }
+      render() {
+        return null;
+      }
+    }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent foo="bar" />);
@@ -1563,23 +1512,20 @@ describe('Preact10ShallowDiffMemo', () => {
 
   it('should stop the update when setState returns null or undefined', () => {
     const log: string[] = [];
-    type State = { count: number };
-    let instance: preact.Component<{}, State> = null as any;
-    const SomeComponent = memo(
-      class SomeComponent extends Component<{}, State> {
-        constructor(props: any) {
-          super(props);
-          this.state = {
-            count: 0,
-          };
-        }
-        render() {
-          log.push('render');
-          instance = this;
-          return null;
-        }
+    let instance: SomeComponent = null as any;
+    class SomeComponent extends Component<{}, { count: number }> {
+      constructor(props: {}) {
+        super(props);
+        this.state = {
+          count: 0,
+        };
       }
-    );
+      render() {
+        log.push('render');
+        instance = this;
+        return null;
+      }
+    }
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent />);
     log.length = 0;
@@ -1595,12 +1541,169 @@ describe('Preact10ShallowDiffMemo', () => {
   // Preact 10 does set this for Function components
   it.skip('should not get this in a function component', () => {
     const logs: any[] = [];
-    const Foo = memo(function Foo(this: any, props: any) {
+    function Foo(this: any, props: any) {
       logs.push(this);
       return <div>foo</div>;
-    });
+    }
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<Foo foo="bar" />);
     expect(logs).toEqual([undefined]);
+  });
+
+  it('should handle memo', () => {
+    function Foo() {
+      return <div>foo</div>;
+    }
+    const MemoFoo = memo(Foo);
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<MemoFoo />);
+  });
+
+  it('should enable memo to prevent a re-render', () => {
+    type Props = { count: number };
+    const logs: any[] = [];
+    const Foo = memo(({ count }: Props) => {
+      logs.push(`Foo: ${count}`);
+      return <div>{count}</div>;
+    });
+    const Bar = memo(({ count }: Props) => {
+      logs.push(`Bar: ${count}`);
+      return <div>{count}</div>;
+    });
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo count={1} />);
+    expect(logs).toEqual(['Foo: 1']);
+    logs.length = 0;
+    // Rendering the same element with the same props should be prevented
+    shallowRenderer.render(<Foo count={1} />);
+    expect(logs).toEqual([]);
+    // A different element with the same props should cause a re-render
+    shallowRenderer.render(<Bar count={1} />);
+    expect(logs).toEqual(['Bar: 1']);
+  });
+
+  it('should respect a custom comparison function with memo', () => {
+    let renderCount = 0;
+    function areEqual(props: any, nextProps: any) {
+      return props.foo === nextProps.foo;
+    }
+    const Foo = memo(({ foo, bar }) => {
+      renderCount++;
+      return (
+        <div>
+          {foo} {bar}
+        </div>
+      );
+    }, areEqual);
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo foo={1} bar={1} />);
+    expect(renderCount).toBe(1);
+    // Change a prop that the comparison funciton ignores
+    shallowRenderer.render(<Foo foo={1} bar={2} />);
+    expect(renderCount).toBe(1);
+    shallowRenderer.render(<Foo foo={2} bar={2} />);
+    expect(renderCount).toBe(2);
+  });
+
+  it('should not call the comparison function with memo on the initial render', () => {
+    const areEqual = sinon.spy(() => false);
+    const SomeComponent = memo(({ foo }: { foo: number }) => {
+      return <div>{foo}</div>;
+    }, areEqual);
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SomeComponent foo={1} />);
+    expect(areEqual).not.toHaveBeenCalled();
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>{1}</div>);
+  });
+
+  it('should handle memo(forwardRef())', () => {
+    const testRef = createRef();
+    const SomeComponent = forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
+
+    const SomeMemoComponent = memo(SomeComponent);
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(
+      <SomeMemoComponent ref={testRef} />
+    ) as VNode;
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
+  // Preact doesn't have this warning
+  it.skip('should warn for forwardRef(memo())', () => {
+    const testRef = createRef();
+    const SomeMemoComponent = memo(({ foo }: { foo?: string }) => {
+      return <div>{foo}</div>;
+    });
+    const shallowRenderer = createRenderer();
+    expect(() => {
+      expect(() => {
+        const SomeComponent = forwardRef(SomeMemoComponent);
+        shallowRenderer.render(<SomeComponent ref={testRef} />);
+      }).toErrorDev(
+        'Warning: forwardRef requires a render function but received ' +
+          'a `memo` component. Instead of forwardRef(memo(...)), use ' +
+          'memo(forwardRef(...))',
+        { withoutStack: true }
+      );
+    }).toThrowError(
+      'forwardRef requires a render function but was given object.'
+    );
+  });
+
+  it('should let you change type', () => {
+    function Foo({ prop }: { prop: string }) {
+      return <div>Foo {prop}</div>;
+    }
+    function Bar({ prop }: { prop: string }) {
+      return <div>Bar {prop}</div>;
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo prop="foo1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo1'}</div>);
+    shallowRenderer.render(<Foo prop="foo2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo2'}</div>);
+    shallowRenderer.render(<Bar prop="bar1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar1'}</div>);
+    shallowRenderer.render(<Bar prop="bar2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
+  });
+
+  it('should let you change class type', () => {
+    class Foo extends Component<{ prop: string }> {
+      render() {
+        return <div>Foo {this.props.prop}</div>;
+      }
+    }
+    class Bar extends Component<{ prop: string }> {
+      render() {
+        return <div>Bar {this.props.prop}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo prop="foo1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo1'}</div>);
+    shallowRenderer.render(<Foo prop="foo2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo2'}</div>);
+    shallowRenderer.render(<Bar prop="bar1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar1'}</div>);
+    shallowRenderer.render(<Bar prop="bar2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
   });
 });
