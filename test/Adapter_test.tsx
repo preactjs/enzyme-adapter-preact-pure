@@ -6,9 +6,11 @@ import Adapter from '../src/Adapter.js';
 import MountRenderer from '../src/MountRenderer.js';
 import ShallowRenderer from '../src/ShallowRenderer.js';
 import StringRenderer from '../src/StringRenderer.js';
-import { stripInternalVNodeFields } from './shared.js';
+import { installVNodeTestHook } from './shared.js';
 
 describe('Adapter', () => {
+  installVNodeTestHook();
+
   it('adds `type` and `props` attributes to VNodes', () => {
     // Add extra properties to vnodes for compatibility with Enzyme.
     new Adapter();
@@ -28,12 +30,10 @@ describe('Adapter', () => {
         adapter.createElement('img', { alt: 'bar' })
       );
       assert.deepEqual(
-        stripInternalVNodeFields(el),
-        stripInternalVNodeFields(
-          <div title="foo">
-            <img alt="bar" />
-          </div>
-        )
+        el,
+        <div title="foo">
+          <img alt="bar" />
+        </div>
       );
     });
   });
@@ -98,14 +98,19 @@ describe('Adapter', () => {
       );
     }
 
+    const testRef = () => {};
+
+    // Delay creating elements until inside the test so any vnode options
+    // installed in before(Each) test hooks (i.e. installVNodeTestHook) will be
+    // setup before calling createElement to create the VNodes
     [
       {
         description: 'Simple DOM element',
-        element: <button type="button">Click me</button>,
+        element: () => <button type="button">Click me</button>,
       },
       {
         description: 'DOM elements with keys',
-        element: (
+        element: () => (
           <ul>
             <li key={1}>Test</li>
             <li key={2}>Test</li>
@@ -114,11 +119,11 @@ describe('Adapter', () => {
       },
       {
         description: 'DOM element with ref',
-        element: <div ref={() => {}} />,
+        element: () => <div ref={testRef} />,
       },
       {
         description: 'Component that renders text',
-        element: <TextComponent />,
+        element: () => <TextComponent />,
         expected: {
           type: TextComponent,
           constructor: undefined,
@@ -131,7 +136,7 @@ describe('Adapter', () => {
       },
       {
         description: 'Component with children',
-        element: <Parent />,
+        element: () => <Parent />,
         expected: {
           type: Parent,
           constructor: undefined,
@@ -168,7 +173,9 @@ describe('Adapter', () => {
       },
       {
         description: 'Element with mixed typed children',
-        element: <div>{[null, undefined, true, false, 0, 1n, 'a string']}</div>,
+        element: () => (
+          <div>{[null, undefined, true, false, 0, 1n, 'a string']}</div>
+        ),
         expected: {
           type: 'div',
           constructor: undefined,
@@ -182,12 +189,12 @@ describe('Adapter', () => {
     ].forEach(({ description, element, expected }) => {
       it(`returns JSX element that matches original input (${description})`, () => {
         const renderer = new MountRenderer();
-        renderer.render(element);
+        renderer.render(element());
         const adapter = new Adapter();
         const rstNode = renderer.getNode() as RSTNode;
         assert.deepEqual(
-          stripInternalVNodeFields(adapter.nodeToElement(rstNode)),
-          expected ?? stripInternalVNodeFields(element)
+          adapter.nodeToElement(rstNode),
+          (expected as any) ?? element()
         );
       });
     });

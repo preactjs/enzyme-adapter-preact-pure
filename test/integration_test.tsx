@@ -11,7 +11,6 @@ import sinon from 'sinon';
 
 import Adapter from '../src/Adapter.js';
 import { setupJSDOM, teardownJSDOM } from './jsdom.js';
-import { stripInternalVNodeFields } from './shared.js';
 
 type TestContextValue = { myTestString: string };
 
@@ -443,19 +442,14 @@ function addInteractiveTests(render: typeof mount) {
       return [undefined, null, true, false, 0, 1n, 'a string'] as any;
     }
 
-    const wrapper = render(<App />);
+    const wrapper = render(<App key="app" />);
     if (isShallow) {
       assert.deepEqual(wrapper.getElements(), ['0', '1', 'a string'] as any);
     } else {
-      assert.deepEqual(stripInternalVNodeFields(wrapper.getElement()), {
-        type: App,
-        constructor: undefined as any,
-        key: undefined,
-        ref: undefined,
-        props: {
-          children: ['0', '1', 'a string'],
-        },
-      } as any);
+      assert.equal(wrapper.getElement().key, 'app');
+      assert.deepEqual(wrapper.getElement().props, {
+        children: ['0', '1', 'a string'],
+      });
       assert.deepEqual(wrapper.children().getElements(), [
         '0',
         '1',

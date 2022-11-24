@@ -10,7 +10,8 @@ import type { VNode } from 'preact';
 import * as preact from 'preact/compat';
 import type { StateUpdater } from 'preact/compat';
 import Preact10ShallowDiff from '../../src/compat-shallow-renderer/Preact10ShallowDiff.js';
-import { expect, installVNodeTestHook } from './utils.js';
+import { installVNodeTestHook } from '../shared.js';
+import { expect } from './utils.js';
 
 const {
   useState,

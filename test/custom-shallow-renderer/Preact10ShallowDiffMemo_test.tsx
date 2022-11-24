@@ -14,7 +14,8 @@ import PropTypes from 'prop-types';
 import sinon from 'sinon';
 
 import Preact10ShallowDiff from '../../src/compat-shallow-renderer/Preact10ShallowDiff.js';
-import { expect, installVNodeTestHook } from './utils.js';
+import { installVNodeTestHook } from '../shared.js';
+import { expect } from './utils.js';
 
 const {
   Component,
