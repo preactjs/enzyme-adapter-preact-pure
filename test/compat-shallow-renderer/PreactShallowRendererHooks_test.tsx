@@ -9,7 +9,7 @@
 import type { VNode } from 'preact';
 import * as preact from 'preact/compat';
 import type { StateUpdater } from 'preact/compat';
-import Preact10ShallowDiff from '../../src/compat-shallow-renderer/Preact10ShallowDiff.js';
+import PreactShallowRenderer from '../../src/compat-shallow-renderer/PreactShallowRenderer.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const {
@@ -26,9 +26,9 @@ const {
   createContext,
   forwardRef,
 } = preact;
-const createRenderer = Preact10ShallowDiff.createRenderer;
+const createRenderer = PreactShallowRenderer.createRenderer;
 
-describe('Preact10ShallowDiff with hooks', () => {
+describe('PreactShallowRenderer with hooks', () => {
   installVNodeTestHook();
 
   it('should work with useState', () => {

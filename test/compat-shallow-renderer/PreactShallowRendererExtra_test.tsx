@@ -6,17 +6,17 @@ import * as preact from 'preact/compat';
 import type { ComponentType } from 'preact';
 import sinon from 'sinon';
 
-import Preact10ShallowDiff from '../../src/compat-shallow-renderer/Preact10ShallowDiff.js';
+import PreactShallowRenderer from '../../src/compat-shallow-renderer/PreactShallowRenderer.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const { Component, memo: realMemo } = preact;
-const createRenderer = Preact10ShallowDiff.createRenderer;
+const createRenderer = PreactShallowRenderer.createRenderer;
 
 function memo<T extends ComponentType<any>>(component: T): T {
   return realMemo<T>(component as any) as any;
 }
 
-describe('Preact10ShallowDiff extra', () => {
+describe('PreactShallowRenderer extra', () => {
   installVNodeTestHook();
 
   function createLifecycleComponent(displayName = 'SomeComponent') {

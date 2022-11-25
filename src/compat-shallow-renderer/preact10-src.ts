@@ -1,6 +1,7 @@
 /**
  * This file includes modified copies of the Preact source and custom
- * implementations of Preact functions (e.g. setState) to perform a shallow diff
+ * implementations of Preact functions (e.g. setState) to perform a shallow
+ * render
  *
  * The Preact source is copyrighted to Jason Miller and licensed under the MIT
  * License, found a the link below:
@@ -17,17 +18,17 @@ import type {
 
 import type {
   ComponentVNode,
-  ShallowDiffComponent,
-} from './Preact10ShallowDiff';
+  ShallowRenderedComponent,
+} from './PreactShallowRenderer';
 
 const options = rawOptions as Options;
 
 /** Symbol to return if a component indicates it should not update */
-export const skipUpdateSymbol = Symbol('Preact10ShallowDiff skip update');
+export const skipUpdateSymbol = Symbol('PreactShallowRenderer skip update');
 
 /**
- * Shallowly diff a component. Much of this function is copied directly from the
- * Preact 10 source. Differences to the original source are commented.
+ * Shallowly render a component. Much of this function is copied directly from
+ * the Preact 10 source. Differences to the original source are commented.
  */
 export function diffComponent(
   newVNode: ComponentVNode,
@@ -111,7 +112,7 @@ export function diffComponent(
       c.componentWillMount();
     }
 
-    // == SHALLOW DIFF CHANGE: Don't invoke CDM
+    // == SHALLOW RENDER CHANGE: Don't invoke CDM
     // if (c.componentDidMount != null) {
     //   c._renderCallbacks.push(c.componentDidMount);
     // }
@@ -152,14 +153,14 @@ export function diffComponent(
       }
 
       // break outer;
-      return skipUpdateSymbol; // === SHALLOW DIFF CHANGE: return skip update symbol
+      return skipUpdateSymbol; // === SHALLOW RENDER CHANGE: return skip update symbol
     }
 
     if (c.componentWillUpdate != null) {
       c.componentWillUpdate(newProps, c._nextState, componentContext);
     }
 
-    // == SHALLOW DIFF CHANGE: Don't invoke CDU
+    // == SHALLOW RENDER CHANGE: Don't invoke CDU
     // if (c.componentDidUpdate != null) {
     //   c._renderCallbacks.push(() => {
     //     c.componentDidUpdate(oldProps, oldState, snapshot);
@@ -205,19 +206,19 @@ export function diffComponent(
     globalContext = assign(assign({}, globalContext), c.getChildContext());
   }
 
-  // == SHALLOW DIFF CHANGE: Don't invoke gSBU
+  // == SHALLOW RENDER CHANGE: Don't invoke gSBU
   // if (!isNew && c.getSnapshotBeforeUpdate != null) {
   //   snapshot = c.getSnapshotBeforeUpdate(oldProps, oldState);
   // }
 
   let renderResult = tmp;
 
-  // == SHALLOW DIFF CHANGE: Don't skip Fragments returned from components
+  // == SHALLOW RENDER CHANGE: Don't skip Fragments returned from components
   // let isTopLevelFragment =
   //   tmp != null && tmp.type === Fragment && tmp.key == null;
   // let renderResult = isTopLevelFragment ? tmp.props.children : tmp;
 
-  // == SHALLOW DIFF CHANGE: Don't render children
+  // == SHALLOW RENDER CHANGE: Don't render children
   // diffChildren(
   //   parentDom,
   //   Array.isArray(renderResult) ? renderResult : [renderResult],
@@ -304,7 +305,7 @@ export function unmount(vnode: InternalVNode) {
   let r;
   if (options.unmount) options.unmount(vnode);
 
-  // == SHALLOW DIFF CHANGE: Don't invoke refs
+  // == SHALLOW RENDER CHANGE: Don't invoke refs
   // if ((r = vnode.ref)) {
   // 	if (!r.current || r.current === vnode._dom) {
   // 		applyRef(r, null, parentVNode);
@@ -324,7 +325,7 @@ export function unmount(vnode: InternalVNode) {
     vnode._component = null;
   }
 
-  // == SHALLOW DIFF CHANGE: Don't unmount children
+  // == SHALLOW RENDER CHANGE: Don't unmount children
   // if ((r = vnode._children)) {
   // 	for (let i = 0; i < r.length; i++) {
   // 		if (r[i]) {
@@ -337,7 +338,7 @@ export function unmount(vnode: InternalVNode) {
   // 	}
   // }
 
-  // == SHALLOW DIFF CHANGE: Don't remove DOM nodes
+  // == SHALLOW RENDER CHANGE: Don't remove DOM nodes
   // if (!skipRemove && vnode._dom != null) {
   // 	removeNode(vnode._dom);
   // }
@@ -404,7 +405,7 @@ function enqueueRender(component: InternalComponentType) {
 
   component._dirty = true;
 
-  let renderer = (component as unknown as ShallowDiffComponent)
-    ._preact10ShallowDiff;
+  let renderer = (component as unknown as ShallowRenderedComponent)
+    ._preactShallowRenderer;
   renderer?.render(newVNode, component._globalContext);
 }

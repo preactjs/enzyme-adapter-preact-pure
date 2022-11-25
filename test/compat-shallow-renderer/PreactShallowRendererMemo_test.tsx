@@ -13,7 +13,7 @@ import type { ComponentType, VNode } from 'preact';
 import PropTypes from 'prop-types';
 import sinon from 'sinon';
 
-import Preact10ShallowDiff from '../../src/compat-shallow-renderer/Preact10ShallowDiff.js';
+import PreactShallowRenderer from '../../src/compat-shallow-renderer/PreactShallowRenderer.js';
 import { expect, installVNodeTestHook } from './utils.js';
 
 const {
@@ -23,7 +23,7 @@ const {
   cloneElement,
   memo: realMemo,
 } = preact;
-const createRenderer = Preact10ShallowDiff.createRenderer;
+const createRenderer = PreactShallowRenderer.createRenderer;
 
 function memo<T extends ComponentType<any>>(component: T): T {
   return realMemo<T>(component as any) as any;
@@ -35,7 +35,7 @@ function memo<T extends ComponentType<any>>(component: T): T {
 // `memo` is it's own component, calls to `instance.setState` operate on the
 // memo component and not the real component underneath it. Might need to fix
 // this for proper shallow rendering to work.
-describe('Preact10ShallowDiffMemo', () => {
+describe('PreactShallowRendererMemo', () => {
   installVNodeTestHook();
 
   it('should call all of the legacy lifecycle hooks', () => {
@@ -497,12 +497,12 @@ describe('Preact10ShallowDiffMemo', () => {
 
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(SomeComponent as any)).toThrowError(
-      'Preact10ShallowDiff render(): Invalid component element. Instead of ' +
+      'PreactShallowRenderer render(): Invalid component element. Instead of ' +
         'passing a component class, make sure to instantiate it by passing it ' +
         'to Preact.createElement.'
     );
     expect(() => shallowRenderer.render(<div />)).toThrowError(
-      'Preact10ShallowDiff render(): Shallow rendering works only with ' +
+      'PreactShallowRenderer render(): Shallow rendering works only with ' +
         'custom components, not primitives (div). Instead of calling ' +
         '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
         'directly instead.'
@@ -1489,7 +1489,7 @@ describe('Preact10ShallowDiffMemo', () => {
         //     `but got: ${typeString}.`
         // );
       }).toThrowError(
-        'Preact10ShallowDiff render(): Shallow rendering works only with custom ' +
+        'PreactShallowRenderer render(): Shallow rendering works only with custom ' +
           `components, but the provided element type was \`${typeString}\`.`
       );
     };

@@ -42,20 +42,20 @@ type VNode<P = any> = ElementVNode<P> | ComponentVNode<P>;
  * component was shallow rendered. Used by our shallow setState and forceUpdate
  * implementations to rerender components shallowly.
  */
-export interface ShallowDiffComponent<P = any> extends Component<P> {
-  _preact10ShallowDiff: Preact10ShallowDiff;
+export interface ShallowRenderedComponent<P = any> extends Component<P> {
+  _preactShallowRenderer: PreactShallowRenderer;
 }
 
 let shallowOptionsInstalled = false;
 
 /** Setup options necessary for shallow rendering */
-function installOptionsForShallowDiff() {
+function installOptionsForShallowRender() {
   if (shallowOptionsInstalled) {
     return;
   }
 
   /**
-   * Eagerly set _preact10ShallowDiff on the component instance so later code
+   * Eagerly set _preactShallowRenderer on the component instance so later code
    * (e.g. the diffed option later in this function) can inspect it to know that
    * this component is being shallow rendered and can respond accordingly
    */
@@ -63,9 +63,9 @@ function installOptionsForShallowDiff() {
   (options as any).__r = (vnode: VNode<any>) => {
     prevRender(vnode);
 
-    const component = getComponent(vnode) as ShallowDiffComponent | null;
-    if (component && Preact10ShallowDiff.current) {
-      component._preact10ShallowDiff = Preact10ShallowDiff.current;
+    const component = getComponent(vnode) as ShallowRenderedComponent | null;
+    if (component && PreactShallowRenderer.current) {
+      component._preactShallowRenderer = PreactShallowRenderer.current;
     }
   };
 
@@ -75,8 +75,8 @@ function installOptionsForShallowDiff() {
    */
   const prevDiffed = options.diffed;
   options.diffed = vnode => {
-    const component = getComponent(vnode) as ShallowDiffComponent | null;
-    if (component && component._preact10ShallowDiff) {
+    const component = getComponent(vnode) as ShallowRenderedComponent | null;
+    if (component && component._preactShallowRenderer) {
       removeEffectCallbacks(vnode as any);
     }
 
@@ -91,22 +91,22 @@ function installOptionsForShallowDiff() {
  * implementations that detect if a component has been shallow rendered and
  * ensures renders caused by setState/forceUpdate are also shallow rendered.
  *
- * Here, the _preact10ShallowDiff property does something similar as React
+ * Here, the _preactShallowRenderer property does something similar as React
  * Component's `updater` property. React Component's `updater` property contains
  * a reference to the implementations of `setState`, `forceUpdate`, etc. and it
  * is set by the code that rendered the component (e.g. ReactDOM). Here the
- * presence of the `_preact10ShallowDiff` property (set by the shallow renderer)
- * indicates `setState` and `forceUpdate` should call into our custom shallow
- * implementation.
+ * presence of the `_preactShallowRenderer` property (set by the shallow
+ * renderer) indicates `setState` and `forceUpdate` should call into our custom
+ * shallow implementation.
  */
 function installShallowComponentHooks() {
   const prevSetState = Component.prototype.setState;
   Component.prototype.setState = function (
-    this: ShallowDiffComponent,
+    this: ShallowRenderedComponent,
     update: any,
     callback: () => void
   ) {
-    if (this._preact10ShallowDiff) {
+    if (this._preactShallowRenderer) {
       shallowSetState.call(this as any, update, callback);
     } else {
       prevSetState.call(this, update, callback);
@@ -115,10 +115,10 @@ function installShallowComponentHooks() {
 
   const prevForceUpdate = Component.prototype.forceUpdate;
   Component.prototype.forceUpdate = function (
-    this: ShallowDiffComponent,
+    this: ShallowRenderedComponent,
     callback: () => void
   ) {
-    if (this._preact10ShallowDiff) {
+    if (this._preactShallowRenderer) {
       shallowForceUpdate.call(this as any, callback);
     } else {
       prevForceUpdate.call(this, callback);
@@ -135,13 +135,13 @@ installShallowComponentHooks();
  *
  * https://github.com/enzymejs/react-shallow-renderer
  */
-export default class Preact10ShallowDiff {
+export default class PreactShallowRenderer {
   static createRenderer = function () {
-    return new Preact10ShallowDiff();
+    return new PreactShallowRenderer();
   };
 
-  /** The current rendering instance of Preact10ShallowDiff */
-  static current: Preact10ShallowDiff | null = null;
+  /** The current rendering instance of PreactShallowRenderer */
+  static current: PreactShallowRenderer | null = null;
 
   /**
    * The previous element that was shallowed rendered. It is used to diff an
@@ -161,14 +161,14 @@ export default class Preact10ShallowDiff {
    * The component instance that was shallow rendered. If render was given a
    * memoed element, then this is the instance of the component that was memoed
    */
-  private _componentInstance: ShallowDiffComponent | null = null;
+  private _componentInstance: ShallowRenderedComponent | null = null;
   /**
    * The result of the last call to render.
    */
   private _rendered: ComponentChild = null;
 
   constructor() {
-    installOptionsForShallowDiff();
+    installOptionsForShallowRender();
     this._reset();
   }
 
@@ -183,7 +183,7 @@ export default class Preact10ShallowDiff {
   public render(element: JSX.Element, context: any = {}): ComponentChild {
     assertIsComponentVNode(element);
 
-    if (Preact10ShallowDiff.current) {
+    if (PreactShallowRenderer.current) {
       return;
     }
 
@@ -202,7 +202,7 @@ export default class Preact10ShallowDiff {
       oldVNode = {} as any;
     }
 
-    Preact10ShallowDiff.current = this;
+    PreactShallowRenderer.current = this;
 
     try {
       const commitQueue: any[] = [];
@@ -216,17 +216,17 @@ export default class Preact10ShallowDiff {
 
       this._componentInstance = getComponent(
         this._prevElement! // this._diffComponent sets _prevElement for us
-      ) as ShallowDiffComponent;
-      this._componentInstance._preact10ShallowDiff = this;
+      ) as ShallowRenderedComponent;
+      this._componentInstance._preactShallowRenderer = this;
     } finally {
-      Preact10ShallowDiff.current = null;
+      PreactShallowRenderer.current = null;
     }
 
     return this._rendered;
   }
 
   public unmount() {
-    Preact10ShallowDiff.current = this;
+    PreactShallowRenderer.current = this;
 
     if (this._prevElement) {
       unmount(this._prevElement);
@@ -236,7 +236,7 @@ export default class Preact10ShallowDiff {
       unmount(this._memoElement);
     }
 
-    Preact10ShallowDiff.current = null;
+    PreactShallowRenderer.current = null;
     this._reset();
   }
 
@@ -246,7 +246,7 @@ export default class Preact10ShallowDiff {
     this._componentInstance = null;
     this._rendered = null;
 
-    Preact10ShallowDiff.current = null;
+    PreactShallowRenderer.current = null;
   }
 
   private _diffComponent(
@@ -286,7 +286,7 @@ export default class Preact10ShallowDiff {
       }
 
       if (isComponentVNode(renderResult)) {
-        // The memo component updated, so let's setup to update and diff the
+        // The memo component updated, so let's setup to update and render the
         // component it returned
         newVNode = renderResult;
         oldVNode = this._prevElement ?? ({} as any);
@@ -305,8 +305,8 @@ export default class Preact10ShallowDiff {
       commitQueue
     );
 
-    // If diffing this component told us not to update, then return the result
-    // of the previous render. Else, return the result of the diff
+    // If rendering this component told us not to update, then return the result
+    // of the previous render. Else, return the result of this render
     return renderResult === skipUpdateSymbol ? this._rendered : renderResult;
   }
 }
@@ -320,7 +320,7 @@ function assertIsComponentVNode(
 ): asserts element is ComponentVNode {
   if (!isValidElement(element)) {
     throw new Error(
-      `Preact10ShallowDiff render(): Invalid component element. ${
+      `PreactShallowRenderer render(): Invalid component element. ${
         typeof element === 'function'
           ? 'Instead of passing a component class, make sure to instantiate it by passing it to Preact.createElement.'
           : ''
@@ -331,13 +331,13 @@ function assertIsComponentVNode(
   // Show a special message for host elements since it's a common case.
   if (typeof element.type === 'string') {
     throw new Error(
-      `Preact10ShallowDiff render(): Shallow rendering works only with custom components, not primitives (${element.type}). Instead of calling \`.render(el)\` and inspecting the rendered output, look at \`el.props\` directly instead.`
+      `PreactShallowRenderer render(): Shallow rendering works only with custom components, not primitives (${element.type}). Instead of calling \`.render(el)\` and inspecting the rendered output, look at \`el.props\` directly instead.`
     );
   }
 
   if (typeof element.type !== 'function') {
     throw new Error(
-      `Preact10ShallowDiff render(): Shallow rendering works only with custom components, but the provided element type was \`${
+      `PreactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was \`${
         Array.isArray(element.type)
           ? 'array'
           : element.type === null

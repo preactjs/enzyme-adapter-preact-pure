@@ -91,7 +91,7 @@ export function installVNodeTestHook() {
       // tests and verify expected VNode output. We choose NaN here because it
       // successfully threads the desired behavior we want for these tests.
       //
-      // The Preact diff uses `__v` to shortcut diffing VNodes that haven't
+      // The Preact renderer uses `__v` to shortcut diffing VNodes that haven't
       // changed since creation (it treats VNodes as immutable). So when Preact
       // checks if `oldVNode.__v == newVNode.__v`, setting `__v` to NaN will
       // always return false, per the rules of JavaScript (NaN !== NaN in JS).
@@ -102,7 +102,7 @@ export function installVNodeTestHook() {
       // so `assert.deepEqual` will see those properties as the same.
       //
       // In summary, using `NaN`, Preact will see the VNodes as different and
-      // diff them normally (it won't shortcut it), but assert.deepEqual will
+      // render them normally (it won't shortcut it), but assert.deepEqual will
       // treat them as the same.
       //
       // @ts-ignore

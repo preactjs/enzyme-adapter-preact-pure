@@ -1,6 +1,6 @@
 # src/compat-shallow-renderer
 
-The modules in this directory implement a custom diff algorithm for Preact
+The modules in this directory implement a custom render algorithm for Preact
 components that shallowly renders them. Much of the core implementation
 (`diffComponent` and related helpers) is copied directly from the Preact 10
 source code.
@@ -17,8 +17,8 @@ https://robertknight.me.uk/posts/shallow-rendering-revisited/.
 
 ## react-shallow-renderer
 
-The custom shallow diff algorithm is exposed on a class that mirrors Enzyme's
-`ReactShallowRender`. This class, `Preact10ShallowDiff`, exposes the same API as
+The custom shallow render algorithm is exposed on a class that mirrors Enzyme's
+`ReactShallowRender`. This class, `PreactShallowRenderer`, exposes the same API as
 `ReactShallowRenderer` and passes nearly the exact same test suite.
 
 ## Preact source
