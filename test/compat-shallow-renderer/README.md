@@ -1,4 +1,4 @@
-# test/custom-shallow-renderer
+# test/compat-shallow-renderer
 
 Most/many of tests in this directory are taken from Enzyme's
 `react-shallow-renderer`. Test files that are taken from that repo include a

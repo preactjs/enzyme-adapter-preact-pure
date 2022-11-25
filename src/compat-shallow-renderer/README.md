@@ -19,7 +19,7 @@ https://robertknight.me.uk/posts/shallow-rendering-revisited/.
 
 The custom shallow diff algorithm is exposed on a class that mirrors Enzyme's
 `ReactShallowRender`. This class, `Preact10ShallowDiff`, exposes the same API as
-`ReactShallowRenderer` as passes nearly the exact same test suite.
+`ReactShallowRenderer` and passes nearly the exact same test suite.
 
 ## Preact source
 
