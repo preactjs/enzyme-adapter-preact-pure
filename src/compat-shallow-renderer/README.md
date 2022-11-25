@@ -24,10 +24,10 @@ The custom shallow render algorithm is exposed on a class that mirrors Enzyme's
 ## Preact source
 
 Parts of the core diffing algorithm are copied directly from Preact's source.
-Those functions are in `preact10-src.ts`. Since this file includes code from
-Preact's source, we need to transform the friendly names of internal properties
-to their mangled public names. We run a custom Babel transform on this file to
-do that replacement.
+Those functions are in `preact10-shallow-diff.ts`. Since this file includes code
+from Preact's source, we need to transform the friendly names of internal
+properties to their mangled public names. We run a custom Babel transform on
+this file to do that replacement.
 
 Since portions of this code is copied from other codebases, some of the code may
 deviate from the conventions of other parts of the project in order to keep it

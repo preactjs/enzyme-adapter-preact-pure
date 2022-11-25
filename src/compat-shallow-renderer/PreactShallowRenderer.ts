@@ -15,7 +15,7 @@ import {
   shallowSetState,
   shallowForceUpdate,
   skipUpdateSymbol,
-} from './preact10-src.js';
+} from './preact10-shallow-diff.js';
 
 const options = rawOptions as Options;
 
