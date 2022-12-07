@@ -1,8 +1,4 @@
 import type { Component, VNode } from 'preact';
-import { Fragment } from 'preact';
-
-// This makes enzyme debug output easier to work with by giving Fragments a name that isn't minified
-Fragment.displayName = 'Fragment';
 
 /**
  * This module provides access to internal properties of Preact 10 VNodes,
