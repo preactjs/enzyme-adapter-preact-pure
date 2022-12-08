@@ -126,8 +126,6 @@ function installShallowComponentHooks() {
   };
 }
 
-installShallowComponentHooks();
-
 /**
  * This class mirrors ReactShallowRenderer for the purpose of shallow rendering
  * Preact components. It implements the same API and passes almost the exact
@@ -168,6 +166,7 @@ export default class PreactShallowRenderer {
   private _rendered: ComponentChild = null;
 
   constructor() {
+    installShallowComponentHooks();
     installOptionsForShallowRender();
     this._reset();
   }
