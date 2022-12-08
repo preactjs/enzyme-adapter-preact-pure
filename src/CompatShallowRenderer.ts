@@ -9,7 +9,10 @@ import { isValidElement } from 'preact';
 import type { EventDetails } from './MountRenderer.js';
 import { propFromEvent } from './util.js';
 import PreactShallowDiff from './compat-shallow-renderer/PreactShallowRenderer.js';
-import { flushRenders } from './debounce-render-hook.js';
+import {
+  flushRenders,
+  installHook as installDebounceHook,
+} from './debounce-render-hook.js';
 import { nodeTypeFromType, rstNodeFromElement } from './preact10-rst.js';
 
 /**
@@ -25,6 +28,8 @@ export default class CompatShallowRenderer implements AbstractShallowRenderer {
   constructor() {
     this._renderer = PreactShallowDiff.createRenderer();
     this._cachedNode = null;
+
+    installDebounceHook();
   }
 
   render(el: VNode, context?: any, options?: ShallowRenderOptions) {
