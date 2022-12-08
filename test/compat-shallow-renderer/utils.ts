@@ -1,10 +1,7 @@
 import { assert } from 'chai';
-import { Fragment, options } from 'preact';
+import { options } from 'preact';
 import type { VNode } from 'preact';
 import sinon from 'sinon';
-
-// This makes enzyme debug output easier to work with by giving Fragments a name that isn't minified
-Fragment.displayName = 'Fragment';
 
 // These tests are from react-shallow-renderer which uses Jest for testing, so
 // here is a lightweight adapter around `chai` to give it the same API as Jest's

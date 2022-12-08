@@ -78,6 +78,19 @@ export default class Adapter extends EnzymeAdapter {
 
     if (this.preactAdapterOptions.useCompatShallowRendering) {
       this.isFragment = node => node?.type === Fragment;
+
+      this.displayNameOfNode = (node: RSTNode | null): string | null => {
+        if (!node) return null;
+        if (!node.type) return null;
+
+        if (this.isFragment?.(node)) {
+          return 'Fragment';
+        }
+
+        return typeof node.type === 'function'
+          ? (node.type as any).displayName || node.type.name || 'Component'
+          : node.type;
+      };
     }
   }
 

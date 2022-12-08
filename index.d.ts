@@ -131,7 +131,7 @@ declare module 'enzyme' {
     nodeToHostNode(node: RSTNode): Node | null;
 
     // Optional methods.
-    displayNameOfNode?(node: RSTNode): string;
+    displayNameOfNode?(node: RSTNode): string | null;
     invokeSetStateCallback?(instance: any, callback: () => {}): void;
     isCustomComponentElement?(instance: RSTNode): boolean;
     isFragment?(node: RSTNode): boolean;
