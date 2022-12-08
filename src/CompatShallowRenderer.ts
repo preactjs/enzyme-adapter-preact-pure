@@ -15,6 +15,16 @@ import {
 } from './debounce-render-hook.js';
 import { nodeTypeFromType, rstNodeFromElement } from './preact10-rst.js';
 
+function isErrorBoundary({ instance, type }: RSTNode): boolean {
+  if (
+    typeof type === 'function' &&
+    (type as ComponentClass).getDerivedStateFromError
+  ) {
+    return true;
+  }
+  return instance && instance.componentDidCatch;
+}
+
 /**
  * A shallow renderer that natively shallow renders Preact components by not
  * relying on a document and overriding children to return null. It relies on a
@@ -43,16 +53,6 @@ export default class CompatShallowRenderer implements AbstractShallowRenderer {
     nodeHierarchy = nodeHierarchy.concat(
       rstNodeFromElement(this._cachedNode) as RSTNode
     );
-
-    const isErrorBoundary = ({ instance: elInstance, type }: RSTNode) => {
-      if (
-        typeof type === 'function' &&
-        (type as ComponentClass).getDerivedStateFromError
-      ) {
-        return true;
-      }
-      return elInstance && elInstance.componentDidCatch;
-    };
 
     const { instance: catchingInstance, type: catchingType } =
       nodeHierarchy.find(isErrorBoundary) || {};
