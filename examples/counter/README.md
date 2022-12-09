@@ -6,7 +6,7 @@ that run in Node using a fake browser API provided by [jsdom](https://github.com
 ## Running the tests
 
 To install the project's dependencies and run the tests, clone this repository,
-switch to the "counter" directory and run:
+switch to the "examples/counter" directory and run:
 
 ```shell
 npm install
