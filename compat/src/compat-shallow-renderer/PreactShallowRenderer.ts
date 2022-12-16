@@ -7,7 +7,7 @@ import type {
 } from 'preact/src/internal';
 import { Component, options as rawOptions, isValidElement } from 'preact';
 
-import { getComponent } from '../preact10-internals.js';
+import { getComponent } from '../../../src/preact10-internals.js';
 import {
   diffComponent,
   commitRoot,

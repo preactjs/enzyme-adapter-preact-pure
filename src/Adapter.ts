@@ -4,6 +4,7 @@ import type {
   RSTNode,
   RSTNodeChild,
   ShallowRendererProps,
+  ShallowRenderer as AbstractShallowRenderer,
 } from 'enzyme';
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
@@ -17,7 +18,6 @@ import { childElements } from './compat.js';
 import { rstNodeFromElement } from './preact10-rst.js';
 import RootFinder from './RootFinder.js';
 import { isRSTNode, nodeToHostNode } from './util.js';
-import CompatShallowRenderer from './CompatShallowRenderer.js';
 
 export const { EnzymeAdapter } = enzyme;
 
@@ -39,8 +39,13 @@ export interface PreactAdapterOptions {
   renderToString?: (el: VNode<any>, context: any) => string;
 
   /**
-   * Enable a new shallow renderer that more closely matches the behavior and
-   * mechanics of React's shallow renderer, but uses Preact.
+   * An option to provide a custom ShallowRenderer implementation.
+   *
+   * This option is primarily used to provide a new shallow renderer that more
+   * closely matches the behavior of the React 16 shallow renderer. This new
+   * renderer can be enabled by importing `CompatShallowRenderer` from
+   * `enzyme-adapter-preact-pure/compat` and passing it in the `ShallowRenderer`
+   * Adapter option.
    *
    * The previous shallow renderer rendered components into a DOM and modified
    * it's output so that all children return null to prevent rendering further
@@ -50,7 +55,7 @@ export interface PreactAdapterOptions {
    * the React 16 enzyme adapter and it well suited for migrating an enzyme test
    * suite from React to Preact.
    */
-  useCompatShallowRendering?: boolean;
+  ShallowRenderer?: { new (): AbstractShallowRenderer };
 }
 
 export default class Adapter extends EnzymeAdapter {
@@ -76,7 +81,7 @@ export default class Adapter extends EnzymeAdapter {
     // the `nodeToElement` method with undefined `this`.
     this.nodeToElement = this.nodeToElement.bind(this);
 
-    if (this.preactAdapterOptions.useCompatShallowRendering) {
+    if (this.preactAdapterOptions.ShallowRenderer) {
       this.isFragment = node => node?.type === Fragment;
 
       this.displayNameOfNode = (node: RSTNode | null): string | null => {
@@ -106,8 +111,8 @@ export default class Adapter extends EnzymeAdapter {
           container: options.attachTo,
         });
       case 'shallow':
-        if (this.preactAdapterOptions.useCompatShallowRendering) {
-          return new CompatShallowRenderer();
+        if (this.preactAdapterOptions.ShallowRenderer) {
+          return new this.preactAdapterOptions.ShallowRenderer();
         } else {
           return new ShallowRenderer({ ...this.preactAdapterOptions });
         }
@@ -167,7 +172,7 @@ export default class Adapter extends EnzymeAdapter {
   elementToNode(el: ReactElement): RSTNode {
     return rstNodeFromElement(
       el as VNode,
-      this.preactAdapterOptions.useCompatShallowRendering ?? false
+      Boolean(this.preactAdapterOptions.ShallowRenderer)
     ) as RSTNode;
   }
 

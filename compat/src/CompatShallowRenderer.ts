@@ -6,14 +6,17 @@ import type {
 import type { ComponentClass, VNode } from 'preact';
 import { isValidElement } from 'preact';
 
-import type { EventDetails } from './MountRenderer.js';
-import { propFromEvent } from './util.js';
+import type { EventDetails } from '../../src/MountRenderer.js';
+import { propFromEvent } from '../../src/util.js';
 import PreactShallowDiff from './compat-shallow-renderer/PreactShallowRenderer.js';
 import {
   flushRenders,
   installHook as installDebounceHook,
-} from './debounce-render-hook.js';
-import { nodeTypeFromType, rstNodeFromElement } from './preact10-rst.js';
+} from '../../src/debounce-render-hook.js';
+import {
+  nodeTypeFromType,
+  rstNodeFromElement,
+} from '../../src/preact10-rst.js';
 
 function isErrorBoundary({ instance, type }: RSTNode): boolean {
   if (

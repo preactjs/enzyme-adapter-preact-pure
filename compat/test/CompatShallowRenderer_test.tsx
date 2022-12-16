@@ -13,7 +13,8 @@ import {
   normalizeDebugMessage,
   WrappingComponent,
   setAdapter,
-} from '../shared.js';
+} from '../../test/shared.js';
+import CompatShallowRenderer from '../src/CompatShallowRenderer.js';
 
 const { Fragment } = preact;
 const { shallow } = enzyme;
@@ -28,11 +29,11 @@ describe('integration tests', () => {
   setAdapter(() => {
     return new Adapter({
       renderToString,
-      useCompatShallowRendering: true,
+      ShallowRenderer: CompatShallowRenderer,
     });
   });
 
-  describe('new "shallow" rendering', () => {
+  describe('compat "shallow" rendering', () => {
     addStaticTests(shallow);
     addInteractiveTests(shallow as any, true);
 

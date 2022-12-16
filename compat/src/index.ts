@@ -1,1 +1,3 @@
-export const HelloWorld = 1;
+import CompatShallowRenderer from './CompatShallowRenderer';
+
+export { CompatShallowRenderer };
