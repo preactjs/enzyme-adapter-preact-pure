@@ -360,7 +360,7 @@ export function addInteractiveTests(
       //
       // In the default shallow renderer, Preact invokes lifecycles. In this
       // test, once `.reset()` is called, `.sCU` returns `undefined` and so
-      // enzyme does not invoke `cDU`. In a real test environment, cDU would be
+      // Enzyme does not invoke `cDU`. In a real test environment, cDU would be
       // invoked twice. A simpler test that doesn't use spies can see this behavior.
       allMethods.forEach(method => Test.prototype[method].reset());
     }

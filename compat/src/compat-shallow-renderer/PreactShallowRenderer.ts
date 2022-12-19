@@ -71,7 +71,7 @@ function installOptionsForShallowRender() {
 
   /**
    * If this component is being shallow rendered, remove all hook effect
-   * callbacks to match how enzyme shallow render's React
+   * callbacks to match how Enzyme shallow render's React
    */
   const prevDiffed = options.diffed;
   options.diffed = vnode => {
@@ -256,7 +256,7 @@ export default class PreactShallowRenderer {
   ) {
     // React's memo function wraps a component. It doesn't create a new VNode in
     // the virtual tree. To be compatible with React's shallow renderer, we'll
-    // try to mimic this behavior so shallow enzyme tests don't need to be aware
+    // try to mimic this behavior so shallow Enzyme tests don't need to be aware
     // of this subtle difference between Preact and React. Further, how Preact
     // implements Memo today may change in the future so we'll try to avoid
     // exposing that implementation detail to users.

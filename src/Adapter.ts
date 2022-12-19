@@ -27,7 +27,7 @@ export interface PreactAdapterOptions {
    * Components. For shallow rendering, this directly calls the component's
    * corresponding prop. For mount rendering, it finds the first DOM node in the
    * Component, and dispatches the event from it. This behavior matches the
-   * behavior of the React 16 enzyme adapter.
+   * behavior of the React 16 Enzyme adapter.
    */
   simulateEventsOnComponents?: boolean;
 
@@ -52,7 +52,7 @@ export interface PreactAdapterOptions {
    * down the tree. The new shallow renderer is a custom implementation of
    * Preact's diffing algorithm that only shallow renders the given component
    * and does not recurse down the VDOM tree. It's behavior more closely matches
-   * the React 16 enzyme adapter and it well suited for migrating an enzyme test
+   * the React 16 Enzyme adapter and it well suited for migrating an Enzyme test
    * suite from React to Preact.
    */
   ShallowRenderer?: { new (): AbstractShallowRenderer };

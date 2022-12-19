@@ -1,8 +1,8 @@
 # enzyme-adapter-preact-pure/compat
 
 This sub-package contains the code for providing better compatibility with
-React's enzyme adapter. Using the renderers contained in this sub-package would
-be useful for teams migrating a large enzyme test suite from React to Preact.
+React's Enzyme adapter. Using the renderers contained in this sub-package would
+be useful for teams migrating a large Enzyme test suite from React to Preact.
 
 It includes some code copied from other code bases to better match Preact and
 React's behavior. Those specifics are called out below.
@@ -38,7 +38,7 @@ from Preact's source, we need to transform the friendly names of internal
 properties to their mangled public names. We run a custom Babel transform on
 this file to do that replacement.
 
-Since portions of this code is copied from other codebases, some of the code may
+Since portions of this code are copied from other codebases, some of the code may
 deviate from the conventions of other parts of the project in order to keep it
 aligned with the original source. However, all code is still formatted per
 Prettier and TypeScript types are added for type safety.

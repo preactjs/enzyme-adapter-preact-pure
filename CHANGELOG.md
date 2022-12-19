@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   calls the prop of the event handler with arguments passed to `simulate`.
 
   The behavior turned on by this flag matches the behavior of the React 16
-  enzyme adapter.
+  Enzyme adapter.
 
 ## [4.0.1] - 2022-04-15
 
