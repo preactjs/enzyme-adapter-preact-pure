@@ -55,7 +55,9 @@ export interface PreactAdapterOptions {
    * the React 16 Enzyme adapter and it well suited for migrating an Enzyme test
    * suite from React to Preact.
    */
-  ShallowRenderer?: { new (): AbstractShallowRenderer };
+  ShallowRenderer?: {
+    new (options: PreactAdapterOptions): AbstractShallowRenderer;
+  };
 }
 
 export default class Adapter extends EnzymeAdapter {
@@ -85,8 +87,9 @@ export default class Adapter extends EnzymeAdapter {
       this.isFragment = node => node?.type === Fragment;
 
       this.displayNameOfNode = (node: RSTNode | null): string | null => {
-        if (!node) return null;
-        if (!node.type) return null;
+        if (!node || !node.type) {
+          return null;
+        }
 
         if (this.isFragment?.(node)) {
           return 'Fragment';
@@ -112,7 +115,9 @@ export default class Adapter extends EnzymeAdapter {
         });
       case 'shallow':
         if (this.preactAdapterOptions.ShallowRenderer) {
-          return new this.preactAdapterOptions.ShallowRenderer();
+          return new this.preactAdapterOptions.ShallowRenderer({
+            ...this.preactAdapterOptions,
+          });
         } else {
           return new ShallowRenderer({ ...this.preactAdapterOptions });
         }
@@ -172,7 +177,7 @@ export default class Adapter extends EnzymeAdapter {
   elementToNode(el: ReactElement): RSTNode {
     return rstNodeFromElement(
       el as VNode,
-      Boolean(this.preactAdapterOptions.ShallowRenderer)
+      Boolean(this.preactAdapterOptions.ShallowRenderer) // preserveChildrenProp
     ) as RSTNode;
   }
 

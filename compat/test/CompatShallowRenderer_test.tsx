@@ -355,7 +355,8 @@ describe('integration tests', () => {
 
       assert.equal(wrapper.children().children().length, 2);
       assert.equal(wrapper.children().children().at(0).type(), 'span');
-      // Difference from React => we return string, etc. children and don't nullify them
+      // Difference from React Enzyme adapter => we return string, etc. children
+      // and whereas React Enzyme adapter don't nullify them
       assert.equal(
         wrapper.children().children().at(1).getElement(),
         'World' as any
