@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   further down the tree. The compat shallow renderer is a custom implementation
   of Preact's diffing algorithm that only shallow renders the given component
   and does not recurse down the VDOM tree. It's behavior more closely matches
-  the React 16 enzyme adapter and it well suited for migrating an enzyme test
+  the React 16 Enzyme adapter and it well suited for migrating an Enzyme test
   suite from React to Preact.
 
 - Support more return types (e.g. booleans, numbers, BigInts) from components

@@ -201,7 +201,7 @@ export function addInteractiveTests(
     const item = wrapper.find('ListItem');
     if (isNewShallowRender) {
       // The new ShallowRenderer preserves VNode props and doesn't alter them.
-      // In this case, the ListItem VNode is not given an props for children
+      // In this case, the ListItem VNode is not given a `children` prop
       // since it doesn't have any children defined in JSX
       assert.deepEqual(item.props(), { label: 'test' });
     } else {
