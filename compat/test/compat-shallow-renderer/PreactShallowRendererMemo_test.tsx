@@ -29,6 +29,13 @@ function memo<T extends ComponentType<any>>(component: T): T {
   return realMemo<T>(component as any) as any;
 }
 
+// React.memo doesn't manifest as a separate component in the virtual
+// tree, so calls to `instance.setState` and other methods are expected to
+// operate on the underlying component beneath memo. However in Preact, since
+// `memo` is its own component, calls to `instance.setState` operate on the
+// memo component and not the real component underneath it. These tests assert
+// that the compat shallow properly handles memo components and forwards calls
+// to the actual component under `memo`.
 describe('PreactShallowRendererMemo', () => {
   installVNodeTestHook();
 
