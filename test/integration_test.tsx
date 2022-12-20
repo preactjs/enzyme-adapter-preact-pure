@@ -21,6 +21,7 @@ const TestContext = preact.createContext<TestContextValue>({
   myTestString: 'default',
 });
 
+const { Fragment } = preact;
 const { configure, shallow, mount, render: renderToString } = enzyme;
 
 const createDefaultAdapter = () => new Adapter();
@@ -117,6 +118,104 @@ describe('integration tests', () => {
         output,
         '<Provider value={{...}}><Component><span>override</span></Component></Provider>'
       );
+    });
+
+    it('getElement() returns top-level rendered component', () => {
+      function App() {
+        return (
+          <Fragment key="1">
+            <Fragment key="2">
+              <div key="div">
+                <Fragment key="3">
+                  <Fragment key="4">
+                    <span>Hello</span>
+                  </Fragment>
+                </Fragment>
+                <Fragment key="text">World</Fragment>
+              </div>
+            </Fragment>
+          </Fragment>
+        );
+      }
+
+      const appKey = 'app';
+      const wrapper = mount(<App key={appKey} />);
+
+      assert.equal(
+        normalizeDebugMessage(wrapper.debug()),
+        '<App><div><span>Hello</span>World</div></App>'
+      );
+
+      assert.deepEqual(wrapper.first().getElement().key, appKey);
+      assert.deepEqual(
+        wrapper.getElements().map(v => v.key),
+        [appKey]
+      );
+      assert.deepEqual(wrapper.get(0).key, appKey);
+      assert.deepEqual(wrapper.at(0).getElement().key, appKey);
+    });
+
+    it('children() hides all Fragments', () => {
+      function App() {
+        return (
+          <Fragment key="1">
+            <Fragment key="2">
+              <div key="div">
+                <Fragment key="3">
+                  <Fragment key="4">
+                    <span>Hello</span>
+                  </Fragment>
+                </Fragment>
+                <Fragment key="text">World</Fragment>
+              </div>
+            </Fragment>
+          </Fragment>
+        );
+      }
+
+      const wrapper = mount(<App />);
+
+      const frag1 = App();
+      const frag2 = frag1.props.children;
+      const divVNode = frag2.props.children;
+
+      assert.equal(frag1.key, '1');
+      assert.equal(frag2.key, '2');
+      assert.equal(divVNode.key, 'div');
+
+      assert.equal(wrapper.children().length, 1);
+      assert.equal(wrapper.children().at(0).key(), divVNode.key);
+      assert.equal(wrapper.childAt(0).key(), divVNode.key);
+
+      assert.equal(wrapper.children().children().length, 2);
+      assert.equal(wrapper.children().children().at(0).type(), 'span');
+      // Difference from React => we return string, etc. children and don't nullify them
+      assert.equal(
+        wrapper.children().children().at(1).getElement(),
+        'World' as any
+      );
+    });
+
+    it('findWhere ignores all Fragment', () => {
+      function App() {
+        return (
+          <Fragment key="1">
+            <Fragment key="2">
+              <div key="div">
+                <Fragment key="3">
+                  <Fragment key="4">
+                    <span>Hello</span>
+                  </Fragment>
+                </Fragment>
+                <Fragment key="text">World</Fragment>
+              </div>
+            </Fragment>
+          </Fragment>
+        );
+      }
+
+      const wrapper = mount(<App />);
+      assert.equal(wrapper.findWhere(w => w.type() === Fragment).length, 0);
     });
 
     describe('simulateEventsOnComponents: true', () => {

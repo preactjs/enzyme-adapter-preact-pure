@@ -160,7 +160,10 @@ export function addStaticTests(render: (el: ReactElement) => Wrapper) {
 /**
  * Register tests for interactive rendering modes (full + shallow rendering).
  */
-export function addInteractiveTests(render: typeof mount) {
+export function addInteractiveTests(
+  render: typeof mount,
+  isNewShallowRender = false
+) {
   const isMount = (render as any) === mount;
   const isShallow = (render as any) === shallow;
 
@@ -196,7 +199,14 @@ export function addInteractiveTests(render: typeof mount) {
     }
     const wrapper = render(<List />);
     const item = wrapper.find('ListItem');
-    assert.deepEqual(item.props(), { label: 'test', children: [] });
+    if (isNewShallowRender) {
+      // The new ShallowRenderer preserves VNode props and doesn't alter them.
+      // In this case, the ListItem VNode is not given a `children` prop
+      // since it doesn't have any children defined in JSX
+      assert.deepEqual(item.props(), { label: 'test' });
+    } else {
+      assert.deepEqual(item.props(), { label: 'test', children: [] });
+    }
   });
 
   it('can traverse a tree with text nodes', () => {
@@ -282,16 +292,25 @@ export function addInteractiveTests(render: typeof mount) {
         super(props);
       }
 
+      shouldComponentUpdate() {
+        return true;
+      }
+      componentWillReceiveProps() {}
+      componentWillMount() {}
+      componentDidMount() {}
+      componentDidUpdate() {}
+      componentWillUnmount() {}
+
       render() {
         return <div>Test</div>;
       }
     }
-    Test.prototype.shouldComponentUpdate = sinon.stub().returns(true);
-    Test.prototype.componentWillReceiveProps = sinon.stub();
-    Test.prototype.componentWillMount = sinon.stub();
-    Test.prototype.componentDidMount = sinon.stub();
-    Test.prototype.componentDidUpdate = sinon.stub();
-    Test.prototype.componentWillUnmount = sinon.stub();
+    sinon.stub(Test.prototype, 'shouldComponentUpdate').returns(true);
+    sinon.stub(Test.prototype, 'componentWillReceiveProps');
+    sinon.stub(Test.prototype, 'componentWillMount');
+    sinon.stub(Test.prototype, 'componentDidMount');
+    sinon.stub(Test.prototype, 'componentDidUpdate');
+    sinon.stub(Test.prototype, 'componentWillUnmount');
     return Test;
   }
 
@@ -328,7 +347,23 @@ export function addInteractiveTests(render: typeof mount) {
     const allMethods = [...shouldCall, ...shouldNotCall];
 
     const wrapper = render(<Test />);
-    allMethods.forEach(method => Test.prototype[method].reset());
+    if (isNewShallowRender) {
+      allMethods.forEach(method => Test.prototype[method].resetHistory());
+    } else {
+      // Calling reset here not only resets call counts, but also any behaviors
+      // setup, such as `.returns(true)`. Calling reset here, removes our
+      // `.returns(true)` setup on shouldComponentUpdate, causing the method to
+      // return `undefined`. In shallow rendering, Enzyme spies on the return
+      // value of `sCU` and chooses to invoke lifecycle methods based on its
+      // return value. Because it returns `undefined` in this case, Enzyme skips
+      // invoking `cDU`.
+      //
+      // In the default shallow renderer, Preact invokes lifecycles. In this
+      // test, once `.reset()` is called, `.sCU` returns `undefined` and so
+      // Enzyme does not invoke `cDU`. In a real test environment, cDU would be
+      // invoked twice. A simpler test that doesn't use spies can see this behavior.
+      allMethods.forEach(method => Test.prototype[method].reset());
+    }
 
     wrapper.setProps({ label: 'foo' });
 
@@ -353,7 +388,7 @@ export function addInteractiveTests(render: typeof mount) {
     const allMethods = [...shouldCall, ...shouldNotCall];
 
     const wrapper = render(<Test />);
-    allMethods.forEach(method => Test.prototype[method].reset());
+    allMethods.forEach(method => Test.prototype[method].resetHistory());
 
     const unmountCallback = sinon.stub();
     (options as any).unmount = unmountCallback;
@@ -441,6 +476,38 @@ export function addInteractiveTests(render: typeof mount) {
 
     wrapper.find('button').simulate('click');
     assert.equal(wrapper.find('#count').text(), 'Count: 1');
+  });
+
+  it('supports nested arrays in children', () => {
+    function ListItem() {
+      return <div>Child</div>;
+    }
+
+    function List() {
+      const chunk1 = [0, 1];
+      const chunk2 = [2, 3];
+
+      // Wrapping ListItems in <li>s is important to reproduce the error this
+      // tests checks for
+      return (
+        <ul>
+          {chunk1.map(id => (
+            <li key={id}>
+              <ListItem />
+            </li>
+          ))}
+          {chunk2.map(id => (
+            <li key={id}>
+              <ListItem key={id} />
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    const wrapper = render(<List />);
+
+    assert.equal(wrapper.find(ListItem).length, 4);
   });
 }
 

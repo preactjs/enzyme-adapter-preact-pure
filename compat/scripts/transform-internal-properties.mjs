@@ -11,17 +11,17 @@ import { fileURLToPath } from 'url';
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = (...args) => path.join(__dirname, '..', ...args);
+const repoRoot = (...args) => path.join(__dirname, '..', '..', ...args);
 
 const preact10Dirs = [
-  repoRoot('./build/src/compat-shallow-renderer/'),
-  repoRoot('./build-cjs/src/compat-shallow-renderer/'),
+  repoRoot('./build/compat/src/compat-shallow-renderer/'),
+  repoRoot('./build-cjs/compat/src/compat-shallow-renderer/'),
 ];
 
 function getPreact10Renames() {
   const rename = {};
 
-  const manglePath = repoRoot('scripts/mangle.json');
+  const manglePath = repoRoot('compat/scripts/mangle.json');
   const mangle = JSON.parse(readFileSync(manglePath, 'utf8'));
 
   for (let prop in mangle.props.props) {

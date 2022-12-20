@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Adds a new shallow renderer that more closely matches the behavior of the
+  React 16 shallow renderer. This new renderer can be enabled by importing
+  `CompatShallowRenderer` from `enzyme-adapter-preact-pure/compat` and passing
+  it in the `ShallowRenderer` Adapter option.
+
+  The previous shallow renderer rendered components into a DOM and modified the
+  component's output so that all children return null to prevent rendering
+  further down the tree. The compat shallow renderer is a custom implementation
+  of Preact's diffing algorithm that only shallow renders the given component
+  and does not recurse down the VDOM tree. It's behavior more closely matches
+  the React 16 Enzyme adapter and it well suited for migrating an Enzyme test
+  suite from React to Preact.
+
 - Support more return types (e.g. booleans, numbers, BigInts) from components
 
 - Add an option (`renderToString`) to allow passing in a custom string renderer
@@ -31,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   calls the prop of the event handler with arguments passed to `simulate`.
 
   The behavior turned on by this flag matches the behavior of the React 16
-  enzyme adapter.
+  Enzyme adapter.
 
 ## [4.0.1] - 2022-04-15
 

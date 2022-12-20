@@ -1,0 +1,9 @@
+{
+  "name": "enzyme-adapter-preact-pure-compat",
+  "private": true,
+  "description": "Enzyme adapter for Preact with extra code to provide better compatibility with React's Enzyme adapter",
+  "main": "../build-cjs/compat/src/index.js",
+  "module": "../build/compat/src/index.js",
+  "types": "../build/compat/src/index.d.ts",
+  "license": "MIT"
+}

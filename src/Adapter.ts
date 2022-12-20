@@ -4,11 +4,12 @@ import type {
   RSTNode,
   RSTNodeChild,
   ShallowRendererProps,
+  ShallowRenderer as AbstractShallowRenderer,
 } from 'enzyme';
 import enzyme from 'enzyme';
 import type { ReactElement } from 'react';
 import type { VNode } from 'preact';
-import { cloneElement, h } from 'preact';
+import { Fragment, cloneElement, h } from 'preact';
 
 import MountRenderer from './MountRenderer.js';
 import ShallowRenderer from './ShallowRenderer.js';
@@ -26,7 +27,7 @@ export interface PreactAdapterOptions {
    * Components. For shallow rendering, this directly calls the component's
    * corresponding prop. For mount rendering, it finds the first DOM node in the
    * Component, and dispatches the event from it. This behavior matches the
-   * behavior of the React 16 enzyme adapter.
+   * behavior of the React 16 Enzyme adapter.
    */
   simulateEventsOnComponents?: boolean;
 
@@ -36,6 +37,27 @@ export interface PreactAdapterOptions {
    * that preact-render-to-string is passed here.
    */
   renderToString?: (el: VNode<any>, context: any) => string;
+
+  /**
+   * An option to provide a custom ShallowRenderer implementation.
+   *
+   * This option is primarily used to provide a new shallow renderer that more
+   * closely matches the behavior of the React 16 shallow renderer. This new
+   * renderer can be enabled by importing `CompatShallowRenderer` from
+   * `enzyme-adapter-preact-pure/compat` and passing it in the `ShallowRenderer`
+   * Adapter option.
+   *
+   * The previous shallow renderer rendered components into a DOM and modified
+   * it's output so that all children return null to prevent rendering further
+   * down the tree. The new shallow renderer is a custom implementation of
+   * Preact's diffing algorithm that only shallow renders the given component
+   * and does not recurse down the VDOM tree. It's behavior more closely matches
+   * the React 16 Enzyme adapter and it well suited for migrating an Enzyme test
+   * suite from React to Preact.
+   */
+  ShallowRenderer?: {
+    new (options: PreactAdapterOptions): AbstractShallowRenderer;
+  };
 }
 
 export default class Adapter extends EnzymeAdapter {
@@ -60,6 +82,24 @@ export default class Adapter extends EnzymeAdapter {
     // Work around a bug in Enzyme where `ShallowWrapper.getElements` calls
     // the `nodeToElement` method with undefined `this`.
     this.nodeToElement = this.nodeToElement.bind(this);
+
+    if (this.preactAdapterOptions.ShallowRenderer) {
+      this.isFragment = node => node?.type === Fragment;
+
+      this.displayNameOfNode = (node: RSTNode | null): string | null => {
+        if (!node || !node.type) {
+          return null;
+        }
+
+        if (this.isFragment?.(node)) {
+          return 'Fragment';
+        }
+
+        return typeof node.type === 'function'
+          ? (node.type as any).displayName || node.type.name || 'Component'
+          : node.type;
+      };
+    }
   }
 
   createRenderer(options: AdapterOptions & MountRendererProps) {
@@ -74,7 +114,13 @@ export default class Adapter extends EnzymeAdapter {
           container: options.attachTo,
         });
       case 'shallow':
-        return new ShallowRenderer({ ...this.preactAdapterOptions });
+        if (this.preactAdapterOptions.ShallowRenderer) {
+          return new this.preactAdapterOptions.ShallowRenderer({
+            ...this.preactAdapterOptions,
+          });
+        } else {
+          return new ShallowRenderer({ ...this.preactAdapterOptions });
+        }
       case 'string':
         return new StringRenderer({ ...this.preactAdapterOptions });
       default:
@@ -129,7 +175,10 @@ export default class Adapter extends EnzymeAdapter {
   }
 
   elementToNode(el: ReactElement): RSTNode {
-    return rstNodeFromElement(el as VNode) as RSTNode;
+    return rstNodeFromElement(
+      el as VNode,
+      Boolean(this.preactAdapterOptions.ShallowRenderer) // preserveChildrenProp
+    ) as RSTNode;
   }
 
   // This function is only called during shallow rendering

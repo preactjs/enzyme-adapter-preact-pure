@@ -23,13 +23,18 @@ import { getRealType } from './shallow-render-utils.js';
 
 type Props = { [prop: string]: any };
 
-function stripSpecialProps(props: Props) {
-  const { children, key, ref, ...otherProps } = props;
-  return otherProps;
+function stripSpecialProps(props: Props, preserveChildrenProp = false) {
+  if (preserveChildrenProp) {
+    const { key, ref, ...otherProps } = props;
+    return otherProps;
+  } else {
+    const { children, key, ref, ...otherProps } = props;
+    return otherProps;
+  }
 }
 
-function convertDOMProps(props: Props) {
-  const srcProps = stripSpecialProps(props);
+function convertDOMProps(props: Props, preserveChildrenProp = false) {
+  const srcProps = stripSpecialProps(props, preserveChildrenProp);
   const converted: Props = {};
   Object.keys(srcProps).forEach(srcProp => {
     const destProp = srcProp === 'class' ? 'className' : srcProp;
@@ -99,7 +104,7 @@ function rstNodeFromVNode(node: VNode | null): RSTNodeChild | RSTNodeChild[] {
   };
 }
 
-function nodeTypeFromType(type: any): NodeType {
+export function nodeTypeFromType(type: any): NodeType {
   if (typeof type === 'string') {
     return 'host';
   } else if (type.prototype && typeof type.prototype.render === 'function') {
@@ -115,19 +120,24 @@ function nodeTypeFromType(type: any): NodeType {
  * Convert a JSX element tree returned by Preact's `h` function into an RST
  * node.
  */
-export function rstNodeFromElement(node: ComponentChild): RSTNodeChild {
+export function rstNodeFromElement(
+  node: ComponentChild,
+  preserveChildrenProp = false
+): RSTNodeChild {
   if (!isValidElement(node)) {
     return node;
   }
-  const children = childElements(node).map(rstNodeFromElement);
+  const children = childElements(node)
+    .flat()
+    .map(child => rstNodeFromElement(child, preserveChildrenProp));
   const nodeType = nodeTypeFromType(node.type);
 
   let props = {};
   if (typeof node.props === 'object' && node.props) {
     props =
       nodeType === 'host'
-        ? convertDOMProps(node.props)
-        : stripSpecialProps(node.props);
+        ? convertDOMProps(node.props, preserveChildrenProp)
+        : stripSpecialProps(node.props, preserveChildrenProp);
   }
 
   const ref = node.ref || null;
@@ -138,7 +148,7 @@ export function rstNodeFromElement(node: ComponentChild): RSTNodeChild {
     props,
     key: node.key || null,
     ref,
-    instance: null,
+    instance: getComponent(node),
     rendered: children,
   };
 }
