@@ -1,0 +1,26 @@
+{
+  "name": "enzyme-preact-compat-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -r @babel/register"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "@babel/register": "^7.10.5",
+    "chai": "^4.2.0",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-preact-pure": "^4.0.1",
+    "jsdom": "^20.0.2",
+    "mocha": "^10.1.0"
+  },
+  "dependencies": {
+    "preact": "^10.11.3",
+    "preact-render-to-string": "^5.2.6"
+  }
+}
