@@ -23,11 +23,11 @@ export const { EnzymeAdapter } = enzyme;
 
 export interface PreactAdapterOptions {
   /**
-   * Turn on behavior that enables calling `.simulateEvent` directly on
-   * Components. For shallow rendering, this directly calls the component's
-   * corresponding prop. For mount rendering, it finds the first DOM node in the
-   * Component, and dispatches the event from it. This behavior matches the
-   * behavior of the React 16 Enzyme adapter.
+   * Turn on behavior that enables calling `.simulate` directly on Components.
+   * For shallow rendering, this directly calls the component's corresponding
+   * prop. For mount rendering, it finds the first DOM node in the Component,
+   * and dispatches the event from it. This behavior matches the behavior of the
+   * React 16 Enzyme adapter.
    */
   simulateEventsOnComponents?: boolean;
 

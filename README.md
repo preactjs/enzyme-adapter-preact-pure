@@ -1,6 +1,6 @@
 # enzyme-adapter-preact-pure
 
-This is an adapter to support using the [Enzyme](https://airbnb.io/enzyme/) UI
+This is an adapter to support using the [Enzyme](https://enzymejs.github.io/enzyme/) UI
 component testing library with [Preact](https://preactjs.com). For documentation, please see [the testing guide on the PreactJS website](https://preactjs.com/guide/v10/unit-testing-with-enzyme).
 
 ## Supported Preact versions
@@ -27,11 +27,11 @@ provided by this package:
 import { configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-preact-pure';
 
-configure({ adapter: new Adapter });
+configure({ adapter: new Adapter() });
 ```
 
 Once the adapter is configured, you can write Enzyme tests for your Preact
-UI components following the [Enzyme docs](https://airbnb.io/enzyme/).
+UI components following the [Enzyme docs](https://enzymejs.github.io/enzyme/).
 The full DOM rendering, shallow rendering and string rendering modes are
 supported.
 
@@ -73,12 +73,66 @@ in behavior between this adapter and Enzyme's React adapters to be aware of:
   This means that any side effects that rendered DOM elements have, such as `<img>`
   elements loading images, will still execute.
 
+If you are converting a React Enzyme test suite to use Preact, try out our `CompatShallowRenderer`. This renderer is an alternate shallow renderer to the default that uses a custom diffing algorithm that mirrors the Preact diff algorithm but only shallowly renders elements, similarly to what [`react-shallow-render`](https://github.com/enzymejs/react-shallow-renderer) does for React components. This renderer has a couple of behaviors that more closely resembles the React adapters, including:
+
+- No DOM nodes are created, so a DOM environment is not required
+- `disableLifecycleMethods` option is respected
+- Virtual element props are preserved intact so filter methods on the Enzyme wrapper behave more similarly to the React wrappers
+
+To enable the `CompatShallowRenderer`, pass it into the `shallowRenderer` Adapter option when configuring Enzyme:
+
+```js
+import { configure } from 'enzyme';
+import Adapter from 'enzyme-adapter-preact-pure';
+import { CompatShallowRenderer } from 'enzyme-adapter-preact-pure/compat';
+
+// Setup Enzyme
+configure({
+  adapter: new Adapter({
+    ShallowRenderer: CompatShallowRenderer,
+  }),
+});
+```
+
 ### Simulating events
 
-The [simulate](https://airbnb.io/enzyme/docs/api/ReactWrapper/simulate.html)
+The [simulate](https://enzymejs.github.io/enzyme/docs/api/ReactWrapper/simulate.html)
 API does not dispatch actual DOM events in the React adapters, it just calls
 the corresponding handler. The Preact adapter does dispatch an actual event
-using `element.dispatchEvent(...)`.
+using `element.dispatchEvent(...)`. Because this behavior, the Preact adapters can only simulate events on real DOM nodes, not Components.
+
+If you'd like to simulate events on Components, enable the `simulateEventsOnComponents` option in the Adapter options. This option changes the previous behavior of how events were dispatched (by directly invoking event handlers instead of dispatching an event) and so is disabled by default. Enabling this option is useful if you are migrating an Enzyme test suite from React to Preact.
+
+```js
+import { configure } from 'enzyme';
+import Adapter from 'enzyme-adapter-preact-pure';
+
+// Setup Enzyme
+configure({
+  adapter: new Adapter({
+    simulateEventsOnComponents: true,
+  }),
+});
+```
+
+### String rendering
+
+By default, the Preact string renderer renders your component into the DOM and then returns the `innerHTML` of the DOM container. This behavior means string rendering requires a DOM environment.
+
+If you'd like to run tests that use the string renderer in a test environment that does not have a DOM, pass `preact-render-to-string` into the `renderToString` Adapter option. Enabling this option is useful if you are migrating an Enzyme test suite from React to Preact.
+
+```js
+import { configure } from 'enzyme';
+import Adapter from 'enzyme-adapter-preact-pure';
+import renderToString from 'preact-render-to-string';
+
+// Setup Enzyme
+configure({
+  adapter: new Adapter({
+    renderToString,
+  }),
+});
+```
 
 ### State updates
 
@@ -91,11 +145,11 @@ microtask. React's behavior [may change in a future release](https://stackoverfl
 To make writing tests easier, the Preact adapter will apply any pending state
 updates and re-render when:
 
- - The component is initially rendered by `mount` or `shallow`
- - An Enzyme API call is made that is expected to trigger a change in the
-   rendered output, such as `wrapper.setProps`, `wrapper.simulate` or
-   `wrapper.setState`
- - `wrapper.update` is called explicitly by a test
+- The component is initially rendered by `mount` or `shallow`
+- An Enzyme API call is made that is expected to trigger a change in the
+  rendered output, such as `wrapper.setProps`, `wrapper.simulate` or
+  `wrapper.setState`
+- `wrapper.update` is called explicitly by a test
 
 The consequences of this when writing tests are that any state updates triggered
 outside of an Enzyme method call will not be reflected in the rendered DOM until
@@ -106,7 +160,7 @@ tree.
 **Example:**
 
 ```js
-const wrapper = shallow(<ParentComponent/>);
+const wrapper = shallow(<ParentComponent />);
 
 // Trigger a state update outsize of Enzyme.
 wrapper.find(ChildComponent).props().onClick();
@@ -129,7 +183,7 @@ In Preact the `act` function is available in the "preact/test-utils" package.
 import { act } from 'preact/test-utils';
 
 // Any effects scheduled by the initial render will run before `mount` returns.
-const wrapper = mount(<Widget showInputField={false}/>);
+const wrapper = mount(<Widget showInputField={false} />);
 
 // Perform an action outside of Enzyme which triggers effects in the parent
 // `Widget`. Since Enzyme doesn't know about this, we have to wrap the calls
@@ -150,11 +204,10 @@ are mapped to `className`.
 ```js
 import { mount } from 'enzyme';
 
-const wrapper = mount(<div class="widget"/>);
-wrapper.props() // Returns `{ children: [], className: 'widget' }`
-wrapper.find('.widget').length // Returns `1`
+const wrapper = mount(<div class="widget" />);
+wrapper.props(); // Returns `{ children: [], className: 'widget' }`
+wrapper.find('.widget').length; // Returns `1`
 ```
-
 
 ### Usage with preact/compat
 
