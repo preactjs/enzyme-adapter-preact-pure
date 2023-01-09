@@ -528,8 +528,8 @@ describe('PreactShallowRenderer with hooks', () => {
 
     expect(result).toEqual(
       <div>
-        <div id="P01" />
-        <div id="P02" />
+        <div id="P0-0" />
+        <div id="P0-1" />
       </div>
     );
 
@@ -537,8 +537,8 @@ describe('PreactShallowRenderer with hooks', () => {
 
     expect(result).toEqual(
       <div>
-        <div id="P01" />
-        <div id="P02" />
+        <div id="P0-0" />
+        <div id="P0-1" />
       </div>
     );
   });
