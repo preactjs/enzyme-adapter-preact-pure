@@ -182,7 +182,7 @@ function rstNodeFromComponent(vnode: VNode, component: Component): RSTNode {
 /**
  * Convert the Preact components rendered into `container` into an RST node.
  */
-export function getNode(container: HTMLElement): RSTNode {
+export function getNode(container: HTMLElement): RSTNode | null {
   const rendered = getLastVNodeRenderedIntoContainer(container);
   const rstNode = rstNodeFromVNode(rendered);
 
@@ -193,6 +193,8 @@ export function getNode(container: HTMLElement): RSTNode {
   if (Array.isArray(rstNode)) {
     if (rstNode.length === 1) {
       return rstNode[0] as RSTNode;
+    } else if (rstNode.length === 0) {
+      return null;
     } else {
       throw new Error(
         'Root element must not be a fragment with multiple children'

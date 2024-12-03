@@ -4,7 +4,7 @@ import type {
   RSTNode,
 } from 'enzyme';
 import type { VNode } from 'preact';
-import { h, createElement } from 'preact';
+import { createElement } from 'preact';
 import { act } from 'preact/test-utils';
 import type { PreactAdapterOptions } from './Adapter.js';
 
@@ -74,10 +74,7 @@ export default class MountRenderer implements AbstractMountRenderer {
   }
 
   unmount() {
-    // A custom tag name is used here to work around
-    // https://github.com/developit/preact/issues/1288.
-    render(h('unmount-me', {}), this._container);
-    this._container.innerHTML = '';
+    render(null, this._container);
   }
 
   getNode() {
